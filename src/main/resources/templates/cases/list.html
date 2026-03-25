@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <title>Cases</title>
+    <link rel="stylesheet" href="/app.css"/>
+    <script defer src="/app.js"></script>
+</head>
+<body>
+<div th:replace="~{fragments/header :: header}"></div>
+
+<main class="container page">
+    <div class="page-title">
+        <h1>Cases</h1>
+        <a class="button" href="/ui/cases/new">Create case</a>
+    </div>
+
+    <section class="panel">
+        <h2>List (placeholder)</h2>
+        <p class="muted">
+            This page is ready to be wired up once you add read endpoints (e.g. <code>GET /cases</code>, <code>GET /cases/{id}</code>).
+        </p>
+        <div class="hint">
+            Tip: you can still open a specific case page by URL:
+            <code>/ui/cases/&lt;caseId&gt;</code>
+        </div>
+    </section>
+</main>
+
+<div th:replace="~{fragments/footer :: footer}"></div>
+</body>
+</html>
+

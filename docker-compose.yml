@@ -1,0 +1,61 @@
+name: projekt-arendehantering
+
+services:
+  app:
+    image: projekt-arendehantering:latest
+    container_name: projekt-arendehantering-app
+    ports:
+      - "8080:8080"
+    environment:
+      # Pick ONE DB profile when starting: --profile postgres OR --profile mysql
+      SPRING_DATASOURCE_URL: ${SPRING_DATASOURCE_URL:-jdbc:postgresql://postgres:5432/arende}
+      SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME:-arende}
+      SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD:-arende}
+      SPRING_JPA_HIBERNATE_DDL_AUTO: ${SPRING_JPA_HIBERNATE_DDL_AUTO:-update}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mysql:
+        condition: service_healthy
+
+  postgres:
+    image: postgres:17-alpine
+    container_name: projekt-arendehantering-postgres
+    profiles: ["postgres"]
+    environment:
+      POSTGRES_DB: arende
+      POSTGRES_USER: arende
+      POSTGRES_PASSWORD: arende
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  mysql:
+    image: mysql:9.4
+    container_name: projekt-arendehantering-mysql
+    profiles: ["mysql"]
+    environment:
+      MYSQL_DATABASE: arende
+      MYSQL_USER: arende
+      MYSQL_PASSWORD: arende
+      MYSQL_ROOT_PASSWORD: root
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p$$MYSQL_ROOT_PASSWORD --silent"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+volumes:
+  postgres_data:
+  mysql_data:
+

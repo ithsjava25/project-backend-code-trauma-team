@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <title>Ärendehantering</title>
+    <link rel="stylesheet" href="/app.css"/>
+    <script defer src="/app.js"></script>
+</head>
+<body>
+<div th:replace="~{fragments/header :: header}"></div>
+
+<main class="container page">
+    <h1>Ärendehantering</h1>
+    <p class="muted">Starter UI to iterate on flows and endpoints.</p>
+
+    <div class="cards">
+        <a class="card" href="/ui/cases/new">
+            <h2>Create case</h2>
+            <p>Create a case via <code>POST /cases</code>.</p>
+        </a>
+        <a class="card" href="/ui/cases">
+            <h2>Cases</h2>
+            <p>Placeholder list page (wire up <code>GET /cases</code> later).</p>
+        </a>
+    </div>
+</main>
+
+<div th:replace="~{fragments/footer :: footer}"></div>
+</body>
+</html>
+

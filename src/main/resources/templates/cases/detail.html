@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <title>Case</title>
+    <link rel="stylesheet" href="/app.css"/>
+    <script defer src="/app.js"></script>
+</head>
+<body>
+<div th:replace="~{fragments/header :: header}"></div>
+
+<main class="container page">
+    <div class="page-title">
+        <h1>Case</h1>
+        <a class="button button-secondary" href="/ui/cases">Back to list</a>
+    </div>
+
+    <section class="panel">
+        <h2>Case id</h2>
+        <code th:text="${caseId}">case-id</code>
+        <p class="muted">
+            This is a placeholder until <code>GET /cases/{id}</code> exists. Once it does, we can populate this view with real data.
+        </p>
+    </section>
+</main>
+
+<div th:replace="~{fragments/footer :: footer}"></div>
+</body>
+</html>
+
