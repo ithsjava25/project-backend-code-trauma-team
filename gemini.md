@@ -1,4 +1,4 @@
-# AI-Assisted Architecture Guardrails (Copy-Paste Identical)
+# AI-Assisted Architecture Guardrails (Case-Service Architecture)
 
 This repo will be developed by different AI tools across a group. Keep the architecture clean and predictable by following these conventions every time you add or change code.
 
@@ -6,209 +6,105 @@ This repo will be developed by different AI tools across a group. Keep the archi
 
 ## Goals (what we optimize for)
 
-1. Security first: authorization and data-access controls must be correct by construction.
-2. Clear layering: domain logic is independent of Spring/Web/DB/S3.
+1. Security first: authorization and data-access controls must be correct.
+2. Clear layering: separation of concerns between DTOs, Services, and Entities.
 3. Auditability: every important activity produces an audit record.
-4. Real-time updates: changes are emitted as events and delivered to clients.
+4. Transactional Integrity: business operations are wrapped in SQL transactions.
 
 ---
 
 ## Project Stack
 
 - Java 25
-- Spring Boot + Maven
+- Spring Boot (Web + Data JPA) + Maven
+- H2 Database (or SQL compatible)
 - JUnit tests
-- Docker (local dev + integration)
-- Server-side templates: Thymeleaf or JTE-templates
+- Thymeleaf templates
 
-## Target Clean Architecture (Spring Boot)
+---
 
-Use a consistent package split under your base package (`org.example.projektarendehantering`).
+## Core Architectural Components
 
-### Recommended package layout
+For every feature (e.g., "Case"), we maintain a consistent set of components:
 
-- `...domain`
-  - Pure domain model: entities/aggregates, value objects, domain services, domain policies
-  - No Spring annotations
-  - No direct JDBC/JPA/S3/Web dependencies
+### 1. `*Controller` (Presentation Layer)
+- **Role:** Handles incoming HTTP requests and interacts with the frontend.
+- **Location:** `...presentation.rest`
+- **Responsibility:** Translates between HTTP payloads and DTOs. Thin logic only.
+- **Injected with:** `*Service`.
 
-- `...application`
-  - Use cases (application services) that orchestrate domain + ports
-  - Permission checks happen here (not only in controllers)
-  - Defines port interfaces (e.g. `EventPublisher`, `CaseRepository`, `FileStorage`)
+### 2. `*DTO` (Data Transfer Object)
+- **Role:** Temporary objects for frontend interaction.
+- **Location:** `...presentation.dto`
+- **Responsibility:** Placeholder for data before it is converted to an entity or returned to the client.
 
-- `...presentation`
-  - Controllers (REST), WebSocket handlers, request/response DTOs
-  - Translates between HTTP/Web payloads and application commands/queries
-  - Keep controllers thin: no heavy logic, no direct persistence/S3 calls
+### 3. `*Entity` (Infrastructure/Persistence Layer)
+- **Role:** The data object written to the database.
+- **Location:** `...infrastructure.persistence`
+- **Responsibility:** JPA-mapped object representing the database schema.
 
-- `...infrastructure`
-  - Adapters that implement application ports
-  - Persistence (JPA repositories, migrations)
-  - S3-compatible storage client/adapter
-  - Real-time delivery adapter (WebSocket/SSE)
-  - Security adapter integrating with Spring Security
-  - Framework-specific configuration
+### 4. `*Mapper` (Application Layer)
+- **Role:** Utility for object conversion.
+- **Location:** `...application.service`
+- **Responsibility:** Mapping `DTO -> Entity` and `Entity -> DTO`.
 
-- `...common` (optional but recommended)
-  - Cross-cutting domain-independent utilities: IDs, error types, time abstraction, shared DTO base types
+### 5. `*Service` (Application Layer)
+- **Role:** The core business logic handler.
+- **Location:** `...application.service`
+- **Responsibility:** Handles SQL transactions (using `@Transactional`). 
+- **Injected with:** `*Repository` and `*Mapper`.
 
-### Folder structure (mirrors packages)
+### 6. `*Repository` (Infrastructure Layer)
+- **Role:** Database access.
+- **Location:** `...infrastructure.persistence`
+- **Responsibility:** Extends `JpaRepository` for SQL operations.
 
-Maintain the following in `src/main/java`:
+---
+
+## Package layout
 
 ```text
 src/main/java/
   org/example/projektarendehantering/
-    ProjektArendehanteringApplication.java
-    common/
-    domain/
+    common/         (Cross-cutting utilities)
+    domain/         (Core business logic / legacy domain models)
     application/
+      service/      (Services, Mappers)
+      ports/        (Interface boundaries)
     presentation/
+      rest/         (Controllers)
+      dto/          (DTOs)
+      web/          (UI Controllers)
     infrastructure/
-```
-
-Maintain the following in `src/test/java`:
-
-```text
-src/test/java/
-  org/example/projektarendehantering/
-    domain/        (unit tests)
-    application/   (use-case tests with mocks/fakes)
-    infrastructure/(adapter tests with testcontainers or fakes)
-    presentation/  (controller tests)
+      persistence/  (Entities, Repositories)
+      config/       (Spring Config)
 ```
 
 ---
 
-## Naming conventions (enforce consistency)
+## Naming conventions
 
-1. Use-case classes: suffix with `UseCase` or `Service` (pick one style and stick to it).
-2. Port interfaces (application boundary): name them as nouns + suffix `Port`.
-   - Example: `FileStoragePort`, `CaseEventPublisherPort`
-3. Adapter implementations (infrastructure): suffix with `*Adapter` or `*JpaRepository` as appropriate.
-   - Example: `S3FileStorageAdapter implements FileStoragePort`
-4. Controller classes: suffix with `*Controller`.
-5. DTOs:
-   - Incoming: `*Request`
-   - Outgoing: `*Response`
-6. Domain objects:
-   - Entities: nouns (e.g. `Case`)
-   - Value objects: `*Id`, `*Name`, `*Policy`, etc.
+1. **Controllers:** Suffix with `Controller` (e.g., `CaseController`).
+2. **Services:** Suffix with `Service` (e.g., `CaseService`).
+3. **Mappers:** Suffix with `Mapper` (e.g., `CaseMapper`).
+4. **DTOs:** Suffix with `DTO` (e.g., `CaseDTO`).
+5. **Entities:** Suffix with `Entity` (e.g., `CaseEntity`).
+6. **Repositories:** Suffix with `Repository` (e.g., `CaseRepository`).
 
 ---
 
-## Security & Authorization (central requirement)
+## Security & Authorization
 
-### Where checks must happen
-
-- Authorization must be enforced in the `application` layer.
-- Controllers must not assume the user is allowed; they pass commands/queries to application services, which verify permissions.
-
-### How to structure authorization
-
-1. Define role/user concepts in `domain` (or `common` if shared).
-2. Create an application-level authorization component (port + implementation).
-   - Example ports:
-     - `CurrentUserPort` (who am I?)
-     - `AuthorizationPolicyPort` (am I allowed?)
-3. Permission logic lives in domain/application policies, not spread across controllers.
-
-### Audit on security-sensitive actions
-
-- If access is denied, decide whether to audit it (at least log internally).
-- If access is granted and data is returned (e.g., file download), audit the event.
+- Authorization must be enforced in the `Service` layer or via Spring Security.
+- Controllers should not perform heavy logic; they delegate to Services which verify permissions.
 
 ---
 
-## File handling & S3 (strict access)
+## AI Tool Usage Rules
 
-### Recommended approach
-
-1. Store only file metadata + S3 key in the database (not the file bytes).
-2. For download:
-   - Application service authorizes the user for that specific case + document.
-   - Infrastructure adapter streams from S3 only after successful authorization.
-3. For upload:
-   - Application service authorizes the user for the target case.
-   - Infrastructure adapter uploads bytes and returns the stored S3 key + metadata.
-
-### Ports
-
-Create ports in `application`:
-- `FileStoragePort` (upload/download/delete)
-- `DocumentMetadataRepositoryPort` (persist metadata + link to cases)
-
-Implement in `infrastructure`:
-- `S3FileStorageAdapter` (S3-compatible client)
-
----
-
-## Logging & Audit Trail (transparency)
-
-Every important activity must create an audit event.
-
-### Define an audit event model
-
-In `domain`, define:
-- `AuditEvent` (type, timestamp, actor, target identifiers, details)
-
-### Persist and publish audit
-
-In `application`:
-- Use an application port like `AuditLogPort` to persist audit events
-- Optionally also publish to the real-time system
-
-In `infrastructure`:
-- Implement persistence (`AuditLogJpaAdapter`, etc.)
-- Optionally forward to external log/stream
-
----
-
-## Real-time updates (comments, changes, lifecycle events)
-
-### Event-driven pattern
-
-1. Application services create domain events (or audit events that double as domain events).
-2. Application publishes events via an application port.
-3. Infrastructure delivery adapter sends them to clients.
-
-Example ports:
-- `CaseEventPublisherPort` (publish lifecycle/comment/file-activity events)
-
-Example delivery adapters:
-- `WebSocketCaseEventsAdapter`
-- `SseCaseEventsAdapter` (if using SSE)
-
----
-
-## AI Tool Usage Rules (how teammates should prompt/code)
-
-1. When you propose code, explain:
-   - which layer you touched (`domain`/`application`/`presentation`/`infrastructure`)
-   - what port/interface boundary is used
-   - where authorization and audit are enforced
-2. Never add Spring annotations in `domain`.
-3. Never call S3 or DB directly from `presentation`. Use application ports/use cases.
-4. Prefer interfaces in `application`; implement them in `infrastructure`.
-5. Add tests:
-   - domain unit tests for pure behavior
-   - application tests for use-case orchestration (mock ports)
-   - integration/adapters tests for S3/JPA/WebSocket only when needed
-6. Keep configuration:
-   - in `src/main/resources` (application properties)
-   - framework wiring in `infrastructure` config classes
-
----
-
-## Initial module checklist (when we start implementing)
-
-At minimum, we will eventually add:
-
-1. `domain`: Case lifecycle model + permissions concepts
-2. `application`: use cases for create/follow/assign/update/close; plus ports for files, audit, events, auth context
-3. `infrastructure`: S3 adapter, persistence adapters, auth adapter, event delivery adapter
-4. `presentation`: REST endpoints + DTOs + WebSocket endpoints
-
-Start small: add one vertical slice (e.g., create case + audit + real-time notification) and repeat.
-
+1. **Always use DTOs** for public API communication.
+2. **Never expose Entities** directly to the web layer.
+3. **Use Mappers** to handle the translation between layers.
+4. **Ensure @Transactional** is used on Service methods that modify data.
+5. **Verify changes** with `mvnw compile` before finishing.
+6. ** DO NOT TOUCH pom.xml, docker-compose or application.properties.
