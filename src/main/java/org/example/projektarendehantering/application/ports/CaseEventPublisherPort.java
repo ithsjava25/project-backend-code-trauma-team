@@ -7,3 +7,4 @@ public interface CaseEventPublisherPort {
     void publishCaseEvent(CaseEvent event);
 }
 
+// Kommentar för att kunna pusha igen
