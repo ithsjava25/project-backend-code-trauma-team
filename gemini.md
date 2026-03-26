@@ -107,3 +107,4 @@ src/main/java/
 3. **Use Mappers** to handle the translation between layers.
 4. **Ensure @Transactional** is used on Service methods that modify data.
 5. **Verify changes** with `mvnw compile` before finishing.
+6. ** DO NOT TOUCH pom.xml, docker-compose or application.properties.
