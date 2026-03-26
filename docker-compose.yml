@@ -36,26 +36,6 @@ services:
       timeout: 3s
       retries: 20
 
-  mysql:
-    image: mysql:9.4
-    container_name: projekt-arendehantering-mysql
-    profiles: ["mysql"]
-    environment:
-      MYSQL_DATABASE: arende
-      MYSQL_USER: arende
-      MYSQL_PASSWORD: arende
-      MYSQL_ROOT_PASSWORD: root
-    ports:
-      - "3306:3306"
-    volumes:
-      - mysql_data:/var/lib/mysql
-    healthcheck:
-      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p$$MYSQL_ROOT_PASSWORD --silent"]
-      interval: 5s
-      timeout: 5s
-      retries: 30
-
 volumes:
   postgres_data:
-  mysql_data:
 
