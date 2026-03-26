@@ -1,7 +1,6 @@
 package org.example.projektarendehantering.infrastructure.security;
 
 import jakarta.servlet.http.HttpServletRequest;
-import org.example.projektarendehantering.application.ports.CurrentUserPort;
 import org.example.projektarendehantering.common.Actor;
 import org.example.projektarendehantering.common.NotAuthorizedException;
 import org.example.projektarendehantering.common.Role;
@@ -17,7 +16,7 @@ import java.util.UUID;
  * - {@code X-Role}: must match {@link Role} enum constant names exactly
  */
 @Component
-public class HeaderCurrentUserAdapter implements CurrentUserPort {
+public class HeaderCurrentUserAdapter {
 
     private final HttpServletRequest request;
 
@@ -25,7 +24,6 @@ public class HeaderCurrentUserAdapter implements CurrentUserPort {
         this.request = request;
     }
 
-    @Override
     public Actor currentUser() {
         String userIdHeader = request.getHeader("X-User-Id");
         String roleHeader = request.getHeader("X-Role");
