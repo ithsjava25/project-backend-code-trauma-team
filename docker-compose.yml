@@ -1,24 +1,5 @@
-name: projekt-arendehantering
-
 services:
-  app:
-    image: projekt-arendehantering:latest
-    container_name: projekt-arendehantering-app
-    ports:
-      - "8080:8080"
-    environment:
-      # Pick ONE DB profile when starting: --profile postgres OR --profile mysql
-      SPRING_DATASOURCE_URL: ${SPRING_DATASOURCE_URL:-jdbc:postgresql://postgres:5432/arende}
-      SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME:-arende}
-      SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD:-arende}
-      SPRING_JPA_HIBERNATE_DDL_AUTO: ${SPRING_JPA_HIBERNATE_DDL_AUTO:-update}
-    depends_on:
-      postgres:
-        condition: service_healthy
-      mysql:
-        condition: service_healthy
-
-  postgres:
+  postgresql:
     image: postgres:17-alpine
     container_name: projekt-arendehantering-postgres
     profiles: ["postgres"]
