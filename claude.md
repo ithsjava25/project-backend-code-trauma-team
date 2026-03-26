@@ -1,88 +1,85 @@
-# AI-Assisted Architecture Guardrails (Case-Service Architecture)
+# AI-Assisted Architecture Guardrails (MVC Architecture)
 
-This repo will be developed by different AI tools across a group. Keep the architecture clean and predictable by following these conventions every time you add or change code.
+This repo follows a clean **Model-View-Controller (MVC)** design pattern. Keep the architecture predictable by following these conventions every time you add or change code.
 
 ---
 
 ## Goals (what we optimize for)
 
-1. Security first: authorization and data-access controls must be correct.
-2. Clear layering: separation of concerns between DTOs, Services, and Entities.
-3. Auditability: every important activity produces an audit record.
-4. Transactional Integrity: business operations are wrapped in SQL transactions.
+1. **Security first:** GitHub OAuth2 authentication and role-based access control.
+2. **Clear layering:** Strict separation between DTOs (Web), Services (Logic), and Entities (DB).
+3. **Simplicity:** No unnecessary abstraction layers (no Domain models or Ports/Adapters).
+4. **Transactional Integrity:** Business operations are wrapped in SQL transactions using `@Transactional`.
 
 ---
 
 ## Project Stack
 
-- Java 25
-- Spring Boot (Web + Data JPA) + Maven
-- H2 Database (or SQL compatible)
-- JUnit tests
-- Thymeleaf templates
+- **Java 25**
+- **Spring Boot 4.0.4** (Web + Data JPA + Security OAuth2)
+- **PostgreSQL** (Production) / **H2** (Tests)
+- **Thymeleaf** templates for the UI
+- **GitHub OAuth2** for Authentication
 
 ---
 
 ## Core Architectural Components
 
-For every feature (e.g., "Case"), we maintain a consistent set of components:
+For every feature (e.g., "Case"), we maintain this consistent set of components:
 
 ### 1. `*Controller` (Presentation Layer)
-- **Role:** Handles incoming HTTP requests and interacts with the frontend.
-- **Location:** `...presentation.rest`
-- **Responsibility:** Translates between HTTP payloads and DTOs. Thin logic only.
+- **Role:** Handles incoming HTTP requests (REST API or Thymeleaf Web).
+- **Location:** `...presentation.rest` or `...presentation.web`
+- **Responsibility:** Thin logic only. Translates between HTTP and DTOs.
 - **Injected with:** `*Service`.
 
 ### 2. `*DTO` (Data Transfer Object)
-- **Role:** Temporary objects for frontend interaction.
+- **Role:** Data containers for web/API interaction.
 - **Location:** `...presentation.dto`
-- **Responsibility:** Placeholder for data before it is converted to an entity or returned to the client.
+- **Responsibility:** Prevents exposing internal database structures to the client.
 
-### 3. `*Entity` (Infrastructure/Persistence Layer)
-- **Role:** The data object written to the database.
-- **Location:** `...infrastructure.persistence`
-- **Responsibility:** JPA-mapped object representing the database schema.
-
-### 4. `*Mapper` (Application Layer)
-- **Role:** Utility for object conversion.
-- **Location:** `...application.service`
-- **Responsibility:** Mapping `DTO -> Entity` and `Entity -> DTO`.
-
-### 5. `*Service` (Application Layer)
+### 3. `*Service` (Application/Logic Layer)
 - **Role:** The core business logic handler.
 - **Location:** `...application.service`
-- **Responsibility:** Handles SQL transactions (using `@Transactional`). 
+- **Responsibility:** Handles `@Transactional` boundaries, business rules, and security checks.
 - **Injected with:** `*Repository` and `*Mapper`.
 
-### 6. `*Repository` (Infrastructure Layer)
-- **Role:** Database access.
+### 4. `*Mapper` (Application/Logic Layer)
+- **Role:** Utility for object conversion.
+- **Location:** `...application.service`
+- **Responsibility:** Mapping `DTO <-> Entity`.
+
+### 5. `*Entity` (Persistence Layer)
+- **Role:** JPA-mapped object representing the database schema.
 - **Location:** `...infrastructure.persistence`
-- **Responsibility:** Extends `JpaRepository` for SQL operations.
+
+### 6. `*Repository` (Infrastructure Layer)
+- **Role:** Database access via Spring Data JPA.
+- **Location:** `...infrastructure.persistence`
 
 ---
 
-## Package layout
+## Package Layout
 
 ```text
 src/main/java/
   org/example/projektarendehantering/
-    common/         (Cross-cutting utilities)
-    domain/         (Core business logic / legacy domain models)
+    common/         (Cross-cutting utilities: Actor, Exceptions, Roles)
     application/
       service/      (Services, Mappers)
-      ports/        (Interface boundaries)
     presentation/
-      rest/         (Controllers)
-      dto/          (DTOs)
+      rest/         (REST Controllers)
       web/          (UI Controllers)
+      dto/          (DTOs)
     infrastructure/
       persistence/  (Entities, Repositories)
-      config/       (Spring Config)
+      config/       (Spring Security / OAuth2 Config)
+      security/     (Authentication/Authorization logic)
 ```
 
 ---
 
-## Naming conventions
+## Naming Conventions
 
 1. **Controllers:** Suffix with `Controller` (e.g., `CaseController`).
 2. **Services:** Suffix with `Service` (e.g., `CaseService`).
@@ -95,8 +92,9 @@ src/main/java/
 
 ## Security & Authorization
 
-- Authorization must be enforced in the `Service` layer or via Spring Security.
-- Controllers should not perform heavy logic; they delegate to Services which verify permissions.
+- **Authentication:** Handled via GitHub OAuth2.
+- **Authorization:** Enforced in the `Service` layer or via `@PreAuthorize`.
+- **Identity:** The current user is represented by the `Actor` class, derived from the OAuth2 session.
 
 ---
 
@@ -107,4 +105,5 @@ src/main/java/
 3. **Use Mappers** to handle the translation between layers.
 4. **Ensure @Transactional** is used on Service methods that modify data.
 5. **Verify changes** with `mvnw compile` before finishing.
-6. ** DO NOT TOUCH pom.xml, docker-compose or application.properties.
+6. **No "Domain" classes:** Logic belongs in Services or Entities.
+7. **No "Ports/Adapters":** Use direct Repository/Service injection.
