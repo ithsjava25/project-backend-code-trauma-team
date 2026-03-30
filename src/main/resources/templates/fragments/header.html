@@ -13,17 +13,14 @@
         </nav>
 
         <div class="auth" id="authBar">
-            <div th:if="${#authorization.expression('isAuthenticated()')}"> │
-                <span class="auth-label" th:text="'Logged in as: ' + ${#authentication.name}">User</span> │
-                <form th:action="@{/logout}" method="post" style="display: inline;"> │
+            <div th:if="${#authorization.expression('isAuthenticated()')}">
+                <span class="auth-label" th:text="'Logged in as: ' + ${#authentication.name}">User</span>
+                <form th:action="@{/logout}" method="post" style="display: inline;">
                     <button class="button button-secondary" type="submit">Logout</button>
-                    │
                 </form>
-                │
             </div>
-            │
-            <div th:unless="${#authorization.expression('isAuthenticated()')}"> │
-                <a th:href="@{/login}" class="button button-secondary">Login</a> │
+            <div th:unless="${#authorization.expression('isAuthenticated()')}">
+                <a th:href="@{/login}" class="button button-secondary">Login</a>
             </div>
         </div>
     </div>
