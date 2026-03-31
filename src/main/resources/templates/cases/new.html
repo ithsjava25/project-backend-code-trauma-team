@@ -1,11 +1,6 @@
 <!doctype html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="utf-8"/>
-    <meta name="viewport" content="width=device-width, initial-scale=1"/>
-    <title>Create case</title>
-    <link rel="stylesheet" href="/app.css"/>
-    <script defer src="/app.js"></script>
+<head th:replace="~{fragments/head :: head(title='Create case')}">
 </head>
 <body>
 <div th:replace="~{fragments/header :: header}"></div>
@@ -16,35 +11,21 @@
         <a class="button button-secondary" href="/ui/cases">Back to list</a>
     </div>
 
-    <form class="form" id="createCaseForm">
+    <form class="form" th:action="@{/ui/cases/new}" th:object="${createCaseForm}" method="post">
         <label class="field">
             <span class="label">Title</span>
-            <input class="input" name="title" maxlength="200" required/>
+            <input class="input" th:field="*{title}" maxlength="200"/>
+            <span class="muted" th:if="${#fields.hasErrors('title')}" th:errors="*{title}" style="color: var(--danger)">Error</span>
         </label>
         <label class="field">
             <span class="label">Description</span>
-            <textarea class="input" name="description" rows="6" maxlength="4000" required></textarea>
+            <textarea class="input" th:field="*{description}" rows="6"></textarea>
+            <span class="muted" th:if="${#fields.hasErrors('description')}" th:errors="*{description}" style="color: var(--danger)">Error</span>
         </label>
         <div class="actions">
-            <button class="button" type="submit">Create</button>
+            <button class="button" type="submit">Create Case</button>
         </div>
     </form>
-
-    <section class="panel" id="createCaseResult" hidden>
-        <h2>Created</h2>
-        <div class="kv">
-            <div class="k">caseId</div>
-            <div class="v"><code id="createdCaseId"></code></div>
-        </div>
-        <div class="actions">
-            <a class="button" id="openCaseLink" href="#">Open case page</a>
-        </div>
-    </section>
-
-    <section class="panel panel-error" id="createCaseError" hidden>
-        <h2>Error</h2>
-        <pre class="pre" id="createCaseErrorText"></pre>
-    </section>
 </main>
 
 <div th:replace="~{fragments/footer :: footer}"></div>

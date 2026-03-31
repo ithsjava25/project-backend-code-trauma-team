@@ -1,10 +1,6 @@
 package org.example.projektarendehantering.infrastructure.persistence;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import java.time.Instant;
 import java.util.UUID;
 
@@ -13,6 +9,7 @@ import java.util.UUID;
 public class CaseEntity {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
     private String status;
     private UUID ownerId;
