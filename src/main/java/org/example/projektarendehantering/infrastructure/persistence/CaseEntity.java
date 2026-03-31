@@ -1,7 +1,6 @@
 package org.example.projektarendehantering.infrastructure.persistence;
 
 import jakarta.persistence.*;
-
 import java.time.Instant;
 import java.util.UUID;
 
@@ -18,15 +17,20 @@ public class CaseEntity {
     private String description;
     private Instant createdAt;
 
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "patient_id", nullable = false)
+    private PatientEntity patient;
+
     public CaseEntity() {}
 
-    public CaseEntity(UUID id, String status, UUID ownerId, String title, String description, Instant createdAt) {
+    public CaseEntity(UUID id, String status, UUID ownerId, String title, String description, Instant createdAt, PatientEntity patient) {
         this.id = id;
         this.status = status;
         this.ownerId = ownerId;
         this.title = title;
         this.description = description;
         this.createdAt = createdAt;
+        this.patient = patient;
     }
 
     public UUID getId() { return id; }
@@ -46,4 +50,7 @@ public class CaseEntity {
 
     public Instant getCreatedAt() { return createdAt; }
     public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
+
+    public PatientEntity getPatient() { return patient; }
+    public void setPatient(PatientEntity patient) { this.patient = patient; }
 }
