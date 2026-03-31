@@ -1,3 +1,10 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:fragment="head(title)">
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <title th:text="${title}">Ärendehantering</title>
+    <style th:inline="css">
 :root {
   --bg: #0b1020;
   --panel: #101a33;
@@ -70,21 +77,9 @@ code { color: rgba(231, 236, 255, 0.95); }
 .auth {
   display: flex;
   gap: 10px;
-  align-items: end;
+  align-items: center;
 }
-.auth-field { display: grid; gap: 6px; }
-.auth-label { font-size: 12px; color: var(--muted); }
-.auth-input {
-  height: 36px;
-  padding: 0 10px;
-  border-radius: 10px;
-  border: 1px solid var(--border);
-  background: rgba(255, 255, 255, 0.03);
-  color: var(--text);
-  outline: none;
-  min-width: 160px;
-}
-.auth-input::placeholder { color: rgba(231, 236, 255, 0.4); }
+.auth-label { font-size: 14px; color: var(--muted); margin-right: 10px; }
 
 .page { padding: 28px 0 40px; }
 .page-title { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
@@ -126,13 +121,16 @@ p { margin: 0 0 14px; color: var(--muted); }
 .field { display: grid; gap: 6px; }
 .label { color: var(--muted); font-size: 12px; }
 .input {
-  width: 100%;
-  border-radius: 12px;
-  border: 1px solid var(--border);
-  background: rgba(255, 255, 255, 0.03);
-  color: var(--text);
-  padding: 10px 12px;
-  outline: none;
+    width: 100%;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    background: rgba(255, 255, 255, 0.03);
+    color: var(--text);
+    padding: 10px 12px;
+}
+.input:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
 }
 textarea.input { padding: 12px; resize: vertical; }
 .actions { display: flex; gap: 10px; margin-top: 4px; }
@@ -168,24 +166,20 @@ textarea.input { padding: 12px; resize: vertical; }
 .k { color: var(--muted); }
 .v { overflow: auto; }
 
-.pre {
-  margin: 0;
-  padding: 12px;
-  border-radius: 12px;
-  background: rgba(255, 110, 138, 0.09);
-  border: 1px solid rgba(255, 110, 138, 0.18);
-  white-space: pre-wrap;
-  word-break: break-word;
-  color: rgba(231, 236, 255, 0.92);
-}
-
-.hint {
+.table {
+  width: 100%;
+  border-collapse: collapse;
   margin-top: 10px;
-  padding: 10px 12px;
-  border-radius: 12px;
-  border: 1px dashed var(--border);
+}
+.table th, .table td {
+  padding: 12px;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+.table th {
+  font-size: 12px;
+  text-transform: uppercase;
   color: var(--muted);
-  background: rgba(255,255,255,0.02);
 }
 
 .app-footer {
@@ -197,7 +191,8 @@ textarea.input { padding: 12px; resize: vertical; }
 
 @media (max-width: 980px) {
   .header-row { grid-template-columns: 1fr; align-items: start; }
-  .auth { flex-wrap: wrap; }
   .cards { grid-template-columns: 1fr; }
 }
-
+    </style>
+</head>
+</html>
