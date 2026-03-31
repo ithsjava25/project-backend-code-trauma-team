@@ -37,7 +37,7 @@ public class CaseEntity {
         this.description = description;
         this.createdAt = createdAt;
         this.patient = patient;
-        this.notes = notes;
+        this.notes = notes != null ? notes : new ArrayList<>();
     }
 
     public UUID getId() { return id; }
