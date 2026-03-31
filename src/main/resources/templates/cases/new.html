@@ -1,7 +1,6 @@
 <!doctype html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
-<head th:replace="~{fragments/head :: head}">
-    <title>Create case</title>
+<head th:replace="~{fragments/head :: head(title='Create case')}">
 </head>
 <body>
 <div th:replace="~{fragments/header :: header}"></div>
@@ -12,14 +11,16 @@
         <a class="button button-secondary" href="/ui/cases">Back to list</a>
     </div>
 
-    <form class="form" th:action="@{/ui/cases/new}" th:object="${caseDTO}" method="post">
+    <form class="form" th:action="@{/ui/cases/new}" th:object="${createCaseForm}" method="post">
         <label class="field">
             <span class="label">Title</span>
-            <input class="input" th:field="*{title}" maxlength="200" required/>
+            <input class="input" th:field="*{title}" maxlength="200"/>
+            <span class="muted" th:if="${#fields.hasErrors('title')}" th:errors="*{title}" style="color: var(--danger)">Error</span>
         </label>
         <label class="field">
             <span class="label">Description</span>
-            <textarea class="input" th:field="*{description}" rows="6" required></textarea>
+            <textarea class="input" th:field="*{description}" rows="6"></textarea>
+            <span class="muted" th:if="${#fields.hasErrors('description')}" th:errors="*{description}" style="color: var(--danger)">Error</span>
         </label>
         <div class="actions">
             <button class="button" type="submit">Create Case</button>
