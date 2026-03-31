@@ -1,6 +1,8 @@
 package org.example.projektarendehantering.presentation.web;
 
 import org.example.projektarendehantering.application.service.CaseService;
+import org.example.projektarendehantering.application.service.PatientService;
+import org.example.projektarendehantering.infrastructure.security.HeaderCurrentUserAdapter;
 import org.example.projektarendehantering.presentation.dto.CaseDTO;
 import org.example.projektarendehantering.presentation.dto.CreateCaseForm;
 import org.springframework.stereotype.Controller;
@@ -18,9 +20,13 @@ import java.util.UUID;
 public class UiController {
 
     private final CaseService caseService;
+    private final PatientService patientService;
+    private final HeaderCurrentUserAdapter currentUserAdapter;
 
-    public UiController(CaseService caseService) {
+    public UiController(CaseService caseService, PatientService patientService, HeaderCurrentUserAdapter currentUserAdapter) {
         this.caseService = caseService;
+        this.patientService = patientService;
+        this.currentUserAdapter = currentUserAdapter;
     }
 
     @GetMapping("/")
@@ -30,13 +36,14 @@ public class UiController {
 
     @GetMapping("/ui/cases")
     public String listCases(Model model) {
-        model.addAttribute("cases", caseService.getAllCases());
+        model.addAttribute("cases", caseService.getAllCases(currentUserAdapter.currentUser()));
         return "cases/list";
     }
 
     @GetMapping("/ui/cases/new")
     public String newCase(Model model) {
         model.addAttribute("createCaseForm", new CreateCaseForm());
+        model.addAttribute("patients", patientService.getAllPatients());
         return "cases/new";
     }
 
@@ -49,14 +56,15 @@ public class UiController {
         CaseDTO caseDTO = new CaseDTO();
         caseDTO.setTitle(form.getTitle());
         caseDTO.setDescription(form.getDescription());
+        caseDTO.setPatientId(form.getPatientId());
 
-        caseService.createCase(caseDTO);
+        caseService.createCase(currentUserAdapter.currentUser(), caseDTO);
         return "redirect:/ui/cases";
     }
 
     @GetMapping("/ui/cases/{caseId}")
     public String caseDetail(@PathVariable UUID caseId, Model model) {
-        caseService.getCase(caseId).ifPresent(c -> model.addAttribute("case", c));
+        caseService.getCase(currentUserAdapter.currentUser(), caseId).ifPresent(c -> model.addAttribute("case", c));
         return "cases/detail";
     }
 }
