@@ -1,11 +1,6 @@
 <!doctype html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="utf-8"/>
-    <meta name="viewport" content="width=device-width, initial-scale=1"/>
-    <title>Cases</title>
-    <link rel="stylesheet" href="/app.css"/>
-    <script defer src="/app.js"></script>
+<head th:replace="~{fragments/head :: head(title='Cases')}">
 </head>
 <body>
 <div th:replace="~{fragments/header :: header}"></div>
@@ -17,14 +12,25 @@
     </div>
 
     <section class="panel">
-        <h2>List (placeholder)</h2>
-        <p class="muted">
-            This page is ready to be wired up once you add read endpoints (e.g. <code>GET /cases</code>, <code>GET /cases/{id}</code>).
-        </p>
-        <div class="hint">
-            Tip: you can still open a specific case page by URL:
-            <code>/ui/cases/&lt;caseId&gt;</code>
-        </div>
+        <table class="table" th:if="${not #lists.isEmpty(cases)}">
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>Created</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="c : ${cases}">
+                    <td th:text="${c.title}">Title</td>
+                    <td th:text="${c.createdAt}">Date</td>
+                    <td>
+                        <a th:href="@{/ui/cases/{id}(id=${c.id})}" class="button button-secondary">View</a>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        <p th:if="${#lists.isEmpty(cases)}" class="muted">No cases found.</p>
     </section>
 </main>
 
