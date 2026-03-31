@@ -32,7 +32,7 @@
             <p th:text="${note.content}">Note content</p>
             <div class="muted" style="font-size: 0.8em;">
                 <span th:text="${note.author}">Author</span> - 
-                <span th:text="${#instants.format(note.createdAt, 'yyyy-MM-dd HH:mm')}">Date</span>
+                <span th:if="${note.createdAt != null}" th:text="${note.createdAt}">Date</span>
             </div>
         </div>
         <p th:if="${#lists.isEmpty(case.notes)}" class="muted">No notes yet.</p>
