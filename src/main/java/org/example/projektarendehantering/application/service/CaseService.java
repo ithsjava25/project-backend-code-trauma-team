@@ -5,6 +5,8 @@ import org.example.projektarendehantering.common.NotAuthorizedException;
 import org.example.projektarendehantering.common.Role;
 import org.example.projektarendehantering.infrastructure.persistence.CaseEntity;
 import org.example.projektarendehantering.infrastructure.persistence.CaseRepository;
+import org.example.projektarendehantering.infrastructure.persistence.EmployeeEntity;
+import org.example.projektarendehantering.infrastructure.persistence.EmployeeRepository;
 import org.example.projektarendehantering.infrastructure.persistence.PatientEntity;
 import org.example.projektarendehantering.infrastructure.persistence.PatientRepository;
 import org.example.projektarendehantering.presentation.dto.CaseAssignmentDTO;
@@ -17,6 +19,7 @@ import org.springframework.web.server.ResponseStatusException;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -26,11 +29,18 @@ public class CaseService {
     private final CaseRepository caseRepository;
     private final CaseMapper caseMapper;
     private final PatientRepository patientRepository;
+    private final EmployeeRepository employeeRepository;
 
-    public CaseService(CaseRepository caseRepository, CaseMapper caseMapper, PatientRepository patientRepository) {
+    public CaseService(
+            CaseRepository caseRepository,
+            CaseMapper caseMapper,
+            PatientRepository patientRepository,
+            EmployeeRepository employeeRepository
+    ) {
         this.caseRepository = caseRepository;
         this.caseMapper = caseMapper;
         this.patientRepository = patientRepository;
+        this.employeeRepository = employeeRepository;
     }
 
     @Transactional
@@ -84,7 +94,12 @@ public class CaseService {
                     .map(caseMapper::toDTO)
                     .collect(Collectors.toList());
         }
-        if (isPatientReadOnly(actor)) {
+        if (isPatient(actor)) {
+            return caseRepository.findAllByPatient_Id(actor.userId()).stream()
+                    .map(caseMapper::toDTO)
+                    .collect(Collectors.toList());
+        }
+        if (isOther(actor)) {
             return caseRepository.findAllByOtherId(actor.userId()).stream()
                     .map(caseMapper::toDTO)
                     .collect(Collectors.toList());
@@ -107,20 +122,53 @@ public class CaseService {
         }
         CaseEntity entity = caseRepository.findById(caseId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Case not found"));
-        if (isDoctor(actor) && entity.getOwnerId() != null && !entity.getOwnerId().equals(actor.userId())) {
-            throw new NotAuthorizedException("Not allowed to modify assignments for this case");
+        if (isDoctor(actor)) {
+            if (entity.getOwnerId() == null || !entity.getOwnerId().equals(actor.userId())) {
+                throw new NotAuthorizedException("Not allowed to modify assignments for this case");
+            }
+            if (dto.getOwnerId() != null) {
+                throw new NotAuthorizedException("Not allowed to change owner for this case");
+            }
         }
-        if (dto.getOwnerId() != null) entity.setOwnerId(dto.getOwnerId());
-        if (dto.getHandlerId() != null) entity.setHandlerId(dto.getHandlerId());
-        if (dto.getOtherId() != null) entity.setOtherId(dto.getOtherId());
+
+        if (isManager(actor) && dto.getOwnerId() != null) {
+            UUID ownerId = requireEmployeeWithRole(dto.getOwnerId(), Set.of(Role.DOCTOR, Role.CASE_OWNER), "ownerId");
+            entity.setOwnerId(ownerId);
+        }
+        if (dto.getHandlerId() != null) {
+            UUID handlerId = requireEmployeeWithRole(dto.getHandlerId(), Set.of(Role.NURSE, Role.HANDLER), "handlerId");
+            entity.setHandlerId(handlerId);
+        }
+        if (dto.getOtherId() != null) {
+            UUID otherId = requireEmployeeWithRole(dto.getOtherId(), Set.of(Role.OTHER), "otherId");
+            entity.setOtherId(otherId);
+        }
         return caseMapper.toDTO(caseRepository.save(entity));
+    }
+
+    private UUID requireEmployeeWithRole(UUID id, Set<Role> allowedRoles, String fieldName) {
+        EmployeeEntity employee = employeeRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.BAD_REQUEST,
+                        fieldName + " refers to a non-existent employee: " + id
+                ));
+        if (employee.getRole() == null || !allowedRoles.contains(employee.getRole())) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    fieldName + " must refer to an employee with role " + allowedRoles + " (was " + employee.getRole() + "): " + id
+            );
+        }
+        return id;
     }
 
     private void requireCanRead(Actor actor, CaseEntity entity) {
         if (isManager(actor)) return;
         if (isDoctor(actor) && actor.userId().equals(entity.getOwnerId())) return;
         if (isNurse(actor) && actor.userId().equals(entity.getHandlerId())) return;
-        if (isPatientReadOnly(actor) && actor.userId().equals(entity.getOtherId())) return;
+        if (isPatient(actor)
+                && entity.getPatient() != null
+                && actor.userId().equals(entity.getPatient().getId())) return;
+        if (isOther(actor) && actor.userId().equals(entity.getOtherId())) return;
         throw new NotAuthorizedException("Not allowed to read this case");
     }
 
@@ -140,7 +188,11 @@ public class CaseService {
         return actor.role() == Role.NURSE || actor.role() == Role.HANDLER;
     }
 
-    private boolean isPatientReadOnly(Actor actor) {
-        return actor.role() == Role.PATIENT || actor.role() == Role.OTHER;
+    private boolean isPatient(Actor actor) {
+        return actor.role() == Role.PATIENT;
+    }
+
+    private boolean isOther(Actor actor) {
+        return actor.role() == Role.OTHER;
     }
 }

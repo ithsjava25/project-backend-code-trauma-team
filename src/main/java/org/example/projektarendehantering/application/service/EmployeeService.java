@@ -1,5 +1,8 @@
 package org.example.projektarendehantering.application.service;
 
+import org.example.projektarendehantering.common.Actor;
+import org.example.projektarendehantering.common.NotAuthorizedException;
+import org.example.projektarendehantering.common.Role;
 import org.example.projektarendehantering.infrastructure.persistence.EmployeeEntity;
 import org.example.projektarendehantering.infrastructure.persistence.EmployeeRepository;
 import org.example.projektarendehantering.presentation.dto.EmployeeCreateDTO;
@@ -25,7 +28,8 @@ public class EmployeeService {
     }
 
     @Transactional
-    public EmployeeDTO createEmployee(EmployeeCreateDTO dto) {
+    public EmployeeDTO createEmployee(Actor actor, EmployeeCreateDTO dto) {
+        requireCanManageEmployees(actor);
         EmployeeEntity entity = employeeMapper.toEntity(dto);
         entity.setId(UUID.randomUUID());
         entity.setCreatedAt(Instant.now());
@@ -33,15 +37,27 @@ public class EmployeeService {
     }
 
     @Transactional(readOnly = true)
-    public Optional<EmployeeDTO> getEmployee(UUID id) {
+    public Optional<EmployeeDTO> getEmployee(Actor actor, UUID id) {
+        requireCanManageEmployees(actor);
         return employeeRepository.findById(id).map(employeeMapper::toDTO);
     }
 
     @Transactional(readOnly = true)
-    public List<EmployeeDTO> getAllEmployees() {
+    public List<EmployeeDTO> getAllEmployees(Actor actor) {
+        requireCanManageEmployees(actor);
         return employeeRepository.findAll().stream()
                 .map(employeeMapper::toDTO)
                 .collect(Collectors.toList());
+    }
+
+    private void requireCanManageEmployees(Actor actor) {
+        if (actor == null) {
+            throw new NotAuthorizedException("Missing actor");
+        }
+        if (actor.role() == Role.MANAGER || actor.role() == Role.ADMIN) {
+            return;
+        }
+        throw new NotAuthorizedException("Not allowed to access employees");
     }
 }
 
