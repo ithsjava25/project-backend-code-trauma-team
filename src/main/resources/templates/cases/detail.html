@@ -1,11 +1,7 @@
 <!doctype html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="utf-8"/>
-    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+<head th:replace="~{fragments/head :: head}">
     <title>Case</title>
-    <link rel="stylesheet" href="/app.css"/>
-    <script defer src="/app.js"></script>
 </head>
 <body>
 <div th:replace="~{fragments/header :: header}"></div>
@@ -16,12 +12,23 @@
         <a class="button button-secondary" href="/ui/cases">Back to list</a>
     </div>
 
-    <section class="panel">
-        <h2>Case id</h2>
-        <code th:text="${caseId}">case-id</code>
-        <p class="muted">
-            This is a placeholder until <code>GET /cases/{id}</code> exists. Once it does, we can populate this view with real data.
-        </p>
+    <section class="panel" th:if="${case != null}">
+        <div class="kv">
+            <div class="k">Title</div>
+            <div class="v" th:text="${case.title}">Title</div>
+        </div>
+        <div class="kv">
+            <div class="k">Description</div>
+            <div class="v" th:text="${case.description}">Description</div>
+        </div>
+        <div class="kv">
+            <div class="k">Created At</div>
+            <div class="v" th:text="${case.createdAt}">Date</div>
+        </div>
+    </section>
+    <section class="panel panel-error" th:if="${case == null}">
+        <h2>Error</h2>
+        <p>Case not found.</p>
     </section>
 </main>
 
