@@ -1,8 +1,8 @@
 package org.example.projektarendehantering.presentation.dto;
 
-import jakarta.validation.constraints.NotNull;
-
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 public class CaseDTO {
@@ -12,9 +12,8 @@ public class CaseDTO {
     private String title;
     private String description;
     private Instant createdAt;
-
-    @NotNull
     private UUID patientId;
+    private List<CaseNoteDTO> notes = new ArrayList<>();
 
     public CaseDTO() {}
 
@@ -44,4 +43,7 @@ public class CaseDTO {
 
     public UUID getPatientId() { return patientId; }
     public void setPatientId(UUID patientId) { this.patientId = patientId; }
+
+    public List<CaseNoteDTO> getNotes() { return notes; }
+    public void setNotes(List<CaseNoteDTO> notes) { this.notes = notes; }
 }

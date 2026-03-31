@@ -1,6 +1,8 @@
 package org.example.projektarendehantering.application.service;
 
 import org.example.projektarendehantering.infrastructure.persistence.CaseEntity;
+import org.example.projektarendehantering.infrastructure.persistence.CaseNoteEntity;
+import org.example.projektarendehantering.infrastructure.persistence.CaseNoteRepository;
 import org.example.projektarendehantering.infrastructure.persistence.CaseRepository;
 import org.example.projektarendehantering.infrastructure.persistence.PatientEntity;
 import org.example.projektarendehantering.infrastructure.persistence.PatientRepository;
@@ -22,11 +24,27 @@ public class CaseService {
     private final CaseRepository caseRepository;
     private final CaseMapper caseMapper;
     private final PatientRepository patientRepository;
+    private final CaseNoteRepository caseNoteRepository;
 
-    public CaseService(CaseRepository caseRepository, CaseMapper caseMapper, PatientRepository patientRepository) {
+    public CaseService(CaseRepository caseRepository, CaseMapper caseMapper, PatientRepository patientRepository, CaseNoteRepository caseNoteRepository) {
         this.caseRepository = caseRepository;
         this.caseMapper = caseMapper;
         this.patientRepository = patientRepository;
+        this.caseNoteRepository = caseNoteRepository;
+    }
+
+    @Transactional
+    public void addNote(UUID caseId, String content, String author) {
+        CaseEntity caseEntity = caseRepository.findById(caseId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Case not found"));
+
+        CaseNoteEntity note = new CaseNoteEntity();
+        note.setCaseEntity(caseEntity);
+        note.setContent(content);
+        note.setAuthor(author);
+        note.setCreatedAt(Instant.now());
+
+        caseNoteRepository.save(note);
     }
 
     @Transactional

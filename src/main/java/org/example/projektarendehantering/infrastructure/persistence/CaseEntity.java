@@ -2,6 +2,8 @@ package org.example.projektarendehantering.infrastructure.persistence;
 
 import jakarta.persistence.*;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @Entity
@@ -21,9 +23,13 @@ public class CaseEntity {
     @JoinColumn(name = "patient_id", nullable = false)
     private PatientEntity patient;
 
+    @OneToMany(mappedBy = "caseEntity", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderBy("createdAt DESC")
+    private List<CaseNoteEntity> notes = new ArrayList<>();
+
     public CaseEntity() {}
 
-    public CaseEntity(UUID id, String status, UUID ownerId, String title, String description, Instant createdAt, PatientEntity patient) {
+    public CaseEntity(UUID id, String status, UUID ownerId, String title, String description, Instant createdAt, PatientEntity patient, List<CaseNoteEntity> notes) {
         this.id = id;
         this.status = status;
         this.ownerId = ownerId;
@@ -31,6 +37,7 @@ public class CaseEntity {
         this.description = description;
         this.createdAt = createdAt;
         this.patient = patient;
+        this.notes = notes;
     }
 
     public UUID getId() { return id; }
@@ -53,4 +60,7 @@ public class CaseEntity {
 
     public PatientEntity getPatient() { return patient; }
     public void setPatient(PatientEntity patient) { this.patient = patient; }
+
+    public List<CaseNoteEntity> getNotes() { return notes; }
+
 }
