@@ -13,20 +13,15 @@
         </nav>
 
         <div class="auth" id="authBar">
-            <label class="auth-field">
-                <span class="auth-label">X-User-Id</span>
-                <input class="auth-input" id="authUserId" placeholder="uuid" />
-            </label>
-            <label class="auth-field">
-                <span class="auth-label">X-Role</span>
-                <select class="auth-input" id="authRole">
-                    <option value="CASE_OWNER">CASE_OWNER</option>
-                    <option value="HANDLER">HANDLER</option>
-                    <option value="ADMIN">ADMIN</option>
-                    <option value="OTHER">OTHER</option>
-                </select>
-            </label>
-            <button class="button button-secondary" type="button" id="authSave">Save</button>
+            <div th:if="${#authorization.expression('isAuthenticated()')}">
+                <span class="auth-label" th:text="'Logged in as: ' + ${#authentication.name}">User</span>
+                <form th:action="@{/logout}" method="post" style="display: inline;">
+                    <button class="button button-secondary" type="submit">Logout</button>
+                </form>
+            </div>
+            <div th:unless="${#authorization.expression('isAuthenticated()')}">
+                <a th:href="@{/login}" class="button button-secondary">Login</a>
+            </div>
         </div>
     </div>
 </header>
