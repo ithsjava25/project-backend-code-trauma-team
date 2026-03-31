@@ -12,8 +12,10 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import jakarta.validation.Valid;
+import java.security.Principal;
 import java.util.UUID;
 
 @Controller
@@ -27,6 +29,13 @@ public class UiController {
         this.caseService = caseService;
         this.patientService = patientService;
         this.currentUserAdapter = currentUserAdapter;
+    }
+
+    @PostMapping("/ui/cases/{caseId}/notes")
+    public String addNote(@PathVariable UUID caseId, @RequestParam("content") String content, Principal principal) {
+        String author = principal != null ? principal.getName() : "Anonymous";
+        caseService.addNote(caseId, content, author);
+        return "redirect:/ui/cases/" + caseId;
     }
 
     @GetMapping("/")

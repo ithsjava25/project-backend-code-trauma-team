@@ -25,6 +25,30 @@
             <div class="v" th:text="${case.createdAt}">Date</div>
         </div>
     </section>
+
+    <section class="panel" th:if="${case != null}">
+        <h2>Notes</h2>
+        <div th:each="note : ${case.notes}" class="hint" style="margin-bottom: 10px;">
+            <p th:text="${note.content}">Note content</p>
+            <div class="muted" style="font-size: 0.8em;">
+                <span th:text="${note.author}">Author</span> - 
+                <span th:text="${#instants.format(note.createdAt, 'yyyy-MM-dd HH:mm')}">Date</span>
+            </div>
+        </div>
+        <p th:if="${#lists.isEmpty(case.notes)}" class="muted">No notes yet.</p>
+
+        <hr style="border: 0; border-top: 1px solid var(--border); margin: 20px 0;"/>
+
+        <h3>Add Note</h3>
+        <form th:action="@{/ui/cases/{id}/notes(id=${case.id})}" method="post" class="form">
+            <label class="field">
+                <textarea class="input" name="content" rows="3" placeholder="Write a note..." required></textarea>
+            </label>
+            <div class="actions">
+                <button class="button" type="submit">Post Note</button>
+            </div>
+        </form>
+    </section>
     <section class="panel panel-error" th:if="${case == null}">
         <h2>Error</h2>
         <p>Case not found.</p>

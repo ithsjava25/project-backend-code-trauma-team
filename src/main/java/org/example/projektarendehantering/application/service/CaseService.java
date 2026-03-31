@@ -4,6 +4,8 @@ import org.example.projektarendehantering.common.Actor;
 import org.example.projektarendehantering.common.NotAuthorizedException;
 import org.example.projektarendehantering.common.Role;
 import org.example.projektarendehantering.infrastructure.persistence.CaseEntity;
+import org.example.projektarendehantering.infrastructure.persistence.CaseNoteEntity;
+import org.example.projektarendehantering.infrastructure.persistence.CaseNoteRepository;
 import org.example.projektarendehantering.infrastructure.persistence.CaseRepository;
 import org.example.projektarendehantering.infrastructure.persistence.EmployeeEntity;
 import org.example.projektarendehantering.infrastructure.persistence.EmployeeRepository;
@@ -29,18 +31,29 @@ public class CaseService {
     private final CaseRepository caseRepository;
     private final CaseMapper caseMapper;
     private final PatientRepository patientRepository;
+    private final CaseNoteRepository caseNoteRepository;
     private final EmployeeRepository employeeRepository;
 
-    public CaseService(
-            CaseRepository caseRepository,
-            CaseMapper caseMapper,
-            PatientRepository patientRepository,
-            EmployeeRepository employeeRepository
-    ) {
+    public CaseService(CaseRepository caseRepository, CaseMapper caseMapper, PatientRepository patientRepository, CaseNoteRepository caseNoteRepository, EmployeeRepository employeeRepository) {
         this.caseRepository = caseRepository;
         this.caseMapper = caseMapper;
         this.patientRepository = patientRepository;
+        this.caseNoteRepository = caseNoteRepository;
         this.employeeRepository = employeeRepository;
+    }
+
+    @Transactional
+    public void addNote(UUID caseId, String content, String author) {
+        CaseEntity caseEntity = caseRepository.findById(caseId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Case not found"));
+
+        CaseNoteEntity note = new CaseNoteEntity();
+        note.setCaseEntity(caseEntity);
+        note.setContent(content);
+        note.setAuthor(author);
+        note.setCreatedAt(Instant.now());
+
+        caseNoteRepository.save(note);
     }
 
     @Transactional
