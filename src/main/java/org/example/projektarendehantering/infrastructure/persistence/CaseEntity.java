@@ -18,6 +18,8 @@ public class CaseEntity {
     private String title;
     private String description;
     private Instant createdAt;
+    private UUID handlerId;
+    private UUID otherId;
 
     @ManyToOne(optional = true)
     @JoinColumn(name = "patient_id", nullable = true) // Optional because the patient can be null
@@ -48,6 +50,12 @@ public class CaseEntity {
 
     public UUID getOwnerId() { return ownerId; }
     public void setOwnerId(UUID ownerId) { this.ownerId = ownerId; }
+
+    public UUID getHandlerId() { return handlerId; }
+    public void setHandlerId(UUID handlerId) { this.handlerId = handlerId; }
+
+    public UUID getOtherId() { return otherId; }
+    public void setOtherId(UUID otherId) { this.otherId = otherId; }
 
     public String getTitle() { return title; }
     public void setTitle(String title) { this.title = title; }
