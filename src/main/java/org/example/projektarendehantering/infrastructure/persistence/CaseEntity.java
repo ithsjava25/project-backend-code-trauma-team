@@ -19,8 +19,8 @@ public class CaseEntity {
     private String description;
     private Instant createdAt;
 
-    @ManyToOne(optional = false)
-    @JoinColumn(name = "patient_id", nullable = false)
+    @ManyToOne(optional = true)
+    @JoinColumn(name = "patient_id", nullable = true) // Optional because the patient can be null
     private PatientEntity patient;
 
     @OneToMany(mappedBy = "caseEntity", cascade = CascadeType.ALL, orphanRemoval = true)
