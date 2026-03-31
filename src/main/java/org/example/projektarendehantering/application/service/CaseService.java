@@ -34,11 +34,12 @@ public class CaseService {
     private final CaseNoteRepository caseNoteRepository;
     private final EmployeeRepository employeeRepository;
 
-    public CaseService(CaseRepository caseRepository, CaseMapper caseMapper, PatientRepository patientRepository, CaseNoteRepository caseNoteRepository) {
+    public CaseService(CaseRepository caseRepository, CaseMapper caseMapper, PatientRepository patientRepository, CaseNoteRepository caseNoteRepository, EmployeeRepository employeeRepository) {
         this.caseRepository = caseRepository;
         this.caseMapper = caseMapper;
         this.patientRepository = patientRepository;
         this.caseNoteRepository = caseNoteRepository;
+        this.employeeRepository = employeeRepository;
     }
 
     @Transactional
@@ -53,18 +54,6 @@ public class CaseService {
         note.setCreatedAt(Instant.now());
 
         caseNoteRepository.save(note);
-   
-
-    public CaseService(
-            CaseRepository caseRepository,
-            CaseMapper caseMapper,
-            PatientRepository patientRepository,
-            EmployeeRepository employeeRepository
-    ) {
-        this.caseRepository = caseRepository;
-        this.caseMapper = caseMapper;
-        this.patientRepository = patientRepository;
-        this.employeeRepository = employeeRepository;
     }
 
     @Transactional
