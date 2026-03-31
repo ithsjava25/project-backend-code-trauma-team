@@ -2,6 +2,7 @@ package org.example.projektarendehantering.application.service;
 
 import org.example.projektarendehantering.infrastructure.persistence.PatientEntity;
 import org.example.projektarendehantering.infrastructure.persistence.PatientRepository;
+import org.example.projektarendehantering.presentation.dto.PatientCreateDTO;
 import org.example.projektarendehantering.presentation.dto.PatientDTO;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -26,14 +27,10 @@ public class PatientService {
     }
 
     @Transactional
-    public PatientDTO createPatient(PatientDTO patientDTO) {
+    public PatientDTO createPatient(PatientCreateDTO patientDTO) {
         PatientEntity entity = patientMapper.toEntity(patientDTO);
-        if (entity.getId() == null) {
-            entity.setId(UUID.randomUUID());
-        }
-        if (entity.getCreatedAt() == null) {
-            entity.setCreatedAt(Instant.now());
-        }
+        entity.setId(UUID.randomUUID());
+        entity.setCreatedAt(Instant.now());
         if (entity.getPersonalIdentityNumber() != null && !entity.getPersonalIdentityNumber().isBlank()) {
             patientRepository.findByPersonalIdentityNumber(entity.getPersonalIdentityNumber())
                     .ifPresent(existing -> {

@@ -14,7 +14,8 @@ public class CaseMapper {
                 entity.getStatus(),
                 entity.getTitle(),
                 entity.getDescription(),
-                entity.getCreatedAt()
+                entity.getCreatedAt(),
+                entity.getPatient() != null ? entity.getPatient().getId() : null
         );
     }
 

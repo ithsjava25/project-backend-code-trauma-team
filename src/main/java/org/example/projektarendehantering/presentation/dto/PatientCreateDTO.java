@@ -2,12 +2,7 @@ package org.example.projektarendehantering.presentation.dto;
 
 import jakarta.validation.constraints.NotBlank;
 
-import java.time.Instant;
-import java.util.UUID;
-
-public class PatientDTO {
-
-    private UUID id;
+public class PatientCreateDTO {
 
     @NotBlank
     private String firstName;
@@ -15,19 +10,15 @@ public class PatientDTO {
     @NotBlank
     private String lastName;
 
-    private Instant createdAt;
+    private String personalIdentityNumber;
 
-    public PatientDTO() {}
+    public PatientCreateDTO() {}
 
-    public PatientDTO(UUID id, String firstName, String lastName, Instant createdAt) {
-        this.id = id;
+    public PatientCreateDTO(String firstName, String lastName, String personalIdentityNumber) {
         this.firstName = firstName;
         this.lastName = lastName;
-        this.createdAt = createdAt;
+        this.personalIdentityNumber = personalIdentityNumber;
     }
-
-    public UUID getId() { return id; }
-    public void setId(UUID id) { this.id = id; }
 
     public String getFirstName() { return firstName; }
     public void setFirstName(String firstName) { this.firstName = firstName; }
@@ -35,7 +26,7 @@ public class PatientDTO {
     public String getLastName() { return lastName; }
     public void setLastName(String lastName) { this.lastName = lastName; }
 
-    public Instant getCreatedAt() { return createdAt; }
-    public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
+    public String getPersonalIdentityNumber() { return personalIdentityNumber; }
+    public void setPersonalIdentityNumber(String personalIdentityNumber) { this.personalIdentityNumber = personalIdentityNumber; }
 }
 

@@ -1,5 +1,7 @@
 package org.example.projektarendehantering.presentation.dto;
 
+import jakarta.validation.constraints.NotNull;
+
 import java.time.Instant;
 import java.util.UUID;
 
@@ -11,14 +13,18 @@ public class CaseDTO {
     private String description;
     private Instant createdAt;
 
+    @NotNull
+    private UUID patientId;
+
     public CaseDTO() {}
 
-    public CaseDTO(UUID id, String status, String title, String description, Instant createdAt) {
+    public CaseDTO(UUID id, String status, String title, String description, Instant createdAt, UUID patientId) {
         this.id = id;
         this.status = status;
         this.title = title;
         this.description = description;
         this.createdAt = createdAt;
+        this.patientId = patientId;
     }
 
     public UUID getId() { return id; }
@@ -35,4 +41,7 @@ public class CaseDTO {
 
     public Instant getCreatedAt() { return createdAt; }
     public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
+
+    public UUID getPatientId() { return patientId; }
+    public void setPatientId(UUID patientId) { this.patientId = patientId; }
 }
