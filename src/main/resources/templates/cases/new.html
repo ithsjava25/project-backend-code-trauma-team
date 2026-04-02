@@ -13,6 +13,14 @@
 
     <form class="form" th:action="@{/ui/cases/new}" th:object="${createCaseForm}" method="post">
         <label class="field">
+            <span class="label">Patient</span>
+            <select class="input" th:field="*{patientId}">
+                <option value="">-- Select Patient --</option>
+                <option th:each="p : ${patients}" th:value="${p.id}" th:text="${p.firstName + ' ' + p.lastName}"></option>
+            </select>
+            <span class="muted" th:if="${#fields.hasErrors('patientId')}" th:errors="*{patientId}" style="color: var(--danger)">Error</span>
+        </label>
+        <label class="field">
             <span class="label">Title</span>
             <input class="input" th:field="*{title}" maxlength="200"/>
             <span class="muted" th:if="${#fields.hasErrors('title')}" th:errors="*{title}" style="color: var(--danger)">Error</span>
