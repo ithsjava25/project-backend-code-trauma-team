@@ -19,7 +19,9 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Instant;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -108,12 +110,10 @@ public class CaseService {
                     .collect(Collectors.toList());
         }
         if (isPatient(actor)) {
-            return caseRepository.findAllByPatient_Id(actor.userId()).stream()
-                    .map(caseMapper::toDTO)
-                    .collect(Collectors.toList());
-        }
-        if (isOther(actor)) {
-            return caseRepository.findAllByOtherId(actor.userId()).stream()
+            Map<UUID, CaseEntity> byId = new LinkedHashMap<>();
+            caseRepository.findAllByPatient_Id(actor.userId()).forEach(c -> byId.putIfAbsent(c.getId(), c));
+            caseRepository.findAllByOtherId(actor.userId()).forEach(c -> byId.putIfAbsent(c.getId(), c));
+            return byId.values().stream()
                     .map(caseMapper::toDTO)
                     .collect(Collectors.toList());
         }
@@ -145,15 +145,15 @@ public class CaseService {
         }
 
         if (isManager(actor) && dto.getOwnerId() != null) {
-            UUID ownerId = requireEmployeeWithRole(dto.getOwnerId(), Set.of(Role.DOCTOR, Role.CASE_OWNER), "ownerId");
+            UUID ownerId = requireEmployeeWithRole(dto.getOwnerId(), Set.of(Role.DOCTOR), "ownerId");
             entity.setOwnerId(ownerId);
         }
         if (dto.getHandlerId() != null) {
-            UUID handlerId = requireEmployeeWithRole(dto.getHandlerId(), Set.of(Role.NURSE, Role.HANDLER), "handlerId");
+            UUID handlerId = requireEmployeeWithRole(dto.getHandlerId(), Set.of(Role.NURSE), "handlerId");
             entity.setHandlerId(handlerId);
         }
         if (dto.getOtherId() != null) {
-            UUID otherId = requireEmployeeWithRole(dto.getOtherId(), Set.of(Role.OTHER), "otherId");
+            UUID otherId = requireEmployeeWithRole(dto.getOtherId(), Set.of(Role.PATIENT), "otherId");
             entity.setOtherId(otherId);
         }
         return caseMapper.toDTO(caseRepository.save(entity));
@@ -181,7 +181,7 @@ public class CaseService {
         if (isPatient(actor)
                 && entity.getPatient() != null
                 && actor.userId().equals(entity.getPatient().getId())) return;
-        if (isOther(actor) && actor.userId().equals(entity.getOtherId())) return;
+        if (isPatient(actor) && actor.userId().equals(entity.getOtherId())) return;
         throw new NotAuthorizedException("Not allowed to read this case");
     }
 
@@ -190,22 +190,18 @@ public class CaseService {
     }
 
     private boolean isManager(Actor actor) {
-        return actor.role() == Role.MANAGER || actor.role() == Role.ADMIN;
+        return actor.role() == Role.MANAGER;
     }
 
     private boolean isDoctor(Actor actor) {
-        return actor.role() == Role.DOCTOR || actor.role() == Role.CASE_OWNER;
+        return actor.role() == Role.DOCTOR;
     }
 
     private boolean isNurse(Actor actor) {
-        return actor.role() == Role.NURSE || actor.role() == Role.HANDLER;
+        return actor.role() == Role.NURSE;
     }
 
     private boolean isPatient(Actor actor) {
         return actor.role() == Role.PATIENT;
-    }
-
-    private boolean isOther(Actor actor) {
-        return actor.role() == Role.OTHER;
     }
 }

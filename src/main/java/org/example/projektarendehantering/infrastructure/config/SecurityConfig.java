@@ -38,7 +38,7 @@ public class SecurityConfig {
         UserDetails admin = User.builder()
             .username("admin")
             .password("{noop}password") // {noop} means no password encoding (fine for dev)
-            .roles("ADMIN")
+            .roles("MANAGER")
             .build();
         return new InMemoryUserDetailsManager(admin);
     }
