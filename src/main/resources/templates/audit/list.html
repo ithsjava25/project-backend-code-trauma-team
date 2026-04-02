@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head(title='Audit')}">
+</head>
+<body>
+<div th:replace="~{fragments/header :: header}"></div>
+
+<main class="container page">
+    <div class="page-title">
+        <h1>Audit</h1>
+    </div>
+
+    <section class="panel">
+        <form method="get" action="/ui/audit" class="form" style="display:flex; gap: 12px; flex-wrap: wrap; align-items: end;">
+            <label class="field">
+                <span class="label">From (ISO)</span>
+                <input class="input" type="text" name="from" th:value="${from}" placeholder="2026-04-02T10:15:30Z"/>
+            </label>
+            <label class="field">
+                <span class="label">To (ISO)</span>
+                <input class="input" type="text" name="to" th:value="${to}" placeholder="2026-04-02T12:15:30Z"/>
+            </label>
+            <label class="field">
+                <span class="label">CaseId</span>
+                <input class="input" type="text" name="caseId" th:value="${caseId}" placeholder="UUID (optional)"/>
+            </label>
+            <label class="field">
+                <span class="label">Size</span>
+                <input class="input" type="number" min="1" max="200" name="size" th:value="${events.size}"/>
+            </label>
+            <input type="hidden" name="page" value="0"/>
+            <button class="button" type="submit">Filter</button>
+        </form>
+    </section>
+
+    <section class="panel" style="margin-top: 16px;">
+        <table class="table" th:if="${events != null and events.content != null and not #lists.isEmpty(events.content)}">
+            <thead>
+            <tr>
+                <th>Time</th>
+                <th>ActorRole</th>
+                <th>ActorId</th>
+                <th>Method</th>
+                <th>Path</th>
+                <th>Status</th>
+                <th>CaseId</th>
+                <th>Handler</th>
+                <th>Error</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="e : ${events.content}">
+                <td th:text="${e.occurredAt}">time</td>
+                <td th:text="${e.actorRole}">role</td>
+                <td th:text="${e.actorId}">actor</td>
+                <td th:text="${e.httpMethod}">GET</td>
+                <td>
+                    <div th:text="${e.requestPath}">/path</div>
+                    <div class="muted" th:if="${e.queryString != null}" th:text="'?' + ${e.queryString}">?q</div>
+                </td>
+                <td th:text="${e.responseStatus}">200</td>
+                <td th:text="${e.caseId}">case</td>
+                <td class="muted" th:text="${e.handler}">handler</td>
+                <td class="muted" th:text="${e.errorType}">err</td>
+            </tr>
+            </tbody>
+        </table>
+
+        <p th:if="${events == null or events.content == null or #lists.isEmpty(events.content)}" class="muted">
+            No audit events found (or you don't have access to any).
+        </p>
+
+        <div style="display:flex; justify-content: space-between; align-items:center; margin-top: 12px;" th:if="${events != null}">
+            <div class="muted" th:text="'Page ' + ${events.number + 1} + ' of ' + ${events.totalPages} + ' (total ' + ${events.totalElements} + ')'">Page</div>
+            <div style="display:flex; gap: 8px;">
+                <a class="button button-secondary"
+                   th:if="${events.hasPrevious()}"
+                   th:href="@{/ui/audit(page=${events.number - 1},size=${events.size},from=${from},to=${to},caseId=${caseId})}">
+                    Previous
+                </a>
+                <a class="button button-secondary"
+                   th:if="${events.hasNext()}"
+                   th:href="@{/ui/audit(page=${events.number + 1},size=${events.size},from=${from},to=${to},caseId=${caseId})}">
+                    Next
+                </a>
+            </div>
+        </div>
+    </section>
+</main>
+
+<div th:replace="~{fragments/footer :: footer}"></div>
+</body>
+</html>
+
