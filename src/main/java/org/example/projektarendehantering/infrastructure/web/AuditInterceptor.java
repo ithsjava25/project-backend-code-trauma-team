@@ -5,7 +5,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.example.projektarendehantering.common.Actor;
 import org.example.projektarendehantering.application.service.AuditService;
 import org.example.projektarendehantering.infrastructure.persistence.AuditEventEntity;
-import org.example.projektarendehantering.infrastructure.security.HeaderCurrentUserAdapter;
+import org.example.projektarendehantering.infrastructure.security.SecurityActorAdapter;
 import org.springframework.stereotype.Component;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.HandlerInterceptor;
@@ -19,18 +19,18 @@ import java.util.UUID;
 public class AuditInterceptor implements HandlerInterceptor {
 
     private final AuditService auditService;
-    private final HeaderCurrentUserAdapter currentUserAdapter;
+    private final SecurityActorAdapter securityActorAdapter;
 
-    public AuditInterceptor(AuditService auditService, HeaderCurrentUserAdapter currentUserAdapter) {
+    public AuditInterceptor(AuditService auditService, SecurityActorAdapter securityActorAdapter) {
         this.auditService = auditService;
-        this.currentUserAdapter = currentUserAdapter;
+        this.securityActorAdapter = securityActorAdapter;
     }
 
     @Override
     public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) {
         Actor actor = null;
         try {
-            actor = currentUserAdapter.currentUser();
+            actor = securityActorAdapter.currentUser();
         } catch (RuntimeException ignored) {
             // If not authenticated (or adapter throws), we still avoid failing the request.
         }

@@ -72,7 +72,7 @@ So static assets, error pages, and login flows do not generate audit rows.
 
 For each request the interceptor:
 
-1. Tries `HeaderCurrentUserAdapter.currentUser()` → on failure (e.g. not authenticated), continues with `actorId` / `actorRole` unset rather than failing the HTTP request.
+1. Tries `SecurityActorAdapter.currentUser()` → on failure (e.g. not authenticated), continues with `actorId` / `actorRole` unset rather than failing the HTTP request.
 2. Sets identity fields: `actorId`, `actorRole`, `principalName`.
 3. Sets request metadata: method, URI, query string, resolved handler name.
 4. Sets `responseStatus`, `errorType` (from `ex`).
@@ -145,7 +145,7 @@ If `from` is after `to`, the service throws `IllegalArgumentException`.
 | `NURSE` or `HANDLER` | Same pattern using `findAllByHandlerId`. Empty allowed-set → **empty page** (not an error). |
 | Any other role (e.g. `OTHER`) | **NotAuthorizedException** |
 
-**Note on `Actor` resolution:** `HeaderCurrentUserAdapter` maps Spring authorities to `Role` for `ADMIN`, `HANDLER`, and `CASE_OWNER`; other authenticated users may receive `OTHER` and then **cannot** list audit events even though requests are still **recorded**. The enum also defines `MANAGER`, `DOCTOR`, and `NURSE` for future or alternate identity wiring.
+**Note on `Actor` resolution:** `SecurityActorAdapter` maps Spring authorities to `Role` for `ADMIN`, `HANDLER`, and `CASE_OWNER`; other authenticated users may receive `OTHER` and then **cannot** list audit events even though requests are still **recorded**. The enum also defines `MANAGER`, `DOCTOR`, and `NURSE` for future or alternate identity wiring.
 
 ### Repository queries used
 
