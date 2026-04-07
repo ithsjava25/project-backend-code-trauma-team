@@ -45,14 +45,18 @@ public class CaseService {
     }
 
     @Transactional
-    public void addNote(UUID caseId, String content, String author) {
+    public void addNote(UUID caseId, String content, Actor actor) {
         CaseEntity caseEntity = caseRepository.findById(caseId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Case not found"));
 
         CaseNoteEntity note = new CaseNoteEntity();
         note.setCaseEntity(caseEntity);
         note.setContent(content);
-        note.setAuthor(author);
+        if (actor != null) {
+            note.setAuthorDisplayName(actor.displayName());
+            note.setAuthorGithubUsername(actor.githubUsername());
+            note.setAuthorRole(actor.role() != null ? actor.role().name() : null);
+        }
         note.setCreatedAt(Instant.now());
 
         caseNoteRepository.save(note);

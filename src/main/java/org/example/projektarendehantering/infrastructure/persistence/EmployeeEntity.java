@@ -19,6 +19,8 @@ public class EmployeeEntity {
 
     private String displayName;
 
+    private String githubUsername;
+
     @Enumerated(EnumType.STRING)
     private Role role;
 
@@ -26,9 +28,10 @@ public class EmployeeEntity {
 
     public EmployeeEntity() {}
 
-    public EmployeeEntity(UUID id, String displayName, Role role, Instant createdAt) {
+    public EmployeeEntity(UUID id, String displayName, String githubUsername, Role role, Instant createdAt) {
         this.id = id;
         this.displayName = displayName;
+        this.githubUsername = githubUsername;
         this.role = role;
         this.createdAt = createdAt;
     }
@@ -38,6 +41,9 @@ public class EmployeeEntity {
 
     public String getDisplayName() { return displayName; }
     public void setDisplayName(String displayName) { this.displayName = displayName; }
+
+    public String getGithubUsername() { return githubUsername; }
+    public void setGithubUsername(String githubUsername) { this.githubUsername = githubUsername; }
 
     public Role getRole() { return role; }
     public void setRole(Role role) { this.role = role; }

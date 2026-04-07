@@ -31,7 +31,9 @@ public class EmployeeService {
     public EmployeeDTO createEmployee(Actor actor, EmployeeCreateDTO dto) {
         requireCanManageEmployees(actor);
         EmployeeEntity entity = employeeMapper.toEntity(dto);
-        entity.setId(UUID.randomUUID());
+        if (entity.getId() == null) {
+            entity.setId(UUID.randomUUID());
+        }
         entity.setCreatedAt(Instant.now());
         return employeeMapper.toDTO(employeeRepository.save(entity));
     }

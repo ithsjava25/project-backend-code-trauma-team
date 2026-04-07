@@ -12,7 +12,9 @@ public class CaseNoteMapper {
         return new CaseNoteDTO(
             entity.getId(),
             entity.getContent(),
-            entity.getAuthor(),
+            entity.getAuthorDisplayName(),
+            entity.getAuthorGithubUsername(),
+            entity.getAuthorRole(),
             entity.getCreatedAt()
         );
     }
@@ -22,7 +24,9 @@ public class CaseNoteMapper {
         CaseNoteEntity entity = new CaseNoteEntity();
         entity.setId(dto.getId());
         entity.setContent(dto.getContent());
-        entity.setAuthor(dto.getAuthor());
+        entity.setAuthorDisplayName(dto.getAuthorDisplayName());
+        entity.setAuthorGithubUsername(dto.getAuthorGithubUsername());
+        entity.setAuthorRole(dto.getAuthorRole());
         entity.setCreatedAt(dto.getCreatedAt());
         return entity;
     }

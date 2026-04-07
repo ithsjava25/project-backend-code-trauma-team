@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head(title='Manage Users')}">
+</head>
+<body>
+<div th:replace="~{fragments/header :: header}"></div>
+
+<main class="container page">
+    <div class="page-title">
+        <h1>User Mappings (Employees)</h1>
+        <a class="button" href="/ui/employees/new">New Mapping</a>
+    </div>
+
+    <section class="panel">
+        <p class="muted">List of GitHub users mapped to application roles.</p>
+        <table class="table" th:if="${not #lists.isEmpty(employees)}">
+            <thead>
+                <tr>
+                    <th>Display Name</th>
+                    <th>GitHub Username</th>
+                    <th>Role</th>
+                    <th>ID (UUID)</th>
+                    <th>Created At</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="e : ${employees}">
+                    <td th:text="${e.displayName}">Name</td>
+                    <td class="code" th:text="${e.githubUsername}">Username</td>
+                    <td th:text="${e.role}">Role</td>
+                    <td class="code" th:text="${e.id}">UUID</td>
+                    <td th:text="${e.createdAt}">Date</td>
+                </tr>
+            </tbody>
+        </table>
+        <p th:if="${#lists.isEmpty(employees)}" class="muted">No user mappings found.</p>
+    </section>
+</main>
+
+<div th:replace="~{fragments/footer :: footer}"></div>
+</body>
+</html>

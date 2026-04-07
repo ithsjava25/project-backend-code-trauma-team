@@ -7,15 +7,19 @@ public class CaseNoteDTO {
 
     private UUID id;
     private String content;
-    private String author;
+    private String authorDisplayName;
+    private String authorGithubUsername;
+    private String authorRole;
     private Instant createdAt;
 
     public CaseNoteDTO() {}
 
-    public CaseNoteDTO(UUID id, String content, String author, Instant createdAt) {
+    public CaseNoteDTO(UUID id, String content, String authorDisplayName, String authorGithubUsername, String authorRole, Instant createdAt) {
         this.id = id;
         this.content = content;
-        this.author = author;
+        this.authorDisplayName = authorDisplayName;
+        this.authorGithubUsername = authorGithubUsername;
+        this.authorRole = authorRole;
         this.createdAt = createdAt;
     }
 
@@ -25,8 +29,14 @@ public class CaseNoteDTO {
     public String getContent() { return content; }
     public void setContent(String content) { this.content = content; }
 
-    public String getAuthor() { return author; }
-    public void setAuthor(String author) { this.author = author; }
+    public String getAuthorDisplayName() { return authorDisplayName; }
+    public void setAuthorDisplayName(String authorDisplayName) { this.authorDisplayName = authorDisplayName; }
+
+    public String getAuthorGithubUsername() { return authorGithubUsername; }
+    public void setAuthorGithubUsername(String authorGithubUsername) { this.authorGithubUsername = authorGithubUsername; }
+
+    public String getAuthorRole() { return authorRole; }
+    public void setAuthorRole(String authorRole) { this.authorRole = authorRole; }
 
     public Instant getCreatedAt() { return createdAt; }
     public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
