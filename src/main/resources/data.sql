@@ -13,15 +13,15 @@ ON CONFLICT (id) DO NOTHING;
 
 -- Seed Employees
 INSERT INTO employees (id, display_name, role, created_at)
-VALUES ('770e8400-e29b-41d4-a716-446655440000', 'Admin User', 'ADMIN', CURRENT_TIMESTAMP)
+VALUES ('770e8400-e29b-41d4-a716-446655440000', 'Admin User', 'MANAGER', CURRENT_TIMESTAMP)
 ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO employees (id, display_name, role, created_at)
-VALUES ('770e8400-e29b-41d4-a716-446655440001', 'Dr. Alice Roberts', 'CASE_OWNER', CURRENT_TIMESTAMP)
+VALUES ('770e8400-e29b-41d4-a716-446655440001', 'Dr. Alice Roberts', 'DOCTOR', CURRENT_TIMESTAMP)
 ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO employees (id, display_name, role, created_at)
-VALUES ('770e8400-e29b-41d4-a716-446655440002', 'Nurse Bob Jones', 'HANDLER', CURRENT_TIMESTAMP)
+VALUES ('770e8400-e29b-41d4-a716-446655440002', 'Nurse Bob Jones', 'NURSE', CURRENT_TIMESTAMP)
 ON CONFLICT (id) DO NOTHING;
 
 -- Seed Cases

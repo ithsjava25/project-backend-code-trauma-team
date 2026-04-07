@@ -26,13 +26,15 @@ public class HeaderCurrentUserAdapter {
         // Create a deterministic UUID based on the username/name
         UUID userId = UUID.nameUUIDFromBytes(authentication.getName().getBytes(StandardCharsets.UTF_8));
 
-        Role role = Role.OTHER;
-        if (authentication.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"))) {
-            role = Role.ADMIN;
-        } else if (authentication.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_HANDLER"))) {
-            role = Role.HANDLER;
-        } else if (authentication.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_CASE_OWNER"))) {
-            role = Role.CASE_OWNER;
+        Role role = Role.PATIENT;
+        if (authentication.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_MANAGER"))) {
+            role = Role.MANAGER;
+        } else if (authentication.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_DOCTOR"))) {
+            role = Role.DOCTOR;
+        } else if (authentication.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_NURSE"))) {
+            role = Role.NURSE;
+        } else if (authentication.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_PATIENT"))) {
+            role = Role.PATIENT;
         }
 
         return new Actor(userId, role);

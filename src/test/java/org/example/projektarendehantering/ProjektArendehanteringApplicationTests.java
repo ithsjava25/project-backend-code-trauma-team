@@ -28,7 +28,7 @@ class ProjektArendehanteringApplicationTests {
     }
 
     @Test
-    @WithMockUser(username = "handler1", roles = {"HANDLER"})
+    @WithMockUser(username = "handler1", roles = {"NURSE"})
     void uiRequest_createsAuditEvent() throws Exception {
         MockMvc mockMvc = webAppContextSetup(webApplicationContext)
                 .apply(springSecurity())

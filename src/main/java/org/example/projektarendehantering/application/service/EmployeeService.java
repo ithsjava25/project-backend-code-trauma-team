@@ -54,7 +54,7 @@ public class EmployeeService {
         if (actor == null) {
             throw new NotAuthorizedException("Missing actor");
         }
-        if (actor.role() == Role.MANAGER || actor.role() == Role.ADMIN) {
+        if (actor.role() == Role.MANAGER) {
             return;
         }
         throw new NotAuthorizedException("Not allowed to access employees");
