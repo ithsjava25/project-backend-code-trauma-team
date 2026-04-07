@@ -6,6 +6,7 @@ import org.example.projektarendehantering.common.Actor;
 import org.example.projektarendehantering.common.Role;
 import org.example.projektarendehantering.infrastructure.security.SecurityActorAdapter;
 import org.example.projektarendehantering.presentation.dto.EmployeeCreateDTO;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -32,6 +33,7 @@ public class EmployeeUiController {
     }
 
     @GetMapping("/ui/employees/new")
+    @PreAuthorize("hasRole('MANAGER')")
     public String newEmployee(Model model) {
         model.addAttribute("employeeCreateDTO", new EmployeeCreateDTO());
         model.addAttribute("roles", Role.values());
