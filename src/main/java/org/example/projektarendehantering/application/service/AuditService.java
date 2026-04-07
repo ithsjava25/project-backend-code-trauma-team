@@ -262,15 +262,15 @@ public class AuditService {
     }
 
     private boolean isManager(Actor actor) {
-        return actor.role() == Role.MANAGER || actor.role() == Role.ADMIN;
+        return actor.role() == Role.MANAGER;
     }
 
     private boolean isDoctor(Actor actor) {
-        return actor.role() == Role.DOCTOR || actor.role() == Role.CASE_OWNER;
+        return actor.role() == Role.DOCTOR;
     }
 
     private boolean isNurse(Actor actor) {
-        return actor.role() == Role.NURSE || actor.role() == Role.HANDLER;
+        return actor.role() == Role.NURSE;
     }
 }
 
