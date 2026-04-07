@@ -1,5 +1,6 @@
 package org.example.projektarendehantering.infrastructure.persistence;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -19,6 +20,7 @@ public class EmployeeEntity {
 
     private String displayName;
 
+    @Column(unique = true)
     private String githubUsername;
 
     @Enumerated(EnumType.STRING)

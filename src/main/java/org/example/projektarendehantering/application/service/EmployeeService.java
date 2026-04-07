@@ -1,6 +1,7 @@
 package org.example.projektarendehantering.application.service;
 
 import org.example.projektarendehantering.common.Actor;
+import org.example.projektarendehantering.common.BadRequestException;
 import org.example.projektarendehantering.common.NotAuthorizedException;
 import org.example.projektarendehantering.common.Role;
 import org.example.projektarendehantering.infrastructure.persistence.EmployeeEntity;
@@ -30,6 +31,11 @@ public class EmployeeService {
     @Transactional
     public EmployeeDTO createEmployee(Actor actor, EmployeeCreateDTO dto) {
         requireCanManageEmployees(actor);
+
+        if (employeeRepository.findByGithubUsername(dto.getGithubUsername()).isPresent()) {
+            throw new BadRequestException("EMPLOYEE_EXISTS", "Employee with username " + dto.getGithubUsername() + " already exists");
+        }
+
         EmployeeEntity entity = employeeMapper.toEntity(dto);
         if (entity.getId() == null) {
             entity.setId(UUID.randomUUID());
