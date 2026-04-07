@@ -8,19 +8,21 @@
 <main class="container page">
     <div class="page-title">
         <h1>New User Mapping</h1>
-        <a class="button button-secondary" href="/ui/employees">Back to list</a>
+        <a class="button button-secondary" th:href="@{/ui/employees}">Back to list</a>
     </div>
 
     <form class="form" th:action="@{/ui/employees/new}" th:object="${employeeCreateDTO}" method="post">
         <label class="field">
             <span class="label">Display Name</span>
             <input class="input" th:field="*{displayName}" placeholder="e.g. Dr. Alice Roberts"/>
-            <span class="muted" th:if="${#fields.hasErrors('displayName')}" th:errors="*{displayName}" style="color: var(--danger)">Error</span>
+            <span class="muted" th:if="${#fields.hasErrors('displayName')}" th:errors="*{displayName}"
+                  style="color: var(--danger)">Error</span>
         </label>
         <label class="field">
             <span class="label">GitHub Username</span>
             <input class="input" th:field="*{githubUsername}" placeholder="e.g. alice_roberts"/>
-            <span class="muted" th:if="${#fields.hasErrors('githubUsername')}" th:errors="*{githubUsername}" style="color: var(--danger)">Error</span>
+            <span class="muted" th:if="${#fields.hasErrors('githubUsername')}" th:errors="*{githubUsername}"
+                  style="color: var(--danger)">Error</span>
         </label>
         <label class="field">
             <span class="label">Role</span>
