@@ -1,7 +1,7 @@
 package org.example.projektarendehantering.presentation.web;
 
 import org.example.projektarendehantering.application.service.AuditService;
-import org.example.projektarendehantering.infrastructure.security.HeaderCurrentUserAdapter;
+import org.example.projektarendehantering.infrastructure.security.SecurityActorAdapter;
 import org.example.projektarendehantering.presentation.dto.AuditEventDTO;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -20,11 +20,11 @@ import java.util.UUID;
 public class AuditUiController {
 
     private final AuditService auditService;
-    private final HeaderCurrentUserAdapter currentUserAdapter;
+    private final SecurityActorAdapter securityActorAdapter;
 
-    public AuditUiController(AuditService auditService, HeaderCurrentUserAdapter currentUserAdapter) {
+    public AuditUiController(AuditService auditService, SecurityActorAdapter securityActorAdapter) {
         this.auditService = auditService;
-        this.currentUserAdapter = currentUserAdapter;
+        this.securityActorAdapter = securityActorAdapter;
     }
 
     @GetMapping("/ui/audit")
@@ -42,7 +42,7 @@ public class AuditUiController {
                 Sort.by(Sort.Direction.DESC, "occurredAt")
         );
 
-        Page<AuditEventDTO> events = auditService.listEvents(currentUserAdapter.currentUser(), from, to, caseId, pageable);
+        Page<AuditEventDTO> events = auditService.listEvents(securityActorAdapter.currentUser(), from, to, caseId, pageable);
         model.addAttribute("events", events);
         model.addAttribute("from", from);
         model.addAttribute("to", to);

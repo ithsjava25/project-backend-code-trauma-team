@@ -1,7 +1,7 @@
 package org.example.projektarendehantering.presentation.rest;
 
 import org.example.projektarendehantering.application.service.AuditService;
-import org.example.projektarendehantering.infrastructure.security.HeaderCurrentUserAdapter;
+import org.example.projektarendehantering.infrastructure.security.SecurityActorAdapter;
 import org.example.projektarendehantering.presentation.dto.AuditEventDTO;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -22,11 +22,11 @@ import java.util.UUID;
 public class AuditController {
 
     private final AuditService auditService;
-    private final HeaderCurrentUserAdapter currentUserAdapter;
+    private final SecurityActorAdapter securityActorAdapter;
 
-    public AuditController(AuditService auditService, HeaderCurrentUserAdapter currentUserAdapter) {
+    public AuditController(AuditService auditService, SecurityActorAdapter securityActorAdapter) {
         this.auditService = auditService;
-        this.currentUserAdapter = currentUserAdapter;
+        this.securityActorAdapter = securityActorAdapter;
     }
 
     @GetMapping
@@ -43,7 +43,7 @@ public class AuditController {
                 Sort.by(Sort.Direction.DESC, "occurredAt")
         );
 
-        return ResponseEntity.ok(auditService.listEvents(currentUserAdapter.currentUser(), from, to, caseId, pageable));
+        return ResponseEntity.ok(auditService.listEvents(securityActorAdapter.currentUser(), from, to, caseId, pageable));
     }
 }
 

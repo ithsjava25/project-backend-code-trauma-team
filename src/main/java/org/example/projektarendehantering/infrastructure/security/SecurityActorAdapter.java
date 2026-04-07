@@ -14,7 +14,7 @@ import java.util.UUID;
  * Bridges Spring Security authentication to the application's Actor model.
  */
 @Component
-public class HeaderCurrentUserAdapter {
+public class SecurityActorAdapter {
 
     public Actor currentUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -40,4 +40,3 @@ public class HeaderCurrentUserAdapter {
         return new Actor(userId, role);
     }
 }
-

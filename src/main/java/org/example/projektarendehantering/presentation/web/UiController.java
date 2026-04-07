@@ -2,7 +2,7 @@ package org.example.projektarendehantering.presentation.web;
 
 import org.example.projektarendehantering.application.service.CaseService;
 import org.example.projektarendehantering.application.service.PatientService;
-import org.example.projektarendehantering.infrastructure.security.HeaderCurrentUserAdapter;
+import org.example.projektarendehantering.infrastructure.security.SecurityActorAdapter;
 import org.example.projektarendehantering.presentation.dto.CaseDTO;
 import org.example.projektarendehantering.presentation.dto.CreateCaseForm;
 import org.springframework.stereotype.Controller;
@@ -23,12 +23,12 @@ public class UiController {
 
     private final CaseService caseService;
     private final PatientService patientService;
-    private final HeaderCurrentUserAdapter currentUserAdapter;
+    private final SecurityActorAdapter securityActorAdapter;
 
-    public UiController(CaseService caseService, PatientService patientService, HeaderCurrentUserAdapter currentUserAdapter) {
+    public UiController(CaseService caseService, PatientService patientService, SecurityActorAdapter securityActorAdapter) {
         this.caseService = caseService;
         this.patientService = patientService;
-        this.currentUserAdapter = currentUserAdapter;
+        this.securityActorAdapter = securityActorAdapter;
     }
 
     @PostMapping("/ui/cases/{caseId}/notes")
@@ -45,7 +45,7 @@ public class UiController {
 
     @GetMapping("/ui/cases")
     public String listCases(Model model) {
-        model.addAttribute("cases", caseService.getAllCases(currentUserAdapter.currentUser()));
+        model.addAttribute("cases", caseService.getAllCases(securityActorAdapter.currentUser()));
         return "cases/list";
     }
 
@@ -67,13 +67,13 @@ public class UiController {
         caseDTO.setDescription(form.getDescription());
         caseDTO.setPatientId(form.getPatientId());
 
-        caseService.createCase(currentUserAdapter.currentUser(), caseDTO);
+        caseService.createCase(securityActorAdapter.currentUser(), caseDTO);
         return "redirect:/ui/cases";
     }
 
     @GetMapping("/ui/cases/{caseId}")
     public String caseDetail(@PathVariable UUID caseId, Model model) {
-        caseService.getCase(currentUserAdapter.currentUser(), caseId).ifPresent(c -> model.addAttribute("case", c));
+        caseService.getCase(securityActorAdapter.currentUser(), caseId).ifPresent(c -> model.addAttribute("case", c));
         return "cases/detail";
     }
 }
