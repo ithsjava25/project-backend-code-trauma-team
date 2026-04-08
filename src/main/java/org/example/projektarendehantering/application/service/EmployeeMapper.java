@@ -1,17 +1,18 @@
 package org.example.projektarendehantering.application.service;
 
-import org.example.projektarendehantering.infrastructure.persistence.EmployeeEntity;
+import org.example.projektarendehantering.infrastructure.persistence.AccountEntity;
 import org.example.projektarendehantering.presentation.dto.EmployeeCreateDTO;
 import org.example.projektarendehantering.presentation.dto.EmployeeDTO;
 import org.springframework.stereotype.Component;
 
 import java.nio.charset.StandardCharsets;
+import java.time.Instant;
 import java.util.UUID;
 
 @Component
 public class EmployeeMapper {
 
-    public EmployeeDTO toDTO(EmployeeEntity entity) {
+    public EmployeeDTO toDTO(AccountEntity entity) {
         if (entity == null) return null;
         return new EmployeeDTO(
                 entity.getId(),
@@ -22,18 +23,20 @@ public class EmployeeMapper {
         );
     }
 
-    public EmployeeEntity toEntity(EmployeeCreateDTO dto) {
+    public AccountEntity toEntity(EmployeeCreateDTO dto) {
         if (dto == null) return null;
-        EmployeeEntity entity = new EmployeeEntity();
+        
+        UUID id = null;
+        if (dto.getGithubUsername() != null && !dto.getGithubUsername().isBlank()) {
+            id = UUID.nameUUIDFromBytes(dto.getGithubUsername().getBytes(StandardCharsets.UTF_8));
+        }
+
+        AccountEntity entity = new AccountEntity();
+        entity.setId(id);
         entity.setDisplayName(dto.getDisplayName());
         entity.setGithubUsername(dto.getGithubUsername());
         entity.setRole(dto.getRole());
-
-        if (dto.getGithubUsername() != null && !dto.getGithubUsername().isBlank()) {
-            UUID id = UUID.nameUUIDFromBytes(dto.getGithubUsername().getBytes(StandardCharsets.UTF_8));
-            entity.setId(id);
-        }
+        entity.setCreatedAt(Instant.now());
         return entity;
     }
 }
-

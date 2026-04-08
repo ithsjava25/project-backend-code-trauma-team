@@ -3,7 +3,7 @@ package org.example.projektarendehantering.infrastructure.security;
 import org.example.projektarendehantering.common.Actor;
 import org.example.projektarendehantering.common.NotAuthorizedException;
 import org.example.projektarendehantering.common.Role;
-import org.example.projektarendehantering.infrastructure.persistence.EmployeeRepository;
+import org.example.projektarendehantering.infrastructure.persistence.AccountRepository;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
@@ -18,10 +18,10 @@ import java.util.UUID;
 @Component
 public class SecurityActorAdapter {
 
-    private final EmployeeRepository employeeRepository;
+    private final AccountRepository accountRepository;
 
-    public SecurityActorAdapter(EmployeeRepository employeeRepository) {
-        this.employeeRepository = employeeRepository;
+    public SecurityActorAdapter(AccountRepository accountRepository) {
+        this.accountRepository = accountRepository;
     }
 
     public Actor currentUser() {
@@ -43,23 +43,17 @@ public class SecurityActorAdapter {
         // Create a deterministic UUID based on the username/name
         UUID userId = UUID.nameUUIDFromBytes(name.getBytes(StandardCharsets.UTF_8));
 
-        // 1. Try finding an employee with this UUID
-        var employee = employeeRepository.findById(userId);
-        if (employee.isPresent()) {
-            var e = employee.get();
-            return new Actor(userId, e.getRole(), e.getDisplayName(), e.getGithubUsername());
+        // 1. Try finding the account
+        var account = accountRepository.findById(userId);
+        if (account.isPresent()) {
+            var a = account.get();
+            return new Actor(userId, a.getRole(), a.getDisplayName(), a.getGithubUsername());
         }
 
-        // 2. Fallback to existing logic (checking Spring authorities)
-        Role role = Role.PATIENT;
+        // 2. Fallback to basic auth / authorities if not in DB yet (e.g. initial setup)
+        Role role = Role.PENDING;
         if (authentication.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_MANAGER"))) {
             role = Role.MANAGER;
-        } else if (authentication.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_DOCTOR"))) {
-            role = Role.DOCTOR;
-        } else if (authentication.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_NURSE"))) {
-            role = Role.NURSE;
-        } else if (authentication.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_PATIENT"))) {
-            role = Role.PATIENT;
         }
 
         return new Actor(userId, role, null, name);

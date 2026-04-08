@@ -2,6 +2,7 @@ package org.example.projektarendehantering.presentation.web;
 
 import org.example.projektarendehantering.application.service.CaseService;
 import org.example.projektarendehantering.application.service.PatientService;
+import org.example.projektarendehantering.infrastructure.persistence.AccountRepository;
 import org.example.projektarendehantering.infrastructure.security.SecurityActorAdapter;
 import org.example.projektarendehantering.presentation.dto.CaseDTO;
 import org.example.projektarendehantering.presentation.dto.CreateCaseForm;
@@ -15,7 +16,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import jakarta.validation.Valid;
-import java.security.Principal;
 import java.util.UUID;
 
 @Controller
@@ -38,9 +38,7 @@ public class UiController {
     }
 
     @GetMapping("/")
-    public String index() {
-        return "index";
-    }
+    public String index() { return "index"; }
 
     @GetMapping("/ui/cases")
     public String listCases(Model model) {
@@ -51,13 +49,15 @@ public class UiController {
     @GetMapping("/ui/cases/new")
     public String newCase(Model model) {
         model.addAttribute("createCaseForm", new CreateCaseForm());
+        // Only show valid patients (those with profiles)
         model.addAttribute("patients", patientService.getAllPatients());
         return "cases/new";
     }
 
     @PostMapping("/ui/cases/new")
-    public String createCase(@Valid @ModelAttribute("createCaseForm") CreateCaseForm form, BindingResult result) {
+    public String createCase(@Valid @ModelAttribute("createCaseForm") CreateCaseForm form, BindingResult result, Model model) {
         if (result.hasErrors()) {
+            model.addAttribute("patients", patientService.getAllPatients());
             return "cases/new";
         }
 
@@ -76,4 +76,3 @@ public class UiController {
         return "cases/detail";
     }
 }
-

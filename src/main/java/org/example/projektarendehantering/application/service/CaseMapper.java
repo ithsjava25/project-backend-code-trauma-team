@@ -23,7 +23,7 @@ public class CaseMapper {
                 entity.getTitle(),
                 entity.getDescription(),
                 entity.getCreatedAt(),
-                entity.getPatient() != null ? entity.getPatient().getId() : null
+                entity.getSubject() != null ? entity.getSubject().getId() : null
         );
         if (entity.getNotes() != null) {
             dto.setNotes(entity.getNotes().stream()

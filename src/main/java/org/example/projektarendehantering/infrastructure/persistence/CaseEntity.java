@@ -22,8 +22,8 @@ public class CaseEntity {
     private UUID otherId;
 
     @ManyToOne(optional = true)
-    @JoinColumn(name = "patient_id", nullable = true) // Optional because the patient can be null
-    private PatientEntity patient;
+    @JoinColumn(name = "patient_id", nullable = true)
+    private PatientProfileEntity subject;
 
     @OneToMany(mappedBy = "caseEntity", cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderBy("createdAt DESC")
@@ -31,14 +31,14 @@ public class CaseEntity {
 
     public CaseEntity() {}
 
-    public CaseEntity(UUID id, String status, UUID ownerId, String title, String description, Instant createdAt, PatientEntity patient, List<CaseNoteEntity> notes) {
+    public CaseEntity(UUID id, String status, UUID ownerId, String title, String description, Instant createdAt, PatientProfileEntity subject, List<CaseNoteEntity> notes) {
         this.id = id;
         this.status = status;
         this.ownerId = ownerId;
         this.title = title;
         this.description = description;
         this.createdAt = createdAt;
-        this.patient = patient;
+        this.subject = subject;
         this.notes = notes != null ? notes : new ArrayList<>();
     }
 
@@ -66,8 +66,8 @@ public class CaseEntity {
     public Instant getCreatedAt() { return createdAt; }
     public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
 
-    public PatientEntity getPatient() { return patient; }
-    public void setPatient(PatientEntity patient) { this.patient = patient; }
+    public PatientProfileEntity getSubject() { return subject; }
+    public void setSubject(PatientProfileEntity subject) { this.subject = subject; }
 
     public List<CaseNoteEntity> getNotes() { return notes; }
 

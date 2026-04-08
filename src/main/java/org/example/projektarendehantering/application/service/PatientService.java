@@ -1,7 +1,10 @@
 package org.example.projektarendehantering.application.service;
 
-import org.example.projektarendehantering.infrastructure.persistence.PatientEntity;
-import org.example.projektarendehantering.infrastructure.persistence.PatientRepository;
+import org.example.projektarendehantering.common.Role;
+import org.example.projektarendehantering.infrastructure.persistence.AccountEntity;
+import org.example.projektarendehantering.infrastructure.persistence.AccountRepository;
+import org.example.projektarendehantering.infrastructure.persistence.PatientProfileEntity;
+import org.example.projektarendehantering.infrastructure.persistence.PatientProfileRepository;
 import org.example.projektarendehantering.presentation.dto.PatientCreateDTO;
 import org.example.projektarendehantering.presentation.dto.PatientDTO;
 import org.springframework.http.HttpStatus;
@@ -18,38 +21,46 @@ import java.util.stream.Collectors;
 @Service
 public class PatientService {
 
-    private final PatientRepository patientRepository;
-    private final PatientMapper patientMapper;
+    private final AccountRepository accountRepository;
+    private final PatientProfileRepository patientProfileRepository;
 
-    public PatientService(PatientRepository patientRepository, PatientMapper patientMapper) {
-        this.patientRepository = patientRepository;
-        this.patientMapper = patientMapper;
+    public PatientService(AccountRepository accountRepository, PatientProfileRepository patientProfileRepository) {
+        this.accountRepository = accountRepository;
+        this.patientProfileRepository = patientProfileRepository;
     }
 
     @Transactional
-    public PatientDTO createPatient(PatientCreateDTO patientDTO) {
-        PatientEntity entity = patientMapper.toEntity(patientDTO);
-        entity.setId(UUID.randomUUID());
-        entity.setCreatedAt(Instant.now());
-        if (entity.getPersonalIdentityNumber() != null && !entity.getPersonalIdentityNumber().isBlank()) {
-            patientRepository.findByPersonalIdentityNumber(entity.getPersonalIdentityNumber())
+    public PatientDTO createPatient(PatientCreateDTO dto) {
+        if (dto.getPersonalIdentityNumber() != null && !dto.getPersonalIdentityNumber().isBlank()) {
+            patientProfileRepository.findByPersonalIdentityNumber(dto.getPersonalIdentityNumber())
                     .ifPresent(existing -> {
                         throw new ResponseStatusException(HttpStatus.CONFLICT, "Patient with personalIdentityNumber already exists");
                     });
         }
-        return patientMapper.toDTO(patientRepository.save(entity));
+
+        UUID id = UUID.randomUUID();
+        String displayName = (dto.getFirstName() + " " + dto.getLastName()).trim();
+        
+        // 1. Create central account (Manual Patients don't have GitHub login)
+        AccountEntity account = new AccountEntity(id, null, displayName, Role.PATIENT, Instant.now());
+        accountRepository.save(account);
+
+        // 2. Create profile
+        PatientProfileEntity profile = new PatientProfileEntity(account, dto.getFirstName(), dto.getLastName(), dto.getPersonalIdentityNumber());
+        patientProfileRepository.save(profile);
+
+        return new PatientDTO(profile.getId(), profile.getFirstName(), profile.getLastName(), account.getCreatedAt());
     }
 
     @Transactional(readOnly = true)
     public Optional<PatientDTO> getPatient(UUID id) {
-        return patientRepository.findById(id).map(patientMapper::toDTO);
+        return patientProfileRepository.findById(id).map(p -> new PatientDTO(p.getId(), p.getFirstName(), p.getLastName(), p.getAccount().getCreatedAt()));
     }
 
     @Transactional(readOnly = true)
     public List<PatientDTO> getAllPatients() {
-        return patientRepository.findAll().stream()
-                .map(patientMapper::toDTO)
+        return patientProfileRepository.findAll().stream()
+                .map(p -> new PatientDTO(p.getId(), p.getFirstName(), p.getLastName(), p.getAccount().getCreatedAt()))
                 .collect(Collectors.toList());
     }
 }
-

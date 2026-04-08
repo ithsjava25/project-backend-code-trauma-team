@@ -3,8 +3,8 @@ package org.example.projektarendehantering.infrastructure.security;
 import org.example.projektarendehantering.common.Actor;
 import org.example.projektarendehantering.common.NotAuthorizedException;
 import org.example.projektarendehantering.common.Role;
-import org.example.projektarendehantering.infrastructure.persistence.EmployeeEntity;
-import org.example.projektarendehantering.infrastructure.persistence.EmployeeRepository;
+import org.example.projektarendehantering.infrastructure.persistence.AccountEntity;
+import org.example.projektarendehantering.infrastructure.persistence.AccountRepository;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -33,7 +33,7 @@ import static org.mockito.Mockito.*;
 class SecurityActorAdapterTest {
 
     @Mock
-    private EmployeeRepository employeeRepository;
+    private AccountRepository accountRepository;
 
     @Mock
     private Authentication authentication;
@@ -74,12 +74,12 @@ class SecurityActorAdapterTest {
     void currentUser_whenEmployeeFoundInRepository_shouldReturnActorFromEmployee() {
         String username = "testuser";
         UUID userId = UUID.nameUUIDFromBytes(username.getBytes(StandardCharsets.UTF_8));
-        EmployeeEntity employee = new EmployeeEntity(userId, "Test User", username, Role.DOCTOR, Instant.now());
+        AccountEntity account = new AccountEntity(userId, username, "Test User", Role.DOCTOR, Instant.now());
 
         when(securityContext.getAuthentication()).thenReturn(authentication);
         when(authentication.isAuthenticated()).thenReturn(true);
         when(authentication.getName()).thenReturn(username);
-        when(employeeRepository.findById(userId)).thenReturn(Optional.of(employee));
+        when(accountRepository.findById(userId)).thenReturn(Optional.of(account));
 
         Actor actor = securityActorAdapter.currentUser();
 
@@ -103,14 +103,14 @@ class SecurityActorAdapterTest {
         when(oauth2Token.getPrincipal()).thenReturn(oauth2User);
         when(oauth2User.getAttribute("login")).thenReturn(login);
         
-        when(employeeRepository.findById(userId)).thenReturn(Optional.empty());
+        when(accountRepository.findById(userId)).thenReturn(Optional.empty());
         doReturn(Collections.emptyList()).when(oauth2Token).getAuthorities();
 
         Actor actor = securityActorAdapter.currentUser();
 
         assertEquals(userId, actor.userId());
         assertEquals(login, actor.githubUsername());
-        assertEquals(Role.PATIENT, actor.role());
+        assertEquals(Role.PENDING, actor.role()); // Changed to PENDING default
     }
 
     @Test
@@ -121,7 +121,7 @@ class SecurityActorAdapterTest {
         when(securityContext.getAuthentication()).thenReturn(authentication);
         when(authentication.isAuthenticated()).thenReturn(true);
         when(authentication.getName()).thenReturn(username);
-        when(employeeRepository.findById(userId)).thenReturn(Optional.empty());
+        when(accountRepository.findById(userId)).thenReturn(Optional.empty());
         
         doReturn(List.of(new SimpleGrantedAuthority("ROLE_MANAGER")))
             .when(authentication).getAuthorities();
@@ -141,14 +141,14 @@ class SecurityActorAdapterTest {
         when(securityContext.getAuthentication()).thenReturn(authentication);
         when(authentication.isAuthenticated()).thenReturn(true);
         when(authentication.getName()).thenReturn(username);
-        when(employeeRepository.findById(userId)).thenReturn(Optional.empty());
+        when(accountRepository.findById(userId)).thenReturn(Optional.empty());
         
         doReturn(List.of(new SimpleGrantedAuthority("ROLE_DOCTOR")))
             .when(authentication).getAuthorities();
 
         Actor actor = securityActorAdapter.currentUser();
 
-        assertEquals(Role.DOCTOR, actor.role());
+        assertEquals(Role.PENDING, actor.role()); // Fallback only handles MANAGER now in code
     }
 
     @Test
@@ -159,14 +159,14 @@ class SecurityActorAdapterTest {
         when(securityContext.getAuthentication()).thenReturn(authentication);
         when(authentication.isAuthenticated()).thenReturn(true);
         when(authentication.getName()).thenReturn(username);
-        when(employeeRepository.findById(userId)).thenReturn(Optional.empty());
+        when(accountRepository.findById(userId)).thenReturn(Optional.empty());
         
         doReturn(List.of(new SimpleGrantedAuthority("ROLE_NURSE")))
             .when(authentication).getAuthorities();
 
         Actor actor = securityActorAdapter.currentUser();
 
-        assertEquals(Role.NURSE, actor.role());
+        assertEquals(Role.PENDING, actor.role());
     }
 
     @Test
@@ -177,12 +177,12 @@ class SecurityActorAdapterTest {
         when(securityContext.getAuthentication()).thenReturn(authentication);
         when(authentication.isAuthenticated()).thenReturn(true);
         when(authentication.getName()).thenReturn(username);
-        when(employeeRepository.findById(userId)).thenReturn(Optional.empty());
+        when(accountRepository.findById(userId)).thenReturn(Optional.empty());
         
         doReturn(Collections.emptyList()).when(authentication).getAuthorities();
 
         Actor actor = securityActorAdapter.currentUser();
 
-        assertEquals(Role.PATIENT, actor.role());
+        assertEquals(Role.PENDING, actor.role());
     }
 }

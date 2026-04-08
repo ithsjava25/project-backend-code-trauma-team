@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.UUID;
 
 public interface CaseRepository extends JpaRepository<CaseEntity, UUID> {
-    List<CaseEntity> findAllByPatient_Id(UUID patientId);
+    List<CaseEntity> findAllBySubject_Id(UUID subjectId);
     List<CaseEntity> findAllByOwnerId(UUID ownerId);
     List<CaseEntity> findAllByHandlerId(UUID handlerId);
     List<CaseEntity> findAllByOtherId(UUID otherId);

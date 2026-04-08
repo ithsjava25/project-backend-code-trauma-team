@@ -1,17 +1,19 @@
 package org.example.projektarendehantering.infrastructure.persistence;
 
 import jakarta.persistence.*;
-
-import java.time.Instant;
 import java.util.UUID;
 
 @Entity
-@Table(name = "patients")
-public class PatientEntity {
+@Table(name = "patient_profiles")
+public class PatientProfileEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
+
+    @OneToOne
+    @MapsId
+    @JoinColumn(name = "id")
+    private AccountEntity account;
 
     private String firstName;
     private String lastName;
@@ -19,20 +21,21 @@ public class PatientEntity {
     @Column(unique = true)
     private String personalIdentityNumber;
 
-    private Instant createdAt;
+    public PatientProfileEntity() {}
 
-    public PatientEntity() {}
-
-    public PatientEntity(UUID id, String firstName, String lastName, String personalIdentityNumber, Instant createdAt) {
-        this.id = id;
+    public PatientProfileEntity(AccountEntity account, String firstName, String lastName, String personalIdentityNumber) {
+        this.account = account;
+        // Do NOT manually set this.id when using @MapsId
         this.firstName = firstName;
         this.lastName = lastName;
         this.personalIdentityNumber = personalIdentityNumber;
-        this.createdAt = createdAt;
     }
 
     public UUID getId() { return id; }
     public void setId(UUID id) { this.id = id; }
+
+    public AccountEntity getAccount() { return account; }
+    public void setAccount(AccountEntity account) { this.account = account; }
 
     public String getFirstName() { return firstName; }
     public void setFirstName(String firstName) { this.firstName = firstName; }
@@ -42,8 +45,4 @@ public class PatientEntity {
 
     public String getPersonalIdentityNumber() { return personalIdentityNumber; }
     public void setPersonalIdentityNumber(String personalIdentityNumber) { this.personalIdentityNumber = personalIdentityNumber; }
-
-    public Instant getCreatedAt() { return createdAt; }
-    public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
 }
-
