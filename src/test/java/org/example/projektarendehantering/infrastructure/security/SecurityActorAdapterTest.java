@@ -1,10 +1,11 @@
 package org.example.projektarendehantering.infrastructure.security;
 
-import org.example.projektarendehantering.common.Actor;
-import org.example.projektarendehantering.common.NotAuthorizedException;
-import org.example.projektarendehantering.common.Role;
-import org.example.projektarendehantering.infrastructure.persistence.AccountEntity;
-import org.example.projektarendehantering.infrastructure.persistence.AccountRepository;
+import org.example.projektarendehantering.shared.Actor;
+import org.example.projektarendehantering.shared.NotAuthorizedException;
+import org.example.projektarendehantering.shared.Role;
+import org.example.projektarendehantering.identity.domain.AccountEntity;
+import org.example.projektarendehantering.identity.domain.AccountRepository;
+import org.example.projektarendehantering.identity.infrastructure.SecurityActorAdapter;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

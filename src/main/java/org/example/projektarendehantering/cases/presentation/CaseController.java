@@ -1,0 +1,48 @@
+package org.example.projektarendehantering.cases.presentation;
+
+import jakarta.validation.Valid;
+import org.example.projektarendehantering.cases.application.CaseService;
+import org.example.projektarendehantering.identity.infrastructure.SecurityActorAdapter;
+import org.example.projektarendehantering.cases.application.CaseAssignmentDTO;
+import org.example.projektarendehantering.cases.application.CaseDTO;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.UUID;
+
+@RestController
+@RequestMapping("/api/cases")
+public class CaseController {
+
+    private final CaseService caseService;
+    private final SecurityActorAdapter securityActorAdapter;
+
+    public CaseController(CaseService caseService, SecurityActorAdapter securityActorAdapter) {
+        this.caseService = caseService;
+        this.securityActorAdapter = securityActorAdapter;
+    }
+
+    @PostMapping
+    public ResponseEntity<CaseDTO> createCase(@RequestBody @Valid CaseDTO caseDTO) {
+        CaseDTO created = caseService.createCase(securityActorAdapter.currentUser(), caseDTO);
+        return ResponseEntity.ok(created);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<CaseDTO> getCase(@PathVariable UUID id) {
+        return caseService.getCase(securityActorAdapter.currentUser(), id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    @GetMapping
+    public ResponseEntity<List<CaseDTO>> getAllCases() {
+        return ResponseEntity.ok(caseService.getAllCases(securityActorAdapter.currentUser()));
+    }
+
+    @PutMapping("/{id}/assignments")
+    public ResponseEntity<CaseDTO> assignUsers(@PathVariable UUID id, @RequestBody CaseAssignmentDTO dto) {
+        return ResponseEntity.ok(caseService.assignUsers(securityActorAdapter.currentUser(), id, dto));
+    }
+}
