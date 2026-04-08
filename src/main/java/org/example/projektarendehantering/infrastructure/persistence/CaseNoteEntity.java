@@ -27,7 +27,9 @@ public class CaseNoteEntity {
 
     private String content;
 
-    private String author;
+    private String authorDisplayName;
+    private String authorGithubUsername;
+    private String authorRole;
 
     private Instant createdAt;
 

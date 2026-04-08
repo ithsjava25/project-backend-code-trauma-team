@@ -9,14 +9,16 @@ public class EmployeeDTO {
 
     private UUID id;
     private String displayName;
+    private String githubUsername;
     private Role role;
     private Instant createdAt;
 
     public EmployeeDTO() {}
 
-    public EmployeeDTO(UUID id, String displayName, Role role, Instant createdAt) {
+    public EmployeeDTO(UUID id, String displayName, String githubUsername, Role role, Instant createdAt) {
         this.id = id;
         this.displayName = displayName;
+        this.githubUsername = githubUsername;
         this.role = role;
         this.createdAt = createdAt;
     }
@@ -26,6 +28,9 @@ public class EmployeeDTO {
 
     public String getDisplayName() { return displayName; }
     public void setDisplayName(String displayName) { this.displayName = displayName; }
+
+    public String getGithubUsername() { return githubUsername; }
+    public void setGithubUsername(String githubUsername) { this.githubUsername = githubUsername; }
 
     public Role getRole() { return role; }
     public void setRole(Role role) { this.role = role; }

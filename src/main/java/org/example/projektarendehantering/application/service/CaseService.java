@@ -32,28 +32,31 @@ public class CaseService {
 
     private final CaseRepository caseRepository;
     private final CaseMapper caseMapper;
+    private final CaseNoteMapper caseNoteMapper;
     private final PatientRepository patientRepository;
     private final CaseNoteRepository caseNoteRepository;
     private final EmployeeRepository employeeRepository;
 
-    public CaseService(CaseRepository caseRepository, CaseMapper caseMapper, PatientRepository patientRepository, CaseNoteRepository caseNoteRepository, EmployeeRepository employeeRepository) {
+    public CaseService(CaseRepository caseRepository, CaseMapper caseMapper, CaseNoteMapper caseNoteMapper, PatientRepository patientRepository, CaseNoteRepository caseNoteRepository, EmployeeRepository employeeRepository) {
         this.caseRepository = caseRepository;
         this.caseMapper = caseMapper;
+        this.caseNoteMapper = caseNoteMapper;
         this.patientRepository = patientRepository;
         this.caseNoteRepository = caseNoteRepository;
         this.employeeRepository = employeeRepository;
     }
 
     @Transactional
-    public void addNote(UUID caseId, String content, String author) {
+    public void addNote(UUID caseId, String content, Actor actor) {
+        if (actor == null) {
+            throw new NotAuthorizedException("Not allowed to add notes");
+        }
         CaseEntity caseEntity = caseRepository.findById(caseId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Case not found"));
+        requireCanRead(actor, caseEntity);
 
-        CaseNoteEntity note = new CaseNoteEntity();
+        CaseNoteEntity note = caseNoteMapper.toEntity(actor, content);
         note.setCaseEntity(caseEntity);
-        note.setContent(content);
-        note.setAuthor(author);
-        note.setCreatedAt(Instant.now());
 
         caseNoteRepository.save(note);
     }
