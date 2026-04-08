@@ -26,6 +26,7 @@ public class EmployeeUiController {
     }
 
     @GetMapping("/ui/employees")
+    @PreAuthorize("hasRole('MANAGER')")
     public String listEmployees(Model model) {
         Actor actor = securityActorAdapter.currentUser();
         model.addAttribute("employees", employeeService.getAllEmployees(actor));
@@ -41,6 +42,7 @@ public class EmployeeUiController {
     }
 
     @PostMapping("/ui/employees/new")
+    @PreAuthorize("hasRole('MANAGER')")
     public String createEmployee(@Valid @ModelAttribute("employeeCreateDTO") EmployeeCreateDTO dto, BindingResult result, Model model) {
         if (result.hasErrors()) {
             model.addAttribute("roles", Role.values());
