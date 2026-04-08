@@ -53,6 +53,7 @@ public class CaseService {
         }
         CaseEntity caseEntity = caseRepository.findById(caseId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Case not found"));
+        requireCanRead(actor, caseEntity);
 
         CaseNoteEntity note = caseNoteMapper.toEntity(actor, content);
         note.setCaseEntity(caseEntity);
