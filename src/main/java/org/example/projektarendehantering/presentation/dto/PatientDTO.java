@@ -15,14 +15,17 @@ public class PatientDTO {
     @NotBlank
     private String lastName;
 
+    private String personalIdentityNumber;
+
     private Instant createdAt;
 
     public PatientDTO() {}
 
-    public PatientDTO(UUID id, String firstName, String lastName, Instant createdAt) {
+    public PatientDTO(UUID id, String firstName, String lastName, String personalIdentityNumber, Instant createdAt) {
         this.id = id;
         this.firstName = firstName;
         this.lastName = lastName;
+        this.personalIdentityNumber = personalIdentityNumber;
         this.createdAt = createdAt;
     }
 
@@ -35,7 +38,9 @@ public class PatientDTO {
     public String getLastName() { return lastName; }
     public void setLastName(String lastName) { this.lastName = lastName; }
 
+    public String getPersonalIdentityNumber() { return personalIdentityNumber; }
+    public void setPersonalIdentityNumber(String personalIdentityNumber) { this.personalIdentityNumber = personalIdentityNumber; }
+
     public Instant getCreatedAt() { return createdAt; }
     public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
 }
-

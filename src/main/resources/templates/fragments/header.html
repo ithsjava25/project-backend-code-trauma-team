@@ -13,6 +13,9 @@
             <a class="nav-link" href="/ui/audit">Audit</a>
             <a class="nav-link"
                th:if="${currentActor != null && currentActor.role() != null && currentActor.role().name() == 'MANAGER'}"
+               href="/ui/patients">Manage Patients</a>
+            <a class="nav-link"
+               th:if="${currentActor != null && currentActor.role() != null && currentActor.role().name() == 'MANAGER'}"
                href="/ui/employees">Manage Users</a></nav>
 
         <div class="auth" id="authBar">

@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head(title='Patients')}"></head>
+<body>
+<div th:replace="~{fragments/header :: header}"></div>
+
+<main class="container page">
+    <div class="page-title">
+        <h1>Registered Patients</h1>
+        <a class="button" href="/ui/patients/new">New Patient</a>
+    </div>
+
+    <section class="panel">
+        <table class="table" th:if="${not #lists.isEmpty(patients)}">
+            <thead>
+            <tr>
+                <th>First Name</th>
+                <th>Last Name</th>
+                <th>Personal ID</th>
+                <th>Created At</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="p : ${patients}">
+                <td th:text="${p.firstName}">First</td>
+                <td th:text="${p.lastName}">Last</td>
+                <td class="code" th:text="${p.personalIdentityNumber}">PIN</td>
+                <td th:text="${p.createdAt}">Date</td>
+            </tr>
+            </tbody>
+        </table>
+        <p th:if="${#lists.isEmpty(patients)}" class="muted">No patients found.</p>
+    </section>
+</main>
+
+<div th:replace="~{fragments/footer :: footer}"></div>
+</body>
+</html>
