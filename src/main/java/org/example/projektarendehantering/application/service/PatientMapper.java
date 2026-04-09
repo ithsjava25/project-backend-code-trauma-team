@@ -14,6 +14,7 @@ public class PatientMapper {
                 entity.getId(),
                 entity.getFirstName(),
                 entity.getLastName(),
+                entity.getPersonalIdentityNumber(),
                 entity.getCreatedAt()
         );
     }
@@ -27,4 +28,3 @@ public class PatientMapper {
         return entity;
     }
 }
-

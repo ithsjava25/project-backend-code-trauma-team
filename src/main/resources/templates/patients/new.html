@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head(title='Register Patient')}"></head>
+<body>
+<div th:replace="~{fragments/header :: header}"></div>
+
+<main class="container page">
+    <div class="page-title">
+        <h1>Register New Patient</h1>
+        <a class="button button-secondary" th:href="@{/ui/patients}">Back to list</a>
+    </div>
+
+    <form class="form" th:action="@{/ui/patients/new}" th:object="${patientCreateDTO}" method="post">
+        <label class="field">
+            <span class="label">First Name</span>
+            <input class="input" th:field="*{firstName}" placeholder="e.g. John" required/>
+            <span class="muted" th:if="${#fields.hasErrors('firstName')}" th:errors="*{firstName}"
+                  style="color: var(--danger)">Error</span>
+        </label>
+        <label class="field">
+            <span class="label">Last Name</span>
+            <input class="input" th:field="*{lastName}" placeholder="e.g. Doe" required/>
+            <span class="muted" th:if="${#fields.hasErrors('lastName')}" th:errors="*{lastName}"
+                  style="color: var(--danger)">Error</span>
+        </label>
+        <label class="field">
+            <span class="label">Personal Identity Number</span>
+            <input class="input" th:field="*{personalIdentityNumber}" placeholder="YYYYMMDD-XXXX" required/>
+            <span class="muted" th:if="${#fields.hasErrors('personalIdentityNumber')}" th:errors="*{personalIdentityNumber}"
+                  style="color: var(--danger)">Error</span>
+        </label>
+        <div class="actions">
+            <button class="button" type="submit">Create Patient</button>
+        </div>
+    </form>
+</main>
+
+<div th:replace="~{fragments/footer :: footer}"></div>
+</body>
+</html>

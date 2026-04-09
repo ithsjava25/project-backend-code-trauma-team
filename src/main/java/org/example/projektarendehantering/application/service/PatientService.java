@@ -29,7 +29,7 @@ public class PatientService {
     @Transactional
     public PatientDTO createPatient(PatientCreateDTO patientDTO) {
         PatientEntity entity = patientMapper.toEntity(patientDTO);
-        entity.setId(UUID.randomUUID());
+        // Removed manual setId - @GeneratedValue in PatientEntity will handle this
         entity.setCreatedAt(Instant.now());
         if (entity.getPersonalIdentityNumber() != null && !entity.getPersonalIdentityNumber().isBlank()) {
             patientRepository.findByPersonalIdentityNumber(entity.getPersonalIdentityNumber())
@@ -52,4 +52,3 @@ public class PatientService {
                 .collect(Collectors.toList());
     }
 }
-
