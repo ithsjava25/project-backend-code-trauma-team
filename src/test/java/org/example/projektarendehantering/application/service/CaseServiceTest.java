@@ -33,6 +33,8 @@ class CaseServiceTest {
     private CaseNoteRepository caseNoteRepository;
     @Mock
     private EmployeeRepository employeeRepository;
+    @Mock
+    private CaseNoteMapper caseNoteMapper;
 
     @InjectMocks
     private CaseService caseService;
@@ -40,21 +42,20 @@ class CaseServiceTest {
     private Actor doctorActor;
     private Actor nurseActor;
     private Actor managerActor;
-    private Actor patientActor;
     private UUID caseId;
     private CaseEntity caseEntity;
+    private UUID patientId;
 
     @BeforeEach
     void setUp() {
         UUID doctorId = UUID.randomUUID();
         UUID nurseId = UUID.randomUUID();
         UUID managerId = UUID.randomUUID();
-        UUID patientId = UUID.randomUUID();
+        patientId = UUID.randomUUID();
 
         doctorActor = new Actor(doctorId, Role.DOCTOR, "Doctor", "doctor_user");
         nurseActor = new Actor(nurseId, Role.NURSE, "Nurse", "nurse_user");
         managerActor = new Actor(managerId, Role.MANAGER, "Manager", "manager_user");
-        patientActor = new Actor(patientId, Role.PATIENT, "Patient", "patient_user");
 
         caseId = UUID.randomUUID();
         caseEntity = new CaseEntity();
@@ -99,16 +100,6 @@ class CaseServiceTest {
     }
 
     @Test
-    void getCase_shouldAllowPatientToReadOwnCase() {
-        when(caseRepository.findById(caseId)).thenReturn(Optional.of(caseEntity));
-        when(caseMapper.toDTO(caseEntity)).thenReturn(new CaseDTO());
-
-        CaseDTO result = caseService.getCase(patientActor, caseId).orElseThrow();
-
-        assertThat(result).isNotNull();
-    }
-
-    @Test
     void getCase_shouldDenyUnauthorizedAccess() {
         Actor unauthorizedActor = new Actor(UUID.randomUUID(), Role.DOCTOR, "Unauthorized", "unauthorized_user");
         when(caseRepository.findById(caseId)).thenReturn(Optional.of(caseEntity));
@@ -121,12 +112,12 @@ class CaseServiceTest {
     @Test
     void createCase_shouldAllowDoctor() {
         CaseDTO dto = new CaseDTO();
-        dto.setPatientId(patientActor.userId());
+        dto.setPatientId(patientId);
         PatientEntity patient = new PatientEntity();
-        patient.setId(patientActor.userId());
+        patient.setId(patientId);
 
         when(caseMapper.toEntity(dto)).thenReturn(new CaseEntity());
-        when(patientRepository.findById(patientActor.userId())).thenReturn(Optional.of(patient));
+        when(patientRepository.findById(patientId)).thenReturn(Optional.of(patient));
         when(caseRepository.save(any(CaseEntity.class))).thenAnswer(i -> i.getArgument(0));
         when(caseMapper.toDTO(any(CaseEntity.class))).thenReturn(new CaseDTO());
 
