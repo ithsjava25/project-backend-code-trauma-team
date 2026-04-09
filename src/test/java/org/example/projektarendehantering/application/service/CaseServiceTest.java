@@ -51,10 +51,10 @@ class CaseServiceTest {
         UUID managerId = UUID.randomUUID();
         UUID patientId = UUID.randomUUID();
 
-        doctorActor = new Actor(doctorId, Role.DOCTOR);
-        nurseActor = new Actor(nurseId, Role.NURSE);
-        managerActor = new Actor(managerId, Role.MANAGER);
-        patientActor = new Actor(patientId, Role.PATIENT);
+        doctorActor = new Actor(doctorId, Role.DOCTOR, "Doctor", "doctor_user");
+        nurseActor = new Actor(nurseId, Role.NURSE, "Nurse", "nurse_user");
+        managerActor = new Actor(managerId, Role.MANAGER, "Manager", "manager_user");
+        patientActor = new Actor(patientId, Role.PATIENT, "Patient", "patient_user");
 
         caseId = UUID.randomUUID();
         caseEntity = new CaseEntity();
@@ -110,7 +110,7 @@ class CaseServiceTest {
 
     @Test
     void getCase_shouldDenyUnauthorizedAccess() {
-        Actor unauthorizedActor = new Actor(UUID.randomUUID(), Role.DOCTOR);
+        Actor unauthorizedActor = new Actor(UUID.randomUUID(), Role.DOCTOR, "Unauthorized", "unauthorized_user");
         when(caseRepository.findById(caseId)).thenReturn(Optional.of(caseEntity));
 
         assertThatThrownBy(() -> caseService.getCase(unauthorizedActor, caseId))

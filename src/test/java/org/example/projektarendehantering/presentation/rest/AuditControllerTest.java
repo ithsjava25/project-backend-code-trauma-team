@@ -53,7 +53,7 @@ class AuditControllerTest {
         mockMvc = webAppContextSetup(context)
                 .apply(springSecurity())
                 .build();
-        managerActor = new Actor(UUID.randomUUID(), Role.MANAGER);
+        managerActor = new Actor(UUID.randomUUID(), Role.MANAGER, "Manager", "manager");
         when(securityActorAdapter.currentUser()).thenReturn(managerActor);
     }
 

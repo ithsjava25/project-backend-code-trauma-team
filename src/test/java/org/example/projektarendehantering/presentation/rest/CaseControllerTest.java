@@ -60,7 +60,7 @@ class CaseControllerTest {
                 .apply(springSecurity())
                 .build();
         caseId = UUID.randomUUID();
-        doctorActor = new Actor(UUID.randomUUID(), Role.DOCTOR);
+        doctorActor = new Actor(UUID.randomUUID(), Role.DOCTOR, "Doctor", "doctor_user");
         when(securityActorAdapter.currentUser()).thenReturn(doctorActor);
     }
 

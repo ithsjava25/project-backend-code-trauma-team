@@ -49,8 +49,8 @@ class AuditServiceTest {
 
     @BeforeEach
     void setUp() {
-        managerActor = new Actor(UUID.randomUUID(), Role.MANAGER);
-        doctorActor = new Actor(UUID.randomUUID(), Role.DOCTOR);
+        managerActor = new Actor(UUID.randomUUID(), Role.MANAGER, "Manager", "manager");
+        doctorActor = new Actor(UUID.randomUUID(), Role.DOCTOR, "Doctor", "doctor");
         caseId = UUID.randomUUID();
     }
 
@@ -92,7 +92,7 @@ class AuditServiceTest {
 
     @Test
     void listEvents_shouldDenyPatient() {
-        Actor patientActor = new Actor(UUID.randomUUID(), Role.PATIENT);
+        Actor patientActor = new Actor(UUID.randomUUID(), Role.PATIENT, "Patient", "patient");
 
         assertThatThrownBy(() -> auditService.listEvents(patientActor, null, null, null, Pageable.unpaged()))
                 .isInstanceOf(NotAuthorizedException.class);

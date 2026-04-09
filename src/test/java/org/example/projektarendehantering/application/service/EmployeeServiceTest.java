@@ -14,6 +14,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
@@ -38,14 +39,14 @@ class EmployeeServiceTest {
 
     @BeforeEach
     void setUp() {
-        managerActor = new Actor(UUID.randomUUID(), Role.MANAGER);
-        doctorActor = new Actor(UUID.randomUUID(), Role.DOCTOR);
+        managerActor = new Actor(UUID.randomUUID(), Role.MANAGER, "Manager", "manager_user");
+        doctorActor = new Actor(UUID.randomUUID(), Role.DOCTOR, "Doctor", "doctor_user");
     }
 
     @Test
     void getAllEmployees_shouldAllowManager() {
         when(employeeRepository.findAll()).thenReturn(List.of(new EmployeeEntity()));
-        when(employeeMapper.toDTO(any())).thenReturn(new EmployeeDTO(UUID.randomUUID(), "Name", Role.DOCTOR, null));
+        when(employeeMapper.toDTO(any())).thenReturn(new EmployeeDTO(UUID.randomUUID(), "Name", "gh_user", Role.DOCTOR, Instant.now()));
 
         List<EmployeeDTO> result = employeeService.getAllEmployees(managerActor);
 
@@ -64,7 +65,7 @@ class EmployeeServiceTest {
     void createEmployee_shouldAllowManager() {
         EmployeeCreateDTO dto = new EmployeeCreateDTO();
         EmployeeEntity entity = new EmployeeEntity();
-        EmployeeDTO resultDTO = new EmployeeDTO(UUID.randomUUID(), "Name", Role.DOCTOR, null);
+        EmployeeDTO resultDTO = new EmployeeDTO(UUID.randomUUID(), "Name", "gh_user", Role.DOCTOR, Instant.now());
 
         when(employeeMapper.toEntity(dto)).thenReturn(entity);
         when(employeeRepository.save(any())).thenReturn(entity);

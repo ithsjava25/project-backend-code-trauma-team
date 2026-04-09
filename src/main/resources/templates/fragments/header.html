@@ -11,11 +11,16 @@
             <a class="nav-link" href="/ui/cases">Cases</a>
             <a class="nav-link" href="/ui/cases/new">Create</a>
             <a class="nav-link" href="/ui/audit">Audit</a>
-        </nav>
+            <a class="nav-link"
+               th:if="${currentActor != null && currentActor.role() != null && currentActor.role().name() == 'MANAGER'}"
+               href="/ui/employees">Manage Users</a></nav>
 
         <div class="auth" id="authBar">
             <div th:if="${#authorization.expression('isAuthenticated()')}">
-                <span class="auth-label" th:text="'Logged in as: ' + ${#authentication.name}">User</span>
+                <span class="auth-label"
+                      th:text="${currentActor != null
+          ? 'Logged in as: ' + (currentActor.displayName ?: (currentActor.githubUsername ?: currentActor.role))
+          : 'Logged in as: ' + '#authentication.name'}">User</span>
                 <form th:action="@{/logout}" method="post" style="display: inline;">
                     <button class="button button-secondary" type="submit">Logout</button>
                 </form>

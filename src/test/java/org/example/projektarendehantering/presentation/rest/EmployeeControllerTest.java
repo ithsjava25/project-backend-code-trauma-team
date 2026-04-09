@@ -17,6 +17,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.context.WebApplicationContext;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -55,14 +56,14 @@ class EmployeeControllerTest {
         mockMvc = webAppContextSetup(context)
                 .apply(springSecurity())
                 .build();
-        managerActor = new Actor(UUID.randomUUID(), Role.MANAGER);
+        managerActor = new Actor(UUID.randomUUID(), Role.MANAGER, "Manager", "manager_user");
         when(securityActorAdapter.currentUser()).thenReturn(managerActor);
     }
 
     @Test
     @WithMockUser(roles = "MANAGER")
     void getAllEmployees_shouldReturnList() throws Exception {
-        EmployeeDTO dto = new EmployeeDTO(UUID.randomUUID(), "Manager Name", Role.MANAGER, null);
+        EmployeeDTO dto = new EmployeeDTO(UUID.randomUUID(), "Manager Name", "manager_user", Role.MANAGER, Instant.now());
 
         when(employeeService.getAllEmployees(managerActor)).thenReturn(List.of(dto));
 
@@ -76,9 +77,10 @@ class EmployeeControllerTest {
     void createEmployee_shouldReturnCreatedEmployee() throws Exception {
         EmployeeCreateDTO input = new EmployeeCreateDTO();
         input.setDisplayName("New Employee");
+        input.setGithubUsername("new_emp_gh");
         input.setRole(Role.DOCTOR);
 
-        EmployeeDTO output = new EmployeeDTO(UUID.randomUUID(), "New Employee", Role.DOCTOR, null);
+        EmployeeDTO output = new EmployeeDTO(UUID.randomUUID(), "New Employee", "new_emp_gh", Role.DOCTOR, Instant.now());
 
         when(employeeService.createEmployee(eq(managerActor), any(EmployeeCreateDTO.class))).thenReturn(output);
 
@@ -94,7 +96,7 @@ class EmployeeControllerTest {
     @WithMockUser(roles = "MANAGER")
     void getEmployee_shouldReturnEmployee_whenExists() throws Exception {
         UUID empId = UUID.randomUUID();
-        EmployeeDTO dto = new EmployeeDTO(empId, "Some Name", Role.NURSE, null);
+        EmployeeDTO dto = new EmployeeDTO(empId, "Some Name", "some_gh", Role.NURSE, Instant.now());
 
         when(employeeService.getEmployee(eq(managerActor), eq(empId))).thenReturn(Optional.of(dto));
 
