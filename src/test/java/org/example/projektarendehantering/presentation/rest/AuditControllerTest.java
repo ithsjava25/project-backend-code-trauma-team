@@ -21,7 +21,10 @@ import java.util.List;
 import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -84,6 +87,14 @@ class AuditControllerTest {
                         .param("page", "1")
                         .param("size", "10"))
                 .andExpect(status().isOk());
+
+        verify(auditService).listEvents(
+                eq(managerActor),
+                isNull(),
+                isNull(),
+                eq(caseId),
+                argThat(p -> p.getPageNumber() == 1 && p.getPageSize() == 10)
+        );
     }
 
     @Test
