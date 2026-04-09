@@ -26,7 +26,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -58,7 +59,8 @@ class SecurityActorAdapterTest {
     void currentUser_whenNotAuthenticated_shouldThrowException() {
         when(securityContext.getAuthentication()).thenReturn(null);
 
-        assertThrows(NotAuthorizedException.class, () -> securityActorAdapter.currentUser());
+        assertThatThrownBy(() -> securityActorAdapter.currentUser())
+                .isInstanceOf(NotAuthorizedException.class);
     }
 
     @Test
@@ -67,7 +69,8 @@ class SecurityActorAdapterTest {
         when(authentication.isAuthenticated()).thenReturn(true);
         when(authentication.getName()).thenReturn("anonymousUser");
 
-        assertThrows(NotAuthorizedException.class, () -> securityActorAdapter.currentUser());
+        assertThatThrownBy(() -> securityActorAdapter.currentUser())
+                .isInstanceOf(NotAuthorizedException.class);
     }
 
     @Test
@@ -83,10 +86,10 @@ class SecurityActorAdapterTest {
 
         Actor actor = securityActorAdapter.currentUser();
 
-        assertEquals(userId, actor.userId());
-        assertEquals(Role.DOCTOR, actor.role());
-        assertEquals("Test User", actor.displayName());
-        assertEquals(username, actor.githubUsername());
+        assertThat(actor.userId()).isEqualTo(userId);
+        assertThat(actor.role()).isEqualTo(Role.DOCTOR);
+        assertThat(actor.displayName()).isEqualTo("Test User");
+        assertThat(actor.githubUsername()).isEqualTo(username);
     }
 
     @Test
@@ -108,9 +111,9 @@ class SecurityActorAdapterTest {
 
         Actor actor = securityActorAdapter.currentUser();
 
-        assertEquals(userId, actor.userId());
-        assertEquals(login, actor.githubUsername());
-        assertEquals(Role.PATIENT, actor.role());
+        assertThat(actor.userId()).isEqualTo(userId);
+        assertThat(actor.githubUsername()).isEqualTo(login);
+        assertThat(actor.role()).isEqualTo(Role.PATIENT);
     }
 
     @Test
@@ -128,9 +131,9 @@ class SecurityActorAdapterTest {
 
         Actor actor = securityActorAdapter.currentUser();
 
-        assertEquals(Role.MANAGER, actor.role());
-        assertEquals(username, actor.githubUsername());
-        assertNull(actor.displayName());
+        assertThat(actor.role()).isEqualTo(Role.MANAGER);
+        assertThat(actor.githubUsername()).isEqualTo(username);
+        assertThat(actor.displayName()).isNull();
     }
 
     @Test
@@ -148,7 +151,7 @@ class SecurityActorAdapterTest {
 
         Actor actor = securityActorAdapter.currentUser();
 
-        assertEquals(Role.DOCTOR, actor.role());
+        assertThat(actor.role()).isEqualTo(Role.DOCTOR);
     }
 
     @Test
@@ -166,7 +169,7 @@ class SecurityActorAdapterTest {
 
         Actor actor = securityActorAdapter.currentUser();
 
-        assertEquals(Role.NURSE, actor.role());
+        assertThat(actor.role()).isEqualTo(Role.NURSE);
     }
 
     @Test
@@ -183,6 +186,12 @@ class SecurityActorAdapterTest {
 
         Actor actor = securityActorAdapter.currentUser();
 
-        assertEquals(Role.PATIENT, actor.role());
+        assertThat(actor.role()).isEqualTo(Role.PATIENT);
+    }
+
+    // Helper because getAuthorities() is wildcard
+    @SuppressWarnings("unchecked")
+    private org.mockito.stubbing.Stubber doReturn(Object value) {
+        return org.mockito.Mockito.doReturn(value);
     }
 }
