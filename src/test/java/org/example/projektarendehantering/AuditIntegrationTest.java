@@ -14,6 +14,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.WebApplicationContext;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
 
@@ -56,7 +57,10 @@ class AuditIntegrationTest {
         List<AuditEventEntity> events = auditEventRepository.findAll();
         assertThat(events.size()).isGreaterThan((int) countBefore);
         
-        AuditEventEntity latest = events.get(events.size() - 1);
+        AuditEventEntity latest = events.stream()
+                .max(Comparator.comparing(AuditEventEntity::getOccurredAt, Comparator.nullsLast(Comparator.naturalOrder()))
+                        .thenComparing(AuditEventEntity::getId, Comparator.nullsLast(Comparator.naturalOrder())))
+                .orElseThrow();
         assertThat(latest.getRequestPath()).isEqualTo("/api/cases");
         assertThat(latest.getHttpMethod()).isEqualTo("GET");
     }
@@ -70,8 +74,10 @@ class AuditIntegrationTest {
 
         auditService.record(event);
 
-        List<AuditEventEntity> events = auditEventRepository.findAll();
-        AuditEventEntity saved = events.get(events.size() - 1);
+        AuditEventEntity saved = auditEventRepository.findAll().stream()
+                .max(Comparator.comparing(AuditEventEntity::getOccurredAt, Comparator.nullsLast(Comparator.naturalOrder()))
+                        .thenComparing(AuditEventEntity::getId, Comparator.nullsLast(Comparator.naturalOrder())))
+                .orElseThrow();
         
         assertThat(saved.getQueryString())
                 .contains("username=oscar")
@@ -88,8 +94,10 @@ class AuditIntegrationTest {
 
         auditService.record(event);
 
-        List<AuditEventEntity> events = auditEventRepository.findAll();
-        AuditEventEntity saved = events.get(events.size() - 1);
+        AuditEventEntity saved = auditEventRepository.findAll().stream()
+                .max(Comparator.comparing(AuditEventEntity::getOccurredAt, Comparator.nullsLast(Comparator.naturalOrder()))
+                        .thenComparing(AuditEventEntity::getId, Comparator.nullsLast(Comparator.naturalOrder())))
+                .orElseThrow();
         
         assertThat(saved.getQueryString())
                 .contains("\"name\":\"Oscar\"")
@@ -105,8 +113,10 @@ class AuditIntegrationTest {
         mockMvc.perform(get("/api/cases/{id}", caseId))
                 .andExpect(status().isNotFound()); // Case doesn't exist, but that's fine for auditing
 
-        List<AuditEventEntity> events = auditEventRepository.findAll();
-        AuditEventEntity latest = events.get(events.size() - 1);
+        AuditEventEntity latest = auditEventRepository.findAll().stream()
+                .max(Comparator.comparing(AuditEventEntity::getOccurredAt, Comparator.nullsLast(Comparator.naturalOrder()))
+                        .thenComparing(AuditEventEntity::getId, Comparator.nullsLast(Comparator.naturalOrder())))
+                .orElseThrow();
         
         assertThat(latest.getCaseId()).isEqualTo(caseId);
     }
