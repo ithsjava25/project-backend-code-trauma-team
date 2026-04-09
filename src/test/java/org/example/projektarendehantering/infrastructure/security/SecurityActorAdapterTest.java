@@ -113,7 +113,7 @@ class SecurityActorAdapterTest {
 
         assertThat(actor.userId()).isEqualTo(userId);
         assertThat(actor.githubUsername()).isEqualTo(login);
-        assertThat(actor.role()).isEqualTo(Role.PATIENT);
+        assertThat(actor.role()).isEqualTo(Role.PENDING);
     }
 
     @Test
@@ -173,8 +173,8 @@ class SecurityActorAdapterTest {
     }
 
     @Test
-    void currentUser_whenEmployeeNotFoundAndNoRoles_shouldDefaultToPatient() {
-        String username = "patient-user";
+    void currentUser_whenEmployeeNotFoundAndNoRoles_shouldDefaultToPending() {
+        String username = "pending-user";
         UUID userId = UUID.nameUUIDFromBytes(username.getBytes(StandardCharsets.UTF_8));
 
         when(securityContext.getAuthentication()).thenReturn(authentication);
@@ -186,7 +186,7 @@ class SecurityActorAdapterTest {
 
         Actor actor = securityActorAdapter.currentUser();
 
-        assertThat(actor.role()).isEqualTo(Role.PATIENT);
+        assertThat(actor.role()).isEqualTo(Role.PENDING);
     }
 
     // Helper because getAuthorities() is wildcard

@@ -51,15 +51,13 @@ public class SecurityActorAdapter {
         }
 
         // 2. Fallback to existing logic (checking Spring authorities)
-        Role role = Role.PATIENT;
+        Role role = Role.PENDING;
         if (authentication.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_MANAGER"))) {
             role = Role.MANAGER;
         } else if (authentication.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_DOCTOR"))) {
             role = Role.DOCTOR;
         } else if (authentication.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_NURSE"))) {
             role = Role.NURSE;
-        } else if (authentication.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_PATIENT"))) {
-            role = Role.PATIENT;
         }
 
         return new Actor(userId, role, null, name);

@@ -6,8 +6,8 @@ package org.example.projektarendehantering.common;
  * Note: enum constant names are intended to be stable because infrastructure may parse them from headers.
  */
 public enum Role {
+    PENDING,
     MANAGER,
     DOCTOR,
-    NURSE,
-    PATIENT
+    NURSE
 }

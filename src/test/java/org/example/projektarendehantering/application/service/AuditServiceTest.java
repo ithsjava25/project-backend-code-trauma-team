@@ -91,10 +91,10 @@ class AuditServiceTest {
     }
 
     @Test
-    void listEvents_shouldDenyPatient() {
-        Actor patientActor = new Actor(UUID.randomUUID(), Role.PATIENT, "Patient", "patient");
+    void listEvents_shouldDenyPendingRole() {
+        Actor pendingActor = new Actor(UUID.randomUUID(), Role.PENDING, "Pending", "pending");
 
-        assertThatThrownBy(() -> auditService.listEvents(patientActor, null, null, null, Pageable.unpaged()))
+        assertThatThrownBy(() -> auditService.listEvents(pendingActor, null, null, null, Pageable.unpaged()))
                 .isInstanceOf(NotAuthorizedException.class);
     }
 

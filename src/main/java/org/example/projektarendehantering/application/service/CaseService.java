@@ -19,9 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Instant;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -112,14 +110,6 @@ public class CaseService {
                     .map(caseMapper::toDTO)
                     .collect(Collectors.toList());
         }
-        if (isPatient(actor)) {
-            Map<UUID, CaseEntity> byId = new LinkedHashMap<>();
-            caseRepository.findAllByPatient_Id(actor.userId()).forEach(c -> byId.putIfAbsent(c.getId(), c));
-            caseRepository.findAllByOtherId(actor.userId()).forEach(c -> byId.putIfAbsent(c.getId(), c));
-            return byId.values().stream()
-                    .map(caseMapper::toDTO)
-                    .collect(Collectors.toList());
-        }
         throw new NotAuthorizedException("Not allowed to list cases");
     }
 
@@ -155,10 +145,6 @@ public class CaseService {
             UUID handlerId = requireEmployeeWithRole(dto.getHandlerId(), Set.of(Role.NURSE), "handlerId");
             entity.setHandlerId(handlerId);
         }
-        if (dto.getOtherId() != null) {
-            UUID otherId = requireEmployeeWithRole(dto.getOtherId(), Set.of(Role.PATIENT), "otherId");
-            entity.setOtherId(otherId);
-        }
         return caseMapper.toDTO(caseRepository.save(entity));
     }
 
@@ -181,10 +167,6 @@ public class CaseService {
         if (isManager(actor)) return;
         if (isDoctor(actor) && actor.userId().equals(entity.getOwnerId())) return;
         if (isNurse(actor) && actor.userId().equals(entity.getHandlerId())) return;
-        if (isPatient(actor)
-                && entity.getPatient() != null
-                && actor.userId().equals(entity.getPatient().getId())) return;
-        if (isPatient(actor) && actor.userId().equals(entity.getOtherId())) return;
         throw new NotAuthorizedException("Not allowed to read this case");
     }
 
@@ -202,9 +184,5 @@ public class CaseService {
 
     private boolean isNurse(Actor actor) {
         return actor.role() == Role.NURSE;
-    }
-
-    private boolean isPatient(Actor actor) {
-        return actor.role() == Role.PATIENT;
     }
 }
