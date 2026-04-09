@@ -25,7 +25,7 @@
         </label>
         <label class="field">
             <span class="label">Personal Identity Number</span>
-            <input class="input" th:field="*{personalIdentityNumber}" placeholder="YYYYMMDD-XXXX"/>
+            <input class="input" th:field="*{personalIdentityNumber}" placeholder="YYYYMMDD-XXXX" required/>
             <span class="muted" th:if="${#fields.hasErrors('personalIdentityNumber')}" th:errors="*{personalIdentityNumber}"
                   style="color: var(--danger)">Error</span>
         </label>

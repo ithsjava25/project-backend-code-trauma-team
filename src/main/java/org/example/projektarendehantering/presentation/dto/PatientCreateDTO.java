@@ -1,6 +1,7 @@
 package org.example.projektarendehantering.presentation.dto;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 
 public class PatientCreateDTO {
 
@@ -11,6 +12,7 @@ public class PatientCreateDTO {
     private String lastName;
 
     @NotBlank
+    @Pattern(regexp = "^\\d{8}-\\d{4}$", message = "Use format YYYYMMDD-XXXX")
     private String personalIdentityNumber;
 
     public PatientCreateDTO() {}
