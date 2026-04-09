@@ -36,6 +36,7 @@ class CustomOAuth2UserServiceTest {
 
     @BeforeEach
     void setUp() {
+        // We create an anonymous subclass to override the base user loading logic
         customOAuth2UserService = new CustomOAuth2UserService(employeeRepository) {
             @Override
             protected OAuth2User loadBaseUser(OAuth2UserRequest userRequest) {
@@ -59,7 +60,7 @@ class CustomOAuth2UserServiceTest {
         UUID userId = UUID.nameUUIDFromBytes(login.getBytes(StandardCharsets.UTF_8));
         EmployeeEntity employee = new EmployeeEntity(userId, "Test User", login, Role.DOCTOR, Instant.now());
         
-        when(employeeRepository.findById(userId)).thenReturn(Optional.of(employee));
+        when(employeeRepository.findByGithubUsername(login)).thenReturn(Optional.of(employee));
 
         OAuth2UserRequest request = mockOAuth2UserRequest();
         
@@ -76,9 +77,8 @@ class CustomOAuth2UserServiceTest {
     void loadUser_whenUserNotFoundInDb_shouldNotAddRoleAuthority() {
         // Arrange
         String login = "testuser";
-        UUID userId = UUID.nameUUIDFromBytes(login.getBytes(StandardCharsets.UTF_8));
         
-        when(employeeRepository.findById(userId)).thenReturn(Optional.empty());
+        when(employeeRepository.findByGithubUsername(login)).thenReturn(Optional.empty());
 
         OAuth2UserRequest request = mockOAuth2UserRequest();
         

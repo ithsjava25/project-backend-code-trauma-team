@@ -10,10 +10,8 @@ import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 
-import java.nio.charset.StandardCharsets;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.UUID;
 
 @Service
 public class CustomOAuth2UserService extends DefaultOAuth2UserService {
@@ -32,10 +30,8 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         Set<GrantedAuthority> authorities = new HashSet<>(oAuth2User.getAuthorities());
 
         if (login != null) {
-            UUID userId = UUID.nameUUIDFromBytes(login.getBytes(StandardCharsets.UTF_8));
-            
-            // Check if user exists in our database
-            employeeRepository.findById(userId).ifPresent(employee -> {
+            // Check if user exists in our database by their githubUsername
+            employeeRepository.findByGithubUsername(login).ifPresent(employee -> {
                 if (employee.getRole() != null) {
                     // Inject the database role as a Spring Security authority (ROLE_XXX)
                     authorities.add(new SimpleGrantedAuthority("ROLE_" + employee.getRole().name()));
