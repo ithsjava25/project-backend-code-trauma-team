@@ -10,6 +10,7 @@ public class PatientCreateDTO {
     @NotBlank
     private String lastName;
 
+    @NotBlank
     private String personalIdentityNumber;
 
     public PatientCreateDTO() {}
