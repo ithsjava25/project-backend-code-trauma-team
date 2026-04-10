@@ -75,7 +75,7 @@ public class DocumentService {
                     .build();
             s3Template.upload(bucket, s3Key, file.getInputStream(), metadata);
         } catch (Exception e) {
-            throw new AppException("S3_UPLOAD_FAILED", "Failed to upload file to S3: " + e.getMessage());
+            throw new AppException("S3_UPLOAD_FAILED", "Failed to upload file to S3");
         }
 
         DocumentEntity entity = new DocumentEntity();
@@ -87,8 +87,18 @@ public class DocumentService {
         entity.setUploadedBy(actor.userId());
         entity.setCaseEntity(caseEntity);
 
-        DocumentEntity saved = documentRepository.save(entity);
-        return documentMapper.toDTO(saved);
+        // --- SAFE DB SAVE WITH COMPENSATION IF IT FAILS ---
+        try {
+            DocumentEntity saved = documentRepository.save(entity);
+            return documentMapper.toDTO(saved);
+        } catch (RuntimeException ex) {
+            try {
+                s3Template.deleteObject(bucket, s3Key);
+            } catch (Exception cleanupEx) {
+                log.error("Failed to cleanup orphaned S3 object {}", s3Key, cleanupEx);
+            }
+            throw ex;
+        }
     }
 
     public List<DocumentDTO> listDocuments(Actor actor, UUID caseId) {
