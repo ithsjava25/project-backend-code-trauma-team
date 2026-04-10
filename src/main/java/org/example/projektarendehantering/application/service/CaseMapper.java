@@ -10,9 +10,11 @@ import java.util.stream.Collectors;
 public class CaseMapper {
 
     private final CaseNoteMapper caseNoteMapper;
+    private final DocumentMapper documentMapper;
 
-    public CaseMapper(CaseNoteMapper caseNoteMapper) {
+    public CaseMapper(CaseNoteMapper caseNoteMapper, DocumentMapper documentMapper) {
         this.caseNoteMapper = caseNoteMapper;
+        this.documentMapper = documentMapper;
     }
 
     public CaseDTO toDTO(CaseEntity entity) {
@@ -28,6 +30,11 @@ public class CaseMapper {
         if (entity.getNotes() != null) {
             dto.setNotes(entity.getNotes().stream()
                     .map(caseNoteMapper::toDTO)
+                    .collect(Collectors.toList()));
+        }
+        if (entity.getDocuments() != null) {
+            dto.setDocuments(entity.getDocuments().stream()
+                    .map(documentMapper::toDTO)
                     .collect(Collectors.toList()));
         }
         return dto;

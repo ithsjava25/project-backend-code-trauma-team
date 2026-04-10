@@ -14,6 +14,7 @@ public class CaseDTO {
     private Instant createdAt;
     private UUID patientId;
     private List<CaseNoteDTO> notes = new ArrayList<>();
+    private List<DocumentDTO> documents = new ArrayList<>();
 
     public CaseDTO() {}
 
@@ -46,4 +47,7 @@ public class CaseDTO {
 
     public List<CaseNoteDTO> getNotes() { return notes; }
     public void setNotes(List<CaseNoteDTO> notes) { this.notes = notes; }
+
+    public List<DocumentDTO> getDocuments() { return documents; }
+    public void setDocuments(List<DocumentDTO> documents) { this.documents = documents; }
 }

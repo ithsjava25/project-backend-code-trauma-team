@@ -29,9 +29,13 @@ public class CaseEntity {
     @OrderBy("createdAt DESC")
     private List<CaseNoteEntity> notes = new ArrayList<>();
 
+    @OneToMany(mappedBy = "caseEntity", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderBy("uploadedAt DESC")
+    private List<DocumentEntity> documents = new ArrayList<>();
+
     public CaseEntity() {}
 
-    public CaseEntity(UUID id, String status, UUID ownerId, String title, String description, Instant createdAt, PatientEntity patient, List<CaseNoteEntity> notes) {
+    public CaseEntity(UUID id, String status, UUID ownerId, String title, String description, Instant createdAt, PatientEntity patient, List<CaseNoteEntity> notes, List<DocumentEntity> documents) {
         this.id = id;
         this.status = status;
         this.ownerId = ownerId;
@@ -40,6 +44,7 @@ public class CaseEntity {
         this.createdAt = createdAt;
         this.patient = patient;
         this.notes = notes != null ? notes : new ArrayList<>();
+        this.documents = documents != null ? documents : new ArrayList<>();
     }
 
     public UUID getId() { return id; }
@@ -70,5 +75,7 @@ public class CaseEntity {
     public void setPatient(PatientEntity patient) { this.patient = patient; }
 
     public List<CaseNoteEntity> getNotes() { return notes; }
+
+    public List<DocumentEntity> getDocuments() { return documents; }
 
 }

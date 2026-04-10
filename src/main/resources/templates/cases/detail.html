@@ -49,6 +49,35 @@
             </div>
         </form>
     </section>
+
+    <section class="panel" th:if="${case != null}">
+        <h2>Documents</h2>
+        <div th:each="doc : ${case.documents}" class="hint" style="margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;">
+            <div>
+                <a th:href="@{/ui/cases/{caseId}/documents/{docId}/download(caseId=${case.id}, docId=${doc.id})}" th:text="${doc.fileName}">Document.pdf</a>
+                <div class="muted" style="font-size: 0.8em;">
+                    <span th:text="${doc.fileSize / 1024} + ' KB'">123 KB</span> - 
+                    <span th:text="${doc.uploadedAt}">Date</span>
+                </div>
+            </div>
+            <form th:action="@{/ui/cases/{caseId}/documents/{docId}/delete(caseId=${case.id}, docId=${doc.id})}" method="post">
+                <button class="button button-secondary" type="submit" onclick="return confirm('Are you sure?')">Delete</button>
+            </form>
+        </div>
+        <p th:if="${#lists.isEmpty(case.documents)}" class="muted">No documents yet.</p>
+
+        <hr style="border: 0; border-top: 1px solid var(--border); margin: 20px 0;"/>
+
+        <h3>Upload Document</h3>
+        <form th:action="@{/ui/cases/{id}/documents/upload(id=${case.id})}" method="post" enctype="multipart/form-data" class="form">
+            <label class="field">
+                <input type="file" name="file" required class="input">
+            </label>
+            <div class="actions">
+                <button class="button" type="submit">Upload</button>
+            </div>
+        </form>
+    </section>
     <section class="panel panel-error" th:if="${case == null}">
         <h2>Error</h2>
         <p>Case not found.</p>
