@@ -41,7 +41,7 @@ public class DocumentUiController {
     public ResponseEntity<Resource> downloadDocument(@PathVariable UUID caseId, @PathVariable UUID documentId) throws IOException {
         Actor actor = securityActorAdapter.currentUser();
         S3Resource s3Resource = documentService.downloadDocument(actor, documentId);
-        DocumentEntity entity = documentService.getEntity(documentId);
+        DocumentEntity entity = documentService.getEntity(actor, documentId);
 
         String encodedFilename = URLEncoder.encode(entity.getFileName(), StandardCharsets.UTF_8)
                 .replace("+", "%20");

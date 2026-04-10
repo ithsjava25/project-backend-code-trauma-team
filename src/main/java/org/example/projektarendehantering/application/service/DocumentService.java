@@ -157,8 +157,11 @@ public class DocumentService {
     }
 
 
-    public DocumentEntity getEntity(UUID documentId) {
-        return documentRepository.findById(documentId).orElseThrow(() -> new BadRequestException("Document not found"));
+    public DocumentEntity getEntity(Actor actor, UUID documentId) {
+        DocumentEntity entity = documentRepository.findById(documentId)
+                .orElseThrow(() -> new BadRequestException("Document not found"));
+        validateAccess(actor, entity.getCaseEntity());
+        return entity;
     }
 
     private void validateAccess(Actor actor, CaseEntity caseEntity) {
