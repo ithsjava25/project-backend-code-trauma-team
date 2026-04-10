@@ -149,20 +149,29 @@ public class DocumentService {
         // 1. Delete DB entity inside the transaction
         documentRepository.delete(entity);
 
-        // 2. Delete S3 object *after* successful commit
-        TransactionSynchronizationManager.registerSynchronization(
-                new TransactionSynchronization() {
-                    @Override
-                    public void afterCommit() {
-                        try {
-                            s3Template.deleteObject(bucket, s3Key);
-                        } catch (Exception e) {
-                            // DB is already committed — log but do not throw
-                            log.error("Failed to delete S3 object {} after DB commit", s3Key, e);
+        // 2. Delete S3 object *after* successful commit (if in a transaction)
+        if (TransactionSynchronizationManager.isSynchronizationActive()) {
+            TransactionSynchronizationManager.registerSynchronization(
+                    new TransactionSynchronization() {
+                        @Override
+                        public void afterCommit() {
+                            try {
+                                s3Template.deleteObject(bucket, s3Key);
+                            } catch (Exception e) {
+                                // DB is already committed — log but do not throw
+                                log.error("Failed to delete S3 object {} after DB commit", s3Key, e);
+                            }
                         }
                     }
-                }
-        );
+            );
+        } else {
+            // No active transaction (e.g. in unit test)
+            try {
+                s3Template.deleteObject(bucket, s3Key);
+            } catch (Exception e) {
+                log.error("Failed to delete S3 object {} (no active transaction)", s3Key, e);
+            }
+        }
     }
 
 
