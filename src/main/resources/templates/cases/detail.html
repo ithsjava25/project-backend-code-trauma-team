@@ -56,7 +56,7 @@
             <div>
                 <a th:href="@{/ui/cases/{caseId}/documents/{docId}/download(caseId=${case.id}, docId=${doc.id})}" th:text="${doc.fileName}">Document.pdf</a>
                 <div class="muted" style="font-size: 0.8em;">
-                    <span th:text="${doc.fileSize / 1024} + ' KB'">123 KB</span> - 
+                    <span th:text="${#numbers.formatDecimal(doc.fileSize / 1024.0, 1, 1)} + ' KB'">123.4 KB</span> - 
                     <span th:text="${doc.uploadedAt}">Date</span>
                 </div>
             </div>
