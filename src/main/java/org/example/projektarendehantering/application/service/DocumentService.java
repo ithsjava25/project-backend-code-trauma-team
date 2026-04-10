@@ -62,10 +62,7 @@ public class DocumentService {
         CaseEntity caseEntity = caseRepository.findById(caseId)
                 .orElseThrow(() -> new BadRequestException("Case not found"));
 
-        // Basic authorization check (similar to other services)
-        if (!actor.isManager() && !actor.userId().equals(caseEntity.getOwnerId()) && !actor.userId().equals(caseEntity.getHandlerId())) {
-            throw new NotAuthorizedException("Not authorized to upload documents to this case");
-        }
+        validateAccess(actor, caseEntity);
 
         String s3Key = UUID.randomUUID().toString() + "-" + originalFilename;
 
@@ -105,10 +102,7 @@ public class DocumentService {
         CaseEntity caseEntity = caseRepository.findById(caseId)
                 .orElseThrow(() -> new BadRequestException("Case not found"));
 
-        // Basic authorization check
-        if (!actor.isManager() && !actor.userId().equals(caseEntity.getOwnerId()) && !actor.userId().equals(caseEntity.getHandlerId())) {
-            throw new NotAuthorizedException("Not authorized to view documents for this case");
-        }
+        validateAccess(actor, caseEntity);
 
         return documentRepository.findAllByCaseEntityId(caseId).stream()
                 .map(documentMapper::toDTO)
@@ -119,12 +113,7 @@ public class DocumentService {
         DocumentEntity entity = documentRepository.findById(documentId)
                 .orElseThrow(() -> new BadRequestException("Document not found"));
 
-        CaseEntity caseEntity = entity.getCaseEntity();
-
-        // Basic authorization check
-        if (!actor.isManager() && !actor.userId().equals(caseEntity.getOwnerId()) && !actor.userId().equals(caseEntity.getHandlerId())) {
-            throw new NotAuthorizedException("Not authorized to download this document");
-        }
+        validateAccess(actor, entity.getCaseEntity());
 
         return s3Template.download(bucket, entity.getS3Key());
     }
@@ -134,14 +123,7 @@ public class DocumentService {
         DocumentEntity entity = documentRepository.findById(documentId)
                 .orElseThrow(() -> new BadRequestException("Document not found"));
 
-        CaseEntity caseEntity = entity.getCaseEntity();
-
-        // Authorization
-        if (!actor.isManager()
-                && !actor.userId().equals(caseEntity.getOwnerId())
-                && !actor.userId().equals(caseEntity.getHandlerId())) {
-            throw new NotAuthorizedException("Not authorized to delete this document");
-        }
+        validateAccess(actor, entity.getCaseEntity());
 
         // Save S3 key before deletion
         String s3Key = entity.getS3Key();
@@ -177,5 +159,12 @@ public class DocumentService {
 
     public DocumentEntity getEntity(UUID documentId) {
         return documentRepository.findById(documentId).orElseThrow(() -> new BadRequestException("Document not found"));
+    }
+
+    private void validateAccess(Actor actor, CaseEntity caseEntity) {
+        if (actor.isManager()) return;
+        if (actor.isDoctor() && actor.userId().equals(caseEntity.getOwnerId())) return;
+        if (actor.isNurse() && actor.userId().equals(caseEntity.getHandlerId())) return;
+        throw new NotAuthorizedException("Not authorized to access documents for this case");
     }
 }
