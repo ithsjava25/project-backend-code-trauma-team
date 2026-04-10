@@ -15,6 +15,8 @@ import org.example.projektarendehantering.presentation.dto.DocumentDTO;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -22,7 +24,9 @@ import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 public class DocumentService {
 
@@ -122,21 +126,35 @@ public class DocumentService {
 
         CaseEntity caseEntity = entity.getCaseEntity();
 
-        // Basic authorization check
-        if (!actor.isManager() && !actor.userId().equals(caseEntity.getOwnerId()) && !actor.userId().equals(caseEntity.getHandlerId())) {
+        // Authorization
+        if (!actor.isManager()
+                && !actor.userId().equals(caseEntity.getOwnerId())
+                && !actor.userId().equals(caseEntity.getHandlerId())) {
             throw new NotAuthorizedException("Not authorized to delete this document");
         }
 
-        try {
-            s3Template.deleteObject(bucket, entity.getS3Key());
-        } catch (Exception e) {
-            // Log error but proceed with DB deletion if S3 delete fails? Or throw?
-            // For now, let's throw to ensure consistency.
-            throw new AppException("S3_DELETE_FAILED", "Failed to delete file from S3: " + e.getMessage());
-        }
+        // Save S3 key before deletion
+        String s3Key = entity.getS3Key();
 
+        // 1. Delete DB entity inside the transaction
         documentRepository.delete(entity);
+
+        // 2. Delete S3 object *after* successful commit
+        TransactionSynchronizationManager.registerSynchronization(
+                new TransactionSynchronization() {
+                    @Override
+                    public void afterCommit() {
+                        try {
+                            s3Template.deleteObject(bucket, s3Key);
+                        } catch (Exception e) {
+                            // DB is already committed — log but do not throw
+                            log.error("Failed to delete S3 object {} after DB commit", s3Key, e);
+                        }
+                    }
+                }
+        );
     }
+
 
     public DocumentEntity getEntity(UUID documentId) {
         return documentRepository.findById(documentId).orElseThrow(() -> new BadRequestException("Document not found"));
