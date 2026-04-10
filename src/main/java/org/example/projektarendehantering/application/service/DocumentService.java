@@ -75,6 +75,22 @@ public class DocumentService {
             throw new AppException("S3_UPLOAD_FAILED", "Failed to upload file to S3");
         }
 
+        boolean syncActive = TransactionSynchronizationManager.isSynchronizationActive();
+        if (syncActive) {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCompletion(int status) {
+                    if (status != TransactionSynchronization.STATUS_COMMITTED) {
+                        try {
+                            s3Template.deleteObject(bucket, s3Key);
+                        } catch (Exception cleanupEx) {
+                            log.error("Failed to cleanup rolled-back S3 object {}", s3Key, cleanupEx);
+                        }
+                    }
+                }
+            });
+        }
+
         DocumentEntity entity = new DocumentEntity();
         entity.setFileName(originalFilename);
         entity.setS3Key(s3Key);
@@ -89,10 +105,12 @@ public class DocumentService {
             DocumentEntity saved = documentRepository.save(entity);
             return documentMapper.toDTO(saved);
         } catch (RuntimeException ex) {
-            try {
-                s3Template.deleteObject(bucket, s3Key);
-            } catch (Exception cleanupEx) {
-                log.error("Failed to cleanup orphaned S3 object {}", s3Key, cleanupEx);
+            if (!syncActive) {
+                try {
+                    s3Template.deleteObject(bucket, s3Key);
+                } catch (Exception cleanupEx) {
+                    log.error("Failed to cleanup orphaned S3 object {}", s3Key, cleanupEx);
+                }
             }
             throw ex;
         }
