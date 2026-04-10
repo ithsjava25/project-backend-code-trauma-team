@@ -14,6 +14,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 
 @Controller
@@ -41,8 +43,11 @@ public class DocumentUiController {
         S3Resource s3Resource = documentService.downloadDocument(actor, documentId);
         DocumentEntity entity = documentService.getEntity(documentId);
 
+        String encodedFilename = URLEncoder.encode(entity.getFileName(), StandardCharsets.UTF_8)
+                .replace("+", "%20");
+
         return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + entity.getFileName() + "\"")
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename*=UTF-8''" + encodedFilename)
                 .contentType(MediaType.parseMediaType(entity.getContentType()))
                 .contentLength(entity.getFileSize())
                 .body(s3Resource);
