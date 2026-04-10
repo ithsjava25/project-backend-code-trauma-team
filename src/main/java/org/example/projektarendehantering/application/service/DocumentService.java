@@ -1,5 +1,6 @@
 package org.example.projektarendehantering.application.service;
 
+import io.awspring.cloud.s3.ObjectMetadata;
 import io.awspring.cloud.s3.S3Resource;
 import io.awspring.cloud.s3.S3Template;
 import org.example.projektarendehantering.common.Actor;
@@ -53,7 +54,10 @@ public class DocumentService {
         String s3Key = UUID.randomUUID().toString() + "-" + file.getOriginalFilename();
 
         try {
-            s3Template.upload(bucket, s3Key, file.getInputStream());
+            ObjectMetadata metadata = ObjectMetadata.builder()
+                    .contentType(file.getContentType())
+                    .build();
+            s3Template.upload(bucket, s3Key, file.getInputStream(), metadata);
         } catch (Exception e) {
             throw new AppException("S3_UPLOAD_FAILED", "Failed to upload file to S3: " + e.getMessage());
         }

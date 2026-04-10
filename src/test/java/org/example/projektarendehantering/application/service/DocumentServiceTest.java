@@ -1,5 +1,6 @@
 package org.example.projektarendehantering.application.service;
 
+import io.awspring.cloud.s3.ObjectMetadata;
 import io.awspring.cloud.s3.S3Template;
 import org.example.projektarendehantering.common.Actor;
 import org.example.projektarendehantering.common.NotAuthorizedException;
@@ -81,7 +82,7 @@ class DocumentServiceTest {
 
         assertThat(result).isNotNull();
         assertThat(result.fileName()).isEqualTo("test.txt");
-        verify(s3Template).upload(eq("test-bucket"), anyString(), any(InputStream.class));
+        verify(s3Template).upload(eq("test-bucket"), anyString(), any(InputStream.class), any(ObjectMetadata.class));
         verify(documentRepository).save(any(DocumentEntity.class));
     }
 
@@ -99,7 +100,7 @@ class DocumentServiceTest {
         DocumentDTO result = documentService.uploadDocument(managerActor, caseId, file);
 
         assertThat(result).isNotNull();
-        verify(s3Template).upload(eq("test-bucket"), anyString(), any(InputStream.class));
+        verify(s3Template).upload(eq("test-bucket"), anyString(), any(InputStream.class), any(ObjectMetadata.class));
     }
 
     @Test

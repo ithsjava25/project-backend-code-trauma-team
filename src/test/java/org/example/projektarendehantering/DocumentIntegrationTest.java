@@ -1,6 +1,9 @@
 package org.example.projektarendehantering;
 
 import io.awspring.cloud.s3.S3Template;
+import io.awspring.cloud.s3.ObjectMetadata;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 import org.example.projektarendehantering.infrastructure.persistence.CaseEntity;
 import org.example.projektarendehantering.infrastructure.persistence.CaseRepository;
 import org.example.projektarendehantering.infrastructure.persistence.DocumentRepository;
@@ -35,7 +38,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.setup.MockMvcBuilders.webAppContextSetup;
 
-@SpringBootTest(properties = "spring.autoconfigure.exclude=io.awspring.cloud.autoconfigure.s3.S3AutoConfiguration")
+@SpringBootTest
 @Transactional
 class DocumentIntegrationTest {
 
@@ -53,6 +56,12 @@ class DocumentIntegrationTest {
 
     @MockitoBean
     private S3Template s3Template;
+
+    @MockitoBean
+    private S3Client s3Client;
+
+    @MockitoBean
+    private S3Presigner s3Presigner;
 
     private MockMvc mockMvc;
     private UUID caseId;
@@ -90,7 +99,7 @@ class DocumentIntegrationTest {
                 .andExpect(header().string("Location", "/ui/cases/" + caseId));
 
         assertThat(documentRepository.findAllByCaseEntityId(caseId)).hasSize(1);
-        verify(s3Template).upload(eq("test-documents"), any(), any(InputStream.class));
+        verify(s3Template).upload(eq("test-documents"), any(), any(InputStream.class), any(ObjectMetadata.class));
     }
 
     @Test
