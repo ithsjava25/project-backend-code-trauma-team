@@ -43,6 +43,18 @@ public class DocumentService {
 
     @Transactional
     public DocumentDTO uploadDocument(Actor actor, UUID caseId, MultipartFile file) throws IOException {
+                if (file == null || file.isEmpty()) {
+                        throw new BadRequestException("File is required");
+                    }
+                String originalFilename = file.getOriginalFilename();
+                if (originalFilename == null || originalFilename.isBlank()) {
+                        throw new BadRequestException("File name is required");
+                    }
+                String contentType = file.getContentType();
+                if (contentType == null || contentType.isBlank()) {
+                       throw new BadRequestException("Content type is required");
+                   }
+
         CaseEntity caseEntity = caseRepository.findById(caseId)
                 .orElseThrow(() -> new BadRequestException("Case not found"));
 
@@ -51,7 +63,7 @@ public class DocumentService {
             throw new NotAuthorizedException("Not authorized to upload documents to this case");
         }
 
-        String s3Key = UUID.randomUUID().toString() + "-" + file.getOriginalFilename();
+        String s3Key = UUID.randomUUID().toString() + "-" + originalFilename;
 
         try {
             ObjectMetadata metadata = ObjectMetadata.builder()
@@ -63,9 +75,9 @@ public class DocumentService {
         }
 
         DocumentEntity entity = new DocumentEntity();
-        entity.setFileName(file.getOriginalFilename());
+        entity.setFileName(originalFilename);
         entity.setS3Key(s3Key);
-        entity.setContentType(file.getContentType());
+        entity.setContentType(contentType);
         entity.setFileSize(file.getSize());
         entity.setUploadedAt(Instant.now());
         entity.setUploadedBy(actor.userId());
