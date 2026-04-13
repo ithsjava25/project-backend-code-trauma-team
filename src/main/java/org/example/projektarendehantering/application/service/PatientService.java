@@ -26,7 +26,7 @@ public class PatientService {
     @Transactional
     public PatientDTO createPatient(PatientCreateDTO patientDTO) {
         PatientEntity entity = patientMapper.toEntity(patientDTO);
-        // Removed manual setId - @GeneratedValue in PatientEntity will handle this
+        entity.setId(UUID.randomUUID());
         entity.setCreatedAt(Instant.now());
         if (entity.getPersonalIdentityNumber() != null && !entity.getPersonalIdentityNumber().isBlank()) {
             patientRepository.findByPersonalIdentityNumber(entity.getPersonalIdentityNumber())

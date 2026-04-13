@@ -61,6 +61,9 @@ public class AuditService {
     @Transactional
     public void record(AuditEventEntity event) {
         if (event == null) return;
+        if (event.getId() == null) {
+            event.setId(UUID.randomUUID());
+        }
         if (event.getOccurredAt() == null) {
             event.setOccurredAt(Instant.now());
         }

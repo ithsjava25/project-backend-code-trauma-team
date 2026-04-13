@@ -47,6 +47,7 @@ public class CaseService {
         requireCanRead(actor, caseEntity);
 
         CaseNoteEntity note = caseNoteMapper.toEntity(actor, content);
+        note.setId(UUID.randomUUID());
         note.setCaseEntity(caseEntity);
 
         caseNoteRepository.save(note);
@@ -61,6 +62,7 @@ public class CaseService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "patientId is required");
         }
         CaseEntity entity = caseMapper.toEntity(caseDTO);
+        entity.setId(UUID.randomUUID());
         PatientEntity patient = patientRepository.findById(caseDTO.getPatientId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Patient not found"));
         entity.setPatient(patient);

@@ -28,7 +28,6 @@ import java.util.UUID;
 public class EmployeeEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
     private String displayName;

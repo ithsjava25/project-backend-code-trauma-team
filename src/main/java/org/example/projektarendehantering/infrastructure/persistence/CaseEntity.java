@@ -22,7 +22,6 @@ import java.util.UUID;
 public class CaseEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
     private String status;
     private UUID ownerId;

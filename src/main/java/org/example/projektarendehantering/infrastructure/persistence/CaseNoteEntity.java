@@ -20,7 +20,6 @@ import java.util.UUID;
 public class CaseNoteEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
     @ManyToOne(fetch = FetchType.LAZY)

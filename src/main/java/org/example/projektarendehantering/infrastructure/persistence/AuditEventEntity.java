@@ -32,7 +32,6 @@ import java.util.UUID;
 public class AuditEventEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
     private Instant occurredAt;
