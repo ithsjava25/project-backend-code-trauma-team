@@ -10,21 +10,21 @@ public class PatientMapper {
 
     public PatientDTO toDTO(PatientEntity entity) {
         if (entity == null) return null;
-        return new PatientDTO(
-                entity.getId(),
-                entity.getFirstName(),
-                entity.getLastName(),
-                entity.getPersonalIdentityNumber(),
-                entity.getCreatedAt()
-        );
+        return PatientDTO.builder()
+                .id(entity.getId())
+                .firstName(entity.getFirstName())
+                .lastName(entity.getLastName())
+                .personalIdentityNumber(entity.getPersonalIdentityNumber())
+                .createdAt(entity.getCreatedAt())
+                .build();
     }
 
     public PatientEntity toEntity(PatientCreateDTO dto) {
         if (dto == null) return null;
-        PatientEntity entity = new PatientEntity();
-        entity.setFirstName(dto.getFirstName());
-        entity.setLastName(dto.getLastName());
-        entity.setPersonalIdentityNumber(dto.getPersonalIdentityNumber());
-        return entity;
+        return PatientEntity.builder()
+                .firstName(dto.getFirstName())
+                .lastName(dto.getLastName())
+                .personalIdentityNumber(dto.getPersonalIdentityNumber())
+                .build();
     }
 }

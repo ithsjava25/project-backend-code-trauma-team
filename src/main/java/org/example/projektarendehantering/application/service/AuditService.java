@@ -16,6 +16,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import lombok.RequiredArgsConstructor;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -30,6 +31,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
+@RequiredArgsConstructor
 public class AuditService {
 
     private final AuditEventRepository auditEventRepository;
@@ -55,12 +57,6 @@ public class AuditService {
             "card_number",
             "refresh_token"
     );
-
-    public AuditService(AuditEventRepository auditEventRepository, AuditEventMapper auditEventMapper, CaseRepository caseRepository) {
-        this.auditEventRepository = auditEventRepository;
-        this.auditEventMapper = auditEventMapper;
-        this.caseRepository = caseRepository;
-    }
 
     @Transactional
     public void record(AuditEventEntity event) {

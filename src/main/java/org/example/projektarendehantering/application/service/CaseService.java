@@ -17,6 +17,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
+import lombok.RequiredArgsConstructor;
 
 import java.time.Instant;
 import java.util.List;
@@ -26,6 +27,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
+@RequiredArgsConstructor
 public class CaseService {
 
     private final CaseRepository caseRepository;
@@ -34,15 +36,6 @@ public class CaseService {
     private final PatientRepository patientRepository;
     private final CaseNoteRepository caseNoteRepository;
     private final EmployeeRepository employeeRepository;
-
-    public CaseService(CaseRepository caseRepository, CaseMapper caseMapper, CaseNoteMapper caseNoteMapper, PatientRepository patientRepository, CaseNoteRepository caseNoteRepository, EmployeeRepository employeeRepository) {
-        this.caseRepository = caseRepository;
-        this.caseMapper = caseMapper;
-        this.caseNoteMapper = caseNoteMapper;
-        this.patientRepository = patientRepository;
-        this.caseNoteRepository = caseNoteRepository;
-        this.employeeRepository = employeeRepository;
-    }
 
     @Transactional
     public void addNote(UUID caseId, String content, Actor actor) {

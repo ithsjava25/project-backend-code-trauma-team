@@ -3,9 +3,17 @@ package org.example.projektarendehantering.presentation.dto;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.util.UUID;
 
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class CreateCaseForm {
 
     @NotBlank(message = "Title is required")
@@ -19,14 +27,4 @@ public class CreateCaseForm {
     @NotNull(message = "Patient is required")
     private UUID patientId;
 
-    public CreateCaseForm() {}
-
-    public String getTitle() { return title; }
-    public void setTitle(String title) { this.title = title; }
-
-    public String getDescription() { return description; }
-    public void setDescription(String description) { this.description = description; }
-
-    public UUID getPatientId() { return patientId; }
-    public void setPatientId(UUID patientId) { this.patientId = patientId; }
 }

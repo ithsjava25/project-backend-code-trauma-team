@@ -9,22 +9,22 @@ public class AuditEventMapper {
 
     public AuditEventDTO toDTO(AuditEventEntity entity) {
         if (entity == null) return null;
-        AuditEventDTO dto = new AuditEventDTO();
-        dto.setId(entity.getId());
-        dto.setOccurredAt(entity.getOccurredAt());
-        dto.setActorId(entity.getActorId());
-        dto.setActorRole(entity.getActorRole());
-        dto.setPrincipalName(entity.getPrincipalName());
-        dto.setHttpMethod(entity.getHttpMethod());
-        dto.setRequestPath(entity.getRequestPath());
-        dto.setQueryString(entity.getQueryString());
-        dto.setHandler(entity.getHandler());
-        dto.setResponseStatus(entity.getResponseStatus());
-        dto.setErrorType(entity.getErrorType());
-        dto.setCaseId(entity.getCaseId());
-        dto.setClientIp(entity.getClientIp());
-        dto.setUserAgent(entity.getUserAgent());
-        return dto;
+        return AuditEventDTO.builder()
+                .id(entity.getId())
+                .occurredAt(entity.getOccurredAt())
+                .actorId(entity.getActorId())
+                .actorRole(entity.getActorRole())
+                .principalName(entity.getPrincipalName())
+                .httpMethod(entity.getHttpMethod())
+                .requestPath(entity.getRequestPath())
+                .queryString(entity.getQueryString())
+                .handler(entity.getHandler())
+                .responseStatus(entity.getResponseStatus())
+                .errorType(entity.getErrorType())
+                .caseId(entity.getCaseId())
+                .clientIp(entity.getClientIp())
+                .userAgent(entity.getUserAgent())
+                .build();
     }
 }
 
