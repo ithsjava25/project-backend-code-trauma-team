@@ -3,6 +3,8 @@ package org.example.projektarendehantering.application.service;
 import io.awspring.cloud.s3.ObjectMetadata;
 import io.awspring.cloud.s3.S3Resource;
 import io.awspring.cloud.s3.S3Template;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.example.projektarendehantering.common.Actor;
 import org.example.projektarendehantering.common.AppException;
 import org.example.projektarendehantering.common.BadRequestException;
@@ -24,10 +26,10 @@ import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
-import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class DocumentService {
 
     private final DocumentRepository documentRepository;
@@ -38,26 +40,19 @@ public class DocumentService {
     @Value("${app.s3.bucket}")
     private String bucket;
 
-    public DocumentService(DocumentRepository documentRepository, CaseRepository caseRepository, S3Template s3Template, DocumentMapper documentMapper) {
-        this.documentRepository = documentRepository;
-        this.caseRepository = caseRepository;
-        this.s3Template = s3Template;
-        this.documentMapper = documentMapper;
-    }
-
     @Transactional
     public DocumentDTO uploadDocument(Actor actor, UUID caseId, MultipartFile file) throws IOException {
-                if (file == null || file.isEmpty()) {
-                        throw new BadRequestException("File is required");
-                    }
-                String originalFilename = file.getOriginalFilename();
-                if (originalFilename == null || originalFilename.isBlank()) {
-                        throw new BadRequestException("File name is required");
-                    }
-                String contentType = file.getContentType();
-                if (contentType == null || contentType.isBlank()) {
-                       throw new BadRequestException("Content type is required");
-                   }
+        if (file == null || file.isEmpty()) {
+            throw new BadRequestException("File is required");
+        }
+        String originalFilename = file.getOriginalFilename();
+        if (originalFilename == null || originalFilename.isBlank()) {
+            throw new BadRequestException("File name is required");
+        }
+        String contentType = file.getContentType();
+        if (contentType == null || contentType.isBlank()) {
+            throw new BadRequestException("Content type is required");
+        }
 
         CaseEntity caseEntity = caseRepository.findById(caseId)
                 .orElseThrow(() -> new BadRequestException("Case not found"));
@@ -91,14 +86,15 @@ public class DocumentService {
             });
         }
 
-        DocumentEntity entity = new DocumentEntity();
-        entity.setFileName(originalFilename);
-        entity.setS3Key(s3Key);
-        entity.setContentType(contentType);
-        entity.setFileSize(file.getSize());
-        entity.setUploadedAt(Instant.now());
-        entity.setUploadedBy(actor.userId());
-        entity.setCaseEntity(caseEntity);
+        DocumentEntity entity = DocumentEntity.builder()
+                .fileName(originalFilename)
+                .s3Key(s3Key)
+                .contentType(contentType)
+                .fileSize(file.getSize())
+                .uploadedAt(Instant.now())
+                .uploadedBy(actor.userId())
+                .caseEntity(caseEntity)
+                .build();
 
         // --- SAFE DB SAVE WITH COMPENSATION IF IT FAILS ---
         try {

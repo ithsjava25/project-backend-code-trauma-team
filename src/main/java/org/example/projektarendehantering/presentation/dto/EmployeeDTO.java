@@ -1,10 +1,18 @@
 package org.example.projektarendehantering.presentation.dto;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.example.projektarendehantering.common.Role;
 
 import java.time.Instant;
 import java.util.UUID;
 
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class EmployeeDTO {
 
     private UUID id;
@@ -13,28 +21,4 @@ public class EmployeeDTO {
     private Role role;
     private Instant createdAt;
 
-    public EmployeeDTO() {}
-
-    public EmployeeDTO(UUID id, String displayName, String githubUsername, Role role, Instant createdAt) {
-        this.id = id;
-        this.displayName = displayName;
-        this.githubUsername = githubUsername;
-        this.role = role;
-        this.createdAt = createdAt;
-    }
-
-    public UUID getId() { return id; }
-    public void setId(UUID id) { this.id = id; }
-
-    public String getDisplayName() { return displayName; }
-    public void setDisplayName(String displayName) { this.displayName = displayName; }
-
-    public String getGithubUsername() { return githubUsername; }
-    public void setGithubUsername(String githubUsername) { this.githubUsername = githubUsername; }
-
-    public Role getRole() { return role; }
-    public void setRole(Role role) { this.role = role; }
-
-    public Instant getCreatedAt() { return createdAt; }
-    public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
 }

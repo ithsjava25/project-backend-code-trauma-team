@@ -1,6 +1,7 @@
 package org.example.projektarendehantering.presentation.web;
 
 import io.awspring.cloud.s3.S3Resource;
+import lombok.RequiredArgsConstructor;
 import org.example.projektarendehantering.application.service.DocumentService;
 import org.example.projektarendehantering.common.Actor;
 import org.example.projektarendehantering.infrastructure.persistence.DocumentEntity;
@@ -20,15 +21,11 @@ import java.util.UUID;
 
 @Controller
 @RequestMapping("/ui/cases/{caseId}/documents")
+@RequiredArgsConstructor
 public class DocumentUiController {
 
     private final DocumentService documentService;
     private final SecurityActorAdapter securityActorAdapter;
-
-    public DocumentUiController(DocumentService documentService, SecurityActorAdapter securityActorAdapter) {
-        this.documentService = documentService;
-        this.securityActorAdapter = securityActorAdapter;
-    }
 
     @PostMapping("/upload")
     public String uploadDocument(@PathVariable UUID caseId, @RequestParam("file") MultipartFile file) throws IOException {

@@ -1,5 +1,6 @@
 package org.example.projektarendehantering.presentation.rest;
 
+import lombok.RequiredArgsConstructor;
 import org.example.projektarendehantering.application.service.AuditService;
 import org.example.projektarendehantering.infrastructure.security.SecurityActorAdapter;
 import org.example.projektarendehantering.presentation.dto.AuditEventDTO;
@@ -19,15 +20,11 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/audit")
+@RequiredArgsConstructor
 public class AuditController {
 
     private final AuditService auditService;
     private final SecurityActorAdapter securityActorAdapter;
-
-    public AuditController(AuditService auditService, SecurityActorAdapter securityActorAdapter) {
-        this.auditService = auditService;
-        this.securityActorAdapter = securityActorAdapter;
-    }
 
     @GetMapping
     public ResponseEntity<Page<AuditEventDTO>> list(
@@ -46,4 +43,3 @@ public class AuditController {
         return ResponseEntity.ok(auditService.listEvents(securityActorAdapter.currentUser(), from, to, caseId, pageable));
     }
 }
-

@@ -1,9 +1,20 @@
 package org.example.projektarendehantering.infrastructure.persistence;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
 import java.time.Instant;
 import java.util.UUID;
 
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 @Entity
 @Table(name = "documents")
 public class DocumentEntity {
@@ -34,40 +45,4 @@ public class DocumentEntity {
     @JoinColumn(name = "case_id", nullable = false)
     private CaseEntity caseEntity;
 
-    public DocumentEntity() {}
-
-    public DocumentEntity(UUID id, String fileName, String s3Key, String contentType, long fileSize, Instant uploadedAt, UUID uploadedBy, CaseEntity caseEntity) {
-        this.id = id;
-        this.fileName = fileName;
-        this.s3Key = s3Key;
-        this.contentType = contentType;
-        this.fileSize = fileSize;
-        this.uploadedAt = uploadedAt;
-        this.uploadedBy = uploadedBy;
-        this.caseEntity = caseEntity;
-    }
-
-    public UUID getId() { return id; }
-    public void setId(UUID id) { this.id = id; }
-
-    public String getFileName() { return fileName; }
-    public void setFileName(String fileName) { this.fileName = fileName; }
-
-    public String getS3Key() { return s3Key; }
-    public void setS3Key(String s3Key) { this.s3Key = s3Key; }
-
-    public String getContentType() { return contentType; }
-    public void setContentType(String contentType) { this.contentType = contentType; }
-
-    public long getFileSize() { return fileSize; }
-    public void setFileSize(long fileSize) { this.fileSize = fileSize; }
-
-    public Instant getUploadedAt() { return uploadedAt; }
-    public void setUploadedAt(Instant uploadedAt) { this.uploadedAt = uploadedAt; }
-
-    public UUID getUploadedBy() { return uploadedBy; }
-    public void setUploadedBy(UUID uploadedBy) { this.uploadedBy = uploadedBy; }
-
-    public CaseEntity getCaseEntity() { return caseEntity; }
-    public void setCaseEntity(CaseEntity caseEntity) { this.caseEntity = caseEntity; }
 }

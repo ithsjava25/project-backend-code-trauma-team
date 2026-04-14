@@ -13,27 +13,28 @@ public class EmployeeMapper {
 
     public EmployeeDTO toDTO(EmployeeEntity entity) {
         if (entity == null) return null;
-        return new EmployeeDTO(
-                entity.getId(),
-                entity.getDisplayName(),
-                entity.getGithubUsername(),
-                entity.getRole(),
-                entity.getCreatedAt()
-        );
+        return EmployeeDTO.builder()
+                .id(entity.getId())
+                .displayName(entity.getDisplayName())
+                .githubUsername(entity.getGithubUsername())
+                .role(entity.getRole())
+                .createdAt(entity.getCreatedAt())
+                .build();
     }
 
     public EmployeeEntity toEntity(EmployeeCreateDTO dto) {
         if (dto == null) return null;
-        EmployeeEntity entity = new EmployeeEntity();
-        entity.setDisplayName(dto.getDisplayName());
-        entity.setGithubUsername(dto.getGithubUsername());
-        entity.setRole(dto.getRole());
-
+        UUID id = null;
         if (dto.getGithubUsername() != null && !dto.getGithubUsername().isBlank()) {
-            UUID id = UUID.nameUUIDFromBytes(dto.getGithubUsername().getBytes(StandardCharsets.UTF_8));
-            entity.setId(id);
+            id = UUID.nameUUIDFromBytes(dto.getGithubUsername().getBytes(StandardCharsets.UTF_8));
         }
-        return entity;
+
+        return EmployeeEntity.builder()
+                .id(id)
+                .displayName(dto.getDisplayName())
+                .githubUsername(dto.getGithubUsername())
+                .role(dto.getRole())
+                .build();
     }
 }
 

@@ -2,8 +2,16 @@ package org.example.projektarendehantering.presentation.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.example.projektarendehantering.common.Role;
 
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class EmployeeCreateDTO {
 
     @NotBlank
@@ -15,21 +23,4 @@ public class EmployeeCreateDTO {
     @NotNull
     private Role role;
 
-    public EmployeeCreateDTO() {}
-
-    public EmployeeCreateDTO(String displayName, String githubUsername, Role role) {
-        this.displayName = displayName;
-        this.githubUsername = githubUsername;
-        this.role = role;
-    }
-
-    public String getDisplayName() { return displayName; }
-    public void setDisplayName(String displayName) { this.displayName = displayName; }
-
-    public String getGithubUsername() { return githubUsername; }
-    public void setGithubUsername(String githubUsername) { this.githubUsername = githubUsername; }
-
-    public Role getRole() { return role; }
-    public void setRole(Role role) { this.role = role; }
 }
-

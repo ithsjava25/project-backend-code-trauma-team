@@ -1,6 +1,7 @@
 package org.example.projektarendehantering.presentation.rest;
 
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.example.projektarendehantering.application.service.CaseService;
 import org.example.projektarendehantering.infrastructure.security.SecurityActorAdapter;
 import org.example.projektarendehantering.presentation.dto.CaseAssignmentDTO;
@@ -13,15 +14,11 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/cases")
+@RequiredArgsConstructor
 public class CaseController {
 
     private final CaseService caseService;
     private final SecurityActorAdapter securityActorAdapter;
-
-    public CaseController(CaseService caseService, SecurityActorAdapter securityActorAdapter) {
-        this.caseService = caseService;
-        this.securityActorAdapter = securityActorAdapter;
-    }
 
     @PostMapping
     public ResponseEntity<CaseDTO> createCase(@RequestBody @Valid CaseDTO caseDTO) {
