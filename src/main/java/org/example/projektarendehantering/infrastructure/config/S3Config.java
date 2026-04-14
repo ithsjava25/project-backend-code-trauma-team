@@ -36,7 +36,8 @@ public class S3Config {
                                 .build());
                         log.info("S3 bucket '{}' created successfully.", bucketName);
                     } catch (S3Exception ce) {
-                        if (ce.statusCode() == 409 || "BucketAlreadyExists".equals(ce.awsErrorDetails().errorCode()) || "BucketAlreadyOwnedByYou".equals(ce.awsErrorDetails().errorCode())) {
+                        String errorCode = ce.awsErrorDetails() != null ? ce.awsErrorDetails().errorCode() : null;
+                        if (ce.statusCode() == 409 && "BucketAlreadyOwnedByYou".equals(errorCode)) {
                             log.info("S3 bucket '{}' was created by another instance.", bucketName);
                         } else {
                             log.error("Failed to create S3 bucket '{}'", bucketName, ce);
