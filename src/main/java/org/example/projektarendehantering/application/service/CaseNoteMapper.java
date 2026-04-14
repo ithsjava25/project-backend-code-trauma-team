@@ -12,36 +12,36 @@ public class CaseNoteMapper {
 
     public CaseNoteDTO toDTO(CaseNoteEntity entity) {
         if (entity == null) return null;
-        return new CaseNoteDTO(
-            entity.getId(),
-            entity.getContent(),
-            entity.getAuthorDisplayName(),
-            entity.getAuthorGithubUsername(),
-            entity.getAuthorRole(),
-            entity.getCreatedAt()
-        );
+        return CaseNoteDTO.builder()
+            .id(entity.getId())
+            .content(entity.getContent())
+            .authorDisplayName(entity.getAuthorDisplayName())
+            .authorGithubUsername(entity.getAuthorGithubUsername())
+            .authorRole(entity.getAuthorRole())
+            .createdAt(entity.getCreatedAt())
+            .build();
     }
 
     public CaseNoteEntity toEntity(CaseNoteDTO dto) {
         if (dto == null) return null;
-        CaseNoteEntity entity = new CaseNoteEntity();
-        entity.setId(dto.getId());
-        entity.setContent(dto.getContent());
-        entity.setAuthorDisplayName(dto.getAuthorDisplayName());
-        entity.setAuthorGithubUsername(dto.getAuthorGithubUsername());
-        entity.setAuthorRole(dto.getAuthorRole());
-        entity.setCreatedAt(dto.getCreatedAt());
-        return entity;
+        return CaseNoteEntity.builder()
+            .id(dto.getId())
+            .content(dto.getContent())
+            .authorDisplayName(dto.getAuthorDisplayName())
+            .authorGithubUsername(dto.getAuthorGithubUsername())
+            .authorRole(dto.getAuthorRole())
+            .createdAt(dto.getCreatedAt())
+            .build();
     }
 
     public CaseNoteEntity toEntity(Actor actor, String content) {
         if (actor == null) return null;
-        CaseNoteEntity entity = new CaseNoteEntity();
-        entity.setContent(content);
-        entity.setAuthorDisplayName(actor.displayName());
-        entity.setAuthorGithubUsername(actor.githubUsername());
-        entity.setAuthorRole(actor.role() != null ? actor.role().name() : null);
-        entity.setCreatedAt(Instant.now());
-        return entity;
+        return CaseNoteEntity.builder()
+            .content(content)
+            .authorDisplayName(actor.displayName())
+            .authorGithubUsername(actor.githubUsername())
+            .authorRole(actor.role() != null ? actor.role().name() : null)
+            .createdAt(Instant.now())
+            .build();
     }
 }

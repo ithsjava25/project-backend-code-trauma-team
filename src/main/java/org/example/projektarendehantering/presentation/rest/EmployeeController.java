@@ -1,6 +1,7 @@
 package org.example.projektarendehantering.presentation.rest;
 
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.example.projektarendehantering.application.service.EmployeeService;
 import org.example.projektarendehantering.infrastructure.security.SecurityActorAdapter;
 import org.example.projektarendehantering.presentation.dto.EmployeeCreateDTO;
@@ -13,15 +14,11 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/employees")
+@RequiredArgsConstructor
 public class EmployeeController {
 
     private final EmployeeService employeeService;
     private final SecurityActorAdapter securityActorAdapter;
-
-    public EmployeeController(EmployeeService employeeService, SecurityActorAdapter securityActorAdapter) {
-        this.employeeService = employeeService;
-        this.securityActorAdapter = securityActorAdapter;
-    }
 
     @PostMapping
     public ResponseEntity<EmployeeDTO> createEmployee(@RequestBody @Valid EmployeeCreateDTO dto) {
@@ -40,4 +37,3 @@ public class EmployeeController {
         return ResponseEntity.ok(employeeService.getAllEmployees(securityActorAdapter.currentUser()));
     }
 }
-
