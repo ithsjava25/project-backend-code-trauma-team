@@ -67,7 +67,8 @@ public class DocumentService {
                     .build();
             s3Template.upload(bucket, s3Key, file.getInputStream(), metadata);
         } catch (Exception e) {
-            throw new AppException("S3_UPLOAD_FAILED", "Failed to upload file to S3");
+            log.error("S3 upload failed for bucket: {}, key: {}. Error: {}", bucket, s3Key, e.getMessage(), e);
+            throw new AppException("S3_UPLOAD_FAILED", "Failed to upload file to S3: " + e.getMessage());
         }
 
         boolean syncActive = TransactionSynchronizationManager.isSynchronizationActive();
