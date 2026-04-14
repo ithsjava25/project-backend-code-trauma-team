@@ -1,6 +1,7 @@
 package org.example.projektarendehantering.presentation.rest;
 
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.example.projektarendehantering.application.service.CaseService;
 import org.example.projektarendehantering.application.service.PatientService;
 import org.example.projektarendehantering.infrastructure.security.SecurityActorAdapter;
@@ -15,17 +16,12 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/patients")
+@RequiredArgsConstructor
 public class PatientController {
 
     private final PatientService patientService;
     private final CaseService caseService;
     private final SecurityActorAdapter securityActorAdapter;
-
-    public PatientController(PatientService patientService, CaseService caseService, SecurityActorAdapter securityActorAdapter) {
-        this.patientService = patientService;
-        this.caseService = caseService;
-        this.securityActorAdapter = securityActorAdapter;
-    }
 
     @PostMapping
     public ResponseEntity<PatientDTO> createPatient(@RequestBody @Valid PatientCreateDTO patientDTO) {
@@ -49,4 +45,3 @@ public class PatientController {
         return ResponseEntity.ok(caseService.getCasesForPatient(securityActorAdapter.currentUser(), id));
     }
 }
-

@@ -40,4 +40,9 @@ public class CaseEntity {
     @Builder.Default
     private List<CaseNoteEntity> notes = new ArrayList<>();
 
+    @OneToMany(mappedBy = "caseEntity", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderBy("uploadedAt DESC")
+    @Builder.Default
+    private List<DocumentEntity> documents = new ArrayList<>();
+
 }

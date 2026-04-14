@@ -26,4 +26,7 @@ public class CaseDTO {
     @Builder.Default
     private List<CaseNoteDTO> notes = new ArrayList<>();
 
+    @Builder.Default
+    private List<DocumentDTO> documents = new ArrayList<>();
+
 }
