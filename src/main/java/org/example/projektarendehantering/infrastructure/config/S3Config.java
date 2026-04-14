@@ -33,10 +33,12 @@ public class S3Config {
                             .build());
                     log.info("S3 bucket '{}' created successfully.", bucketName);
                 } else {
-                    log.error("Failed to check if S3 bucket '{}' exists: {}", bucketName, e.getMessage());
+                    log.error("Failed to check if S3 bucket '{}' exists", bucketName, e);
+                    throw new IllegalStateException("S3 bucket initialization failed", e);
                 }
             } catch (Exception e) {
-                log.error("Unexpected error initializing S3 bucket '{}': {}", bucketName, e.getMessage());
+                log.error("Unexpected error initializing S3 bucket '{}'", bucketName, e);
+                throw new IllegalStateException("S3 bucket initialization failed", e);
             }
         };
     }
