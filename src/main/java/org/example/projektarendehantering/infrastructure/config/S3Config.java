@@ -30,10 +30,19 @@ public class S3Config {
             } catch (S3Exception e) {
                 if (e.statusCode() == 404) {
                     log.info("S3 bucket '{}' does not exist. Creating it...", bucketName);
-                    s3Client.createBucket(CreateBucketRequest.builder()
-                            .bucket(bucketName)
-                            .build());
-                    log.info("S3 bucket '{}' created successfully.", bucketName);
+                    try {
+                        s3Client.createBucket(CreateBucketRequest.builder()
+                                .bucket(bucketName)
+                                .build());
+                        log.info("S3 bucket '{}' created successfully.", bucketName);
+                    } catch (S3Exception ce) {
+                        if (ce.statusCode() == 409 || "BucketAlreadyExists".equals(ce.awsErrorDetails().errorCode()) || "BucketAlreadyOwnedByYou".equals(ce.awsErrorDetails().errorCode())) {
+                            log.info("S3 bucket '{}' was created by another instance.", bucketName);
+                        } else {
+                            log.error("Failed to create S3 bucket '{}'", bucketName, ce);
+                            throw new IllegalStateException("S3 bucket initialization failed", ce);
+                        }
+                    }
                 } else {
                     log.error("Failed to check if S3 bucket '{}' exists", bucketName, e);
                     throw new IllegalStateException("S3 bucket initialization failed", e);
