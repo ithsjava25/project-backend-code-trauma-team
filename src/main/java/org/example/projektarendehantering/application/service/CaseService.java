@@ -84,6 +84,29 @@ public class CaseService {
         return caseMapper.toDTO(savedEntity);
     }
 
+    @Transactional
+    public CaseDTO updateCase(Actor actor, UUID caseId, CaseDTO caseDTO) {
+        CaseEntity entity = caseRepository.findById(caseId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Case not found"));
+
+        requireCanEdit(actor, entity);
+
+        entity.setTitle(caseDTO.getTitle());
+        entity.setDescription(caseDTO.getDescription());
+
+        CaseEntity savedEntity = caseRepository.save(entity);
+        return caseMapper.toDTO(savedEntity);
+    }
+
+    @Transactional
+    public void deleteCase(Actor actor, UUID caseId) {
+        CaseEntity entity = caseRepository.findById(caseId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Case not found"));
+
+        requireCanDelete(actor, entity);
+        caseRepository.delete(entity);
+    }
+
     @Transactional(readOnly = true)
     public Optional<CaseDTO> getCase(Actor actor, UUID id) {
         return caseRepository.findById(id)
@@ -168,6 +191,24 @@ public class CaseService {
         if (isDoctor(actor) && actor.userId().equals(entity.getOwnerId())) return;
         if (isNurse(actor) && actor.userId().equals(entity.getHandlerId())) return;
         throw new NotAuthorizedException("Not allowed to read this case");
+    }
+
+    private void requireCanEdit(Actor actor, CaseEntity entity) {
+        if (actor == null) {
+            throw new NotAuthorizedException("Not allowed to edit this case");
+        }
+        if (isManager(actor)) return;
+        if (isDoctor(actor) && actor.userId().equals(entity.getOwnerId())) return;
+        throw new NotAuthorizedException("Not allowed to edit this case");
+    }
+
+    private void requireCanDelete(Actor actor, CaseEntity entity) {
+        if (actor == null) {
+            throw new NotAuthorizedException("Not allowed to delete this case");
+        }
+        if (isManager(actor)) return;
+        if (isDoctor(actor) && actor.userId().equals(entity.getOwnerId())) return;
+        throw new NotAuthorizedException("Not allowed to delete this case");
     }
 
     private boolean canCreate(Actor actor) {
