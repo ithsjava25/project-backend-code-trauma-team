@@ -81,6 +81,7 @@ class DocumentIntegrationTest {
         employeeRepository.save(manager);
 
         CaseEntity caseEntity = new CaseEntity();
+        caseEntity.setId(UUID.randomUUID());
         caseEntity.setTitle("Test Case");
         caseEntity.setOwnerId(manager.getId()); 
         CaseEntity saved = caseRepository.save(caseEntity);
