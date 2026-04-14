@@ -41,6 +41,18 @@ public class CaseController {
         return ResponseEntity.ok(caseService.getAllCases(securityActorAdapter.currentUser()));
     }
 
+    @PutMapping("/{id}")
+    public ResponseEntity<CaseDTO> updateCase(@PathVariable UUID id, @RequestBody @Valid CaseDTO caseDTO) {
+        CaseDTO updated = caseService.updateCase(securityActorAdapter.currentUser(), id, caseDTO);
+        return ResponseEntity.ok(updated);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteCase(@PathVariable UUID id) {
+        caseService.deleteCase(securityActorAdapter.currentUser(), id);
+        return ResponseEntity.noContent().build();
+    }
+
     @PutMapping("/{id}/assignments")
     public ResponseEntity<CaseDTO> assignUsers(@PathVariable UUID id, @RequestBody CaseAssignmentDTO dto) {
         return ResponseEntity.ok(caseService.assignUsers(securityActorAdapter.currentUser(), id, dto));
