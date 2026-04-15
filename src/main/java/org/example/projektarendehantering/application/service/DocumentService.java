@@ -6,10 +6,7 @@ import io.awspring.cloud.s3.S3Template;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.projektarendehantering.common.*;
-import org.example.projektarendehantering.infrastructure.persistence.CaseEntity;
-import org.example.projektarendehantering.infrastructure.persistence.CaseRepository;
-import org.example.projektarendehantering.infrastructure.persistence.DocumentEntity;
-import org.example.projektarendehantering.infrastructure.persistence.DocumentRepository;
+import org.example.projektarendehantering.infrastructure.persistence.*;
 import org.example.projektarendehantering.presentation.dto.DocumentDTO;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -33,6 +30,7 @@ public class DocumentService {
     private final CaseRepository caseRepository;
     private final S3Template s3Template;
     private final DocumentMapper documentMapper;
+    private final AuditService auditService;
 
     @Value("${app.s3.bucket}")
     private String bucket;
@@ -98,8 +96,20 @@ public class DocumentService {
         // --- SAFE DB SAVE WITH COMPENSATION IF IT FAILS ---
         try {
             DocumentEntity saved = documentRepository.save(entity);
-            caseEntity.setStatus(CaseStatus.COMMUNICATION);
-            caseRepository.save(caseEntity);
+            CaseStatus previousStatus = caseEntity.getStatus();
+            if (previousStatus != CaseStatus.COMMUNICATION) {
+                caseEntity.setStatus(CaseStatus.COMMUNICATION);
+                caseRepository.save(caseEntity);
+
+                String statusChange = (previousStatus != null ? previousStatus.name() : "NEW")
+                        + " -> " + CaseStatus.COMMUNICATION.name();
+                auditService.record(AuditEventEntity.builder()
+                        .caseId(caseEntity.getId())
+                        .statusChange(statusChange)
+                        .actorId(actor.userId())
+                        .actorRole(actor.role() != null ? actor.role().name() : null)
+                        .build());
+            }
             return documentMapper.toDTO(saved);
         } catch (RuntimeException ex) {
             if (!syncActive) {

@@ -259,7 +259,8 @@ class CaseServiceTest {
                 .isInstanceOf(NotAuthorizedException.class)
                 .hasMessageContaining("Not allowed to delete this case");
 
-        verify(caseRepository, never()).delete(any(CaseEntity.class));
+        assertThat(caseEntity.getStatus()).isNotEqualTo(CaseStatus.CLOSED);
+        verify(caseRepository, never()).save(any(CaseEntity.class));
     }
 
     @Test
@@ -270,7 +271,8 @@ class CaseServiceTest {
                 .isInstanceOf(NotAuthorizedException.class)
                 .hasMessageContaining("Not allowed to delete this case");
 
-        verify(caseRepository, never()).delete(any(CaseEntity.class));
+        assertThat(caseEntity.getStatus()).isNotEqualTo(CaseStatus.CLOSED);
+        verify(caseRepository, never()).save(any(CaseEntity.class));
     }
 
     @Test
@@ -282,7 +284,7 @@ class CaseServiceTest {
                 .hasMessageContaining("404 NOT_FOUND")
                 .hasMessageContaining("Case not found");
 
-        verify(caseRepository, never()).delete(any(CaseEntity.class));
+        verify(caseRepository, never()).save(any(CaseEntity.class));
     }
 
     @Test

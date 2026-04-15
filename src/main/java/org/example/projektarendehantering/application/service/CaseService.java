@@ -125,6 +125,7 @@ public class CaseService {
     @Transactional
     public void deleteCase(Actor actor, UUID caseId) {
         CaseEntity entity = caseRepository.findById(caseId)
+                .filter(ce -> ce.getStatus() != CaseStatus.CLOSED)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Case not found"));
 
         requireCanDelete(actor, entity);
@@ -167,7 +168,7 @@ public class CaseService {
     @Transactional(readOnly = true)
     public List<CaseDTO> getCasesForPatient(Actor actor, UUID patientId) {
         return caseRepository.findAllByPatient_IdAndStatusNot(patientId, CaseStatus.CLOSED).stream()
-                .peek(entity -> requireCanRead(actor, entity))
+                .filter(entity -> canRead(actor, entity))
                 .map(caseMapper::toDTO)
                 .collect(Collectors.toList());
     }
@@ -197,7 +198,7 @@ public class CaseService {
             UUID handlerId = requireEmployeeWithRole(dto.getHandlerId(), Set.of(Role.NURSE), "handlerId");
             entity.setHandlerId(handlerId);
         }
-        
+
         CaseStatus previousStatus = entity.getStatus();
         entity.setStatus(CaseStatus.HANDLER_ASSIGNED);
         CaseEntity savedEntity = caseRepository.save(entity);
@@ -247,6 +248,13 @@ public class CaseService {
 
     private boolean canCreate(Actor actor) {
         return isManager(actor) || isDoctor(actor);
+    }
+
+    private boolean canRead(Actor actor, CaseEntity entity) {
+        if (isManager(actor)) return true;
+        if (isDoctor(actor) && actor.userId().equals(entity.getOwnerId())) return true;
+        if (isNurse(actor) && actor.userId().equals(entity.getHandlerId())) return true;
+        return false;
     }
 
     private boolean isManager(Actor actor) {
