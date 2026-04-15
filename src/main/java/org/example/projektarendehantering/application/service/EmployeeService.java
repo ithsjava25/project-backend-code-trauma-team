@@ -10,6 +10,7 @@ import org.example.projektarendehantering.presentation.dto.EmployeeCreateDTO;
 import org.example.projektarendehantering.presentation.dto.EmployeeDTO;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import lombok.RequiredArgsConstructor;
 
 import java.time.Instant;
 import java.util.List;
@@ -18,15 +19,11 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
+@RequiredArgsConstructor
 public class EmployeeService {
 
     private final EmployeeRepository employeeRepository;
     private final EmployeeMapper employeeMapper;
-
-    public EmployeeService(EmployeeRepository employeeRepository, EmployeeMapper employeeMapper) {
-        this.employeeRepository = employeeRepository;
-        this.employeeMapper = employeeMapper;
-    }
 
     @Transactional
     public EmployeeDTO createEmployee(Actor actor, EmployeeCreateDTO dto) {

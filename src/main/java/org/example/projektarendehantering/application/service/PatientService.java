@@ -8,6 +8,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
+import lombok.RequiredArgsConstructor;
 
 import java.time.Instant;
 import java.util.List;
@@ -16,20 +17,16 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
+@RequiredArgsConstructor
 public class PatientService {
 
     private final PatientRepository patientRepository;
     private final PatientMapper patientMapper;
 
-    public PatientService(PatientRepository patientRepository, PatientMapper patientMapper) {
-        this.patientRepository = patientRepository;
-        this.patientMapper = patientMapper;
-    }
-
     @Transactional
     public PatientDTO createPatient(PatientCreateDTO patientDTO) {
         PatientEntity entity = patientMapper.toEntity(patientDTO);
-        // Removed manual setId - @GeneratedValue in PatientEntity will handle this
+        entity.setId(UUID.randomUUID());
         entity.setCreatedAt(Instant.now());
         if (entity.getPersonalIdentityNumber() != null && !entity.getPersonalIdentityNumber().isBlank()) {
             patientRepository.findByPersonalIdentityNumber(entity.getPersonalIdentityNumber())

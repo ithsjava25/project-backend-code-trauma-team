@@ -1,17 +1,27 @@
 package org.example.projektarendehantering.infrastructure.persistence;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 @Entity
 @Table(name = "cases")
 public class CaseEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
     private String status;
     private UUID ownerId;
@@ -27,48 +37,12 @@ public class CaseEntity {
 
     @OneToMany(mappedBy = "caseEntity", cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderBy("createdAt DESC")
+    @Builder.Default
     private List<CaseNoteEntity> notes = new ArrayList<>();
 
-    public CaseEntity() {}
-
-    public CaseEntity(UUID id, String status, UUID ownerId, String title, String description, Instant createdAt, PatientEntity patient, List<CaseNoteEntity> notes) {
-        this.id = id;
-        this.status = status;
-        this.ownerId = ownerId;
-        this.title = title;
-        this.description = description;
-        this.createdAt = createdAt;
-        this.patient = patient;
-        this.notes = notes != null ? notes : new ArrayList<>();
-    }
-
-    public UUID getId() { return id; }
-    public void setId(UUID id) { this.id = id; }
-
-    public String getStatus() { return status; }
-    public void setStatus(String status) { this.status = status; }
-
-    public UUID getOwnerId() { return ownerId; }
-    public void setOwnerId(UUID ownerId) { this.ownerId = ownerId; }
-
-    public UUID getHandlerId() { return handlerId; }
-    public void setHandlerId(UUID handlerId) { this.handlerId = handlerId; }
-
-    public UUID getOtherId() { return otherId; }
-    public void setOtherId(UUID otherId) { this.otherId = otherId; }
-
-    public String getTitle() { return title; }
-    public void setTitle(String title) { this.title = title; }
-
-    public String getDescription() { return description; }
-    public void setDescription(String description) { this.description = description; }
-
-    public Instant getCreatedAt() { return createdAt; }
-    public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
-
-    public PatientEntity getPatient() { return patient; }
-    public void setPatient(PatientEntity patient) { this.patient = patient; }
-
-    public List<CaseNoteEntity> getNotes() { return notes; }
+    @OneToMany(mappedBy = "caseEntity", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderBy("uploadedAt DESC")
+    @Builder.Default
+    private List<DocumentEntity> documents = new ArrayList<>();
 
 }
