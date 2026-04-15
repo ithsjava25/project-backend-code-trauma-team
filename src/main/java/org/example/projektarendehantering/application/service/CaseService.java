@@ -1,6 +1,7 @@
 package org.example.projektarendehantering.application.service;
 
 import org.example.projektarendehantering.common.Actor;
+import org.example.projektarendehantering.common.CaseStatus;
 import org.example.projektarendehantering.common.NotAuthorizedException;
 import org.example.projektarendehantering.common.Role;
 import org.example.projektarendehantering.infrastructure.persistence.CaseEntity;
@@ -43,6 +44,7 @@ public class CaseService {
             throw new NotAuthorizedException("Not allowed to add notes");
         }
         CaseEntity caseEntity = caseRepository.findById(caseId)
+                .filter(entity -> entity.getStatus() != CaseStatus.CLOSED)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Case not found"));
         requireCanRead(actor, caseEntity);
 
@@ -51,6 +53,9 @@ public class CaseService {
         note.setCaseEntity(caseEntity);
 
         caseNoteRepository.save(note);
+
+        caseEntity.setStatus(CaseStatus.COMMUNICATION);
+        caseRepository.save(caseEntity);
     }
 
     @Transactional
@@ -69,9 +74,8 @@ public class CaseService {
         if (isDoctor(actor) || isManager(actor)) {
             entity.setOwnerId(actor.userId());
         }
-        if (entity.getStatus() == null) {
-            entity.setStatus("OPEN");
-        }
+        entity.setStatus(CaseStatus.CREATED);
+
         if (entity.getCreatedAt() == null) {
             entity.setCreatedAt(Instant.now());
         }
@@ -98,12 +102,14 @@ public class CaseService {
         }
 
         CaseEntity entity = caseRepository.findById(caseId)
+                .filter(ce -> ce.getStatus() != CaseStatus.CLOSED)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Case not found"));
 
         requireCanEdit(actor, entity);
 
         entity.setTitle(title);
         entity.setDescription(description);
+        entity.setStatus(CaseStatus.UPDATED);
 
         CaseEntity savedEntity = caseRepository.save(entity);
         return caseMapper.toDTO(savedEntity);
@@ -115,12 +121,14 @@ public class CaseService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Case not found"));
 
         requireCanDelete(actor, entity);
-        caseRepository.delete(entity);
+        entity.setStatus(CaseStatus.CLOSED);
+        caseRepository.save(entity);
     }
 
     @Transactional(readOnly = true)
     public Optional<CaseDTO> getCase(Actor actor, UUID id) {
         return caseRepository.findById(id)
+                .filter(entity -> entity.getStatus() != CaseStatus.CLOSED)
                 .map(entity -> {
                     requireCanRead(actor, entity);
                     return caseMapper.toDTO(entity);
@@ -130,17 +138,17 @@ public class CaseService {
     @Transactional(readOnly = true)
     public List<CaseDTO> getAllCases(Actor actor) {
         if (isManager(actor)) {
-            return caseRepository.findAll().stream()
+            return caseRepository.findAllByStatusNot(CaseStatus.CLOSED).stream()
                     .map(caseMapper::toDTO)
                     .collect(Collectors.toList());
         }
         if (isDoctor(actor)) {
-            return caseRepository.findAllByOwnerId(actor.userId()).stream()
+            return caseRepository.findAllByOwnerIdAndStatusNot(actor.userId(), CaseStatus.CLOSED).stream()
                     .map(caseMapper::toDTO)
                     .collect(Collectors.toList());
         }
         if (isNurse(actor)) {
-            return caseRepository.findAllByHandlerId(actor.userId()).stream()
+            return caseRepository.findAllByHandlerIdAndStatusNot(actor.userId(), CaseStatus.CLOSED).stream()
                     .map(caseMapper::toDTO)
                     .collect(Collectors.toList());
         }
@@ -149,7 +157,7 @@ public class CaseService {
 
     @Transactional(readOnly = true)
     public List<CaseDTO> getCasesForPatient(Actor actor, UUID patientId) {
-        return caseRepository.findAllByPatient_Id(patientId).stream()
+        return caseRepository.findAllByPatient_IdAndStatusNot(patientId, CaseStatus.CLOSED).stream()
                 .peek(entity -> requireCanRead(actor, entity))
                 .map(caseMapper::toDTO)
                 .collect(Collectors.toList());
@@ -161,6 +169,7 @@ public class CaseService {
             throw new NotAuthorizedException("Not allowed to assign users to case");
         }
         CaseEntity entity = caseRepository.findById(caseId)
+                .filter(ce -> ce.getStatus() != CaseStatus.CLOSED)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Case not found"));
         if (isDoctor(actor)) {
             if (entity.getOwnerId() == null || !entity.getOwnerId().equals(actor.userId())) {
@@ -179,6 +188,8 @@ public class CaseService {
             UUID handlerId = requireEmployeeWithRole(dto.getHandlerId(), Set.of(Role.NURSE), "handlerId");
             entity.setHandlerId(handlerId);
         }
+        
+        entity.setStatus(CaseStatus.HANDLER_ASSIGNED);
         return caseMapper.toDTO(caseRepository.save(entity));
     }
 

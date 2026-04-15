@@ -229,7 +229,8 @@ class CaseServiceTest {
 
         caseService.deleteCase(doctorActor, caseId);
 
-        verify(caseRepository).delete(caseEntity);
+        assertThat(caseEntity.getStatus()).isEqualTo(org.example.projektarendehantering.common.CaseStatus.CLOSED);
+        verify(caseRepository).save(caseEntity);
     }
 
     @Test
@@ -238,7 +239,8 @@ class CaseServiceTest {
 
         caseService.deleteCase(managerActor, caseId);
 
-        verify(caseRepository).delete(caseEntity);
+        assertThat(caseEntity.getStatus()).isEqualTo(org.example.projektarendehantering.common.CaseStatus.CLOSED);
+        verify(caseRepository).save(caseEntity);
     }
 
     @Test
