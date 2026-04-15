@@ -79,6 +79,45 @@ public class CaseService {
         return caseMapper.toDTO(savedEntity);
     }
 
+    @Transactional
+    public CaseDTO updateCase(Actor actor, UUID caseId, CaseDTO caseDTO) {
+
+        if (caseDTO == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Title and description are required");
+        }
+
+        String title = caseDTO.getTitle() == null ? null : caseDTO.getTitle().trim();
+        String description = caseDTO.getDescription() == null ? null : caseDTO.getDescription().trim();
+
+        if (title == null || title.isBlank()
+                || description == null || description.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Title and description are required");
+        }
+        if (title.length() > 200 || description.length() > 2000) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "title/description length exceeds limits");
+        }
+
+        CaseEntity entity = caseRepository.findById(caseId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Case not found"));
+
+        requireCanEdit(actor, entity);
+
+        entity.setTitle(title);
+        entity.setDescription(description);
+
+        CaseEntity savedEntity = caseRepository.save(entity);
+        return caseMapper.toDTO(savedEntity);
+    }
+
+    @Transactional
+    public void deleteCase(Actor actor, UUID caseId) {
+        CaseEntity entity = caseRepository.findById(caseId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Case not found"));
+
+        requireCanDelete(actor, entity);
+        caseRepository.delete(entity);
+    }
+
     @Transactional(readOnly = true)
     public Optional<CaseDTO> getCase(Actor actor, UUID id) {
         return caseRepository.findById(id)
@@ -163,6 +202,24 @@ public class CaseService {
         if (isDoctor(actor) && actor.userId().equals(entity.getOwnerId())) return;
         if (isNurse(actor) && actor.userId().equals(entity.getHandlerId())) return;
         throw new NotAuthorizedException("Not allowed to read this case");
+    }
+
+    private void requireCanEdit(Actor actor, CaseEntity entity) {
+        if (actor == null) {
+            throw new NotAuthorizedException("Not allowed to edit this case");
+        }
+        if (isManager(actor)) return;
+        if (isDoctor(actor) && actor.userId().equals(entity.getOwnerId())) return;
+        throw new NotAuthorizedException("Not allowed to edit this case");
+    }
+
+    private void requireCanDelete(Actor actor, CaseEntity entity) {
+        if (actor == null) {
+            throw new NotAuthorizedException("Not allowed to delete this case");
+        }
+        if (isManager(actor)) return;
+        if (isDoctor(actor) && actor.userId().equals(entity.getOwnerId())) return;
+        throw new NotAuthorizedException("Not allowed to delete this case");
     }
 
     private boolean canCreate(Actor actor) {

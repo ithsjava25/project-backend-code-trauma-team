@@ -1,6 +1,8 @@
 package org.example.projektarendehantering.presentation.rest;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
 import org.example.projektarendehantering.application.service.CaseService;
 import org.example.projektarendehantering.infrastructure.security.SecurityActorAdapter;
@@ -38,8 +40,29 @@ public class CaseController {
         return ResponseEntity.ok(caseService.getAllCases(securityActorAdapter.currentUser()));
     }
 
+    @PutMapping("/{id}")
+    public ResponseEntity<CaseDTO> updateCase(@PathVariable UUID id, @RequestBody @Valid UpdateCaseRequest request) {
+        CaseDTO caseDTO = new CaseDTO();
+        caseDTO.setTitle(request.title());
+        caseDTO.setDescription(request.description());
+        CaseDTO updated = caseService.updateCase(securityActorAdapter.currentUser(), id, caseDTO);
+        return ResponseEntity.ok(updated);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteCase(@PathVariable UUID id) {
+        caseService.deleteCase(securityActorAdapter.currentUser(), id);
+        return ResponseEntity.noContent().build();
+    }
+
     @PutMapping("/{id}/assignments")
     public ResponseEntity<CaseDTO> assignUsers(@PathVariable UUID id, @RequestBody CaseAssignmentDTO dto) {
         return ResponseEntity.ok(caseService.assignUsers(securityActorAdapter.currentUser(), id, dto));
     }
+
+
+    public record UpdateCaseRequest(
+            @NotBlank @Size(max = 200) String title,
+            @NotBlank @Size(max = 2000) String description
+    ) {}
 }
