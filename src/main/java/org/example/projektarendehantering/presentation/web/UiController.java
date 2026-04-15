@@ -5,6 +5,8 @@ import org.example.projektarendehantering.application.service.PatientService;
 import org.example.projektarendehantering.infrastructure.security.SecurityActorAdapter;
 import org.example.projektarendehantering.presentation.dto.CaseDTO;
 import org.example.projektarendehantering.presentation.dto.CreateCaseForm;
+import org.example.projektarendehantering.presentation.dto.UpdateCaseForm;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -15,6 +17,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import jakarta.validation.Valid;
+import org.springframework.web.server.ResponseStatusException;
+
 import java.security.Principal;
 import java.util.UUID;
 
@@ -74,6 +78,46 @@ public class UiController {
     public String caseDetail(@PathVariable UUID caseId, Model model) {
         caseService.getCase(securityActorAdapter.currentUser(), caseId).ifPresent(c -> model.addAttribute("case", c));
         return "cases/detail";
+    }
+
+    @GetMapping("/ui/cases/{caseId}/edit")
+    public String editCase(@PathVariable UUID caseId, Model model) {
+        CaseDTO caseDTO = caseService.getCase(securityActorAdapter.currentUser(), caseId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Case not found"));
+
+        UpdateCaseForm form = new UpdateCaseForm();
+        form.setTitle(caseDTO.getTitle());
+        form.setDescription(caseDTO.getDescription());
+
+        model.addAttribute("caseId", caseId);
+        model.addAttribute("updateCaseForm", form);
+        return "cases/edit";
+    }
+
+    @PostMapping("/ui/cases/{caseId}/edit")
+    public String updateCase(
+            @PathVariable UUID caseId,
+            @Valid @ModelAttribute("updateCaseForm") UpdateCaseForm form,
+            BindingResult result,
+            Model model
+    ) {
+        if (result.hasErrors()) {
+            model.addAttribute("caseId", caseId);
+            return "cases/edit";
+        }
+
+        CaseDTO caseDTO = new CaseDTO();
+        caseDTO.setTitle(form.getTitle());
+        caseDTO.setDescription(form.getDescription());
+
+        caseService.updateCase(securityActorAdapter.currentUser(), caseId, caseDTO);
+        return "redirect:/ui/cases/" + caseId;
+    }
+
+    @PostMapping("/ui/cases/{caseId}/delete")
+    public String deleteCase(@PathVariable UUID caseId) {
+        caseService.deleteCase(securityActorAdapter.currentUser(), caseId);
+        return "redirect:/ui/cases";
     }
 }
 
