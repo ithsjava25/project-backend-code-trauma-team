@@ -2,6 +2,7 @@ package org.example.projektarendehantering.presentation.web;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.example.projektarendehantering.common.Actor;
 import org.example.projektarendehantering.common.AppException;
 import org.example.projektarendehantering.common.NotAuthorizedException;
@@ -20,6 +21,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Map;
 
+@Slf4j
 @ControllerAdvice
 public class GlobalControllerAdvice {
 
@@ -100,6 +102,7 @@ public class GlobalControllerAdvice {
 
     @ExceptionHandler(Exception.class)
     public Object handleGeneralException(Exception e, HttpServletRequest request, HttpServletResponse response, Model model) {
+        log.error("Unhandled exception for request {}: {}", request.getRequestURI(), e.getMessage(), e);
         HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
         if (isRestRequest(request)) {
             return ResponseEntity.status(status)
