@@ -6,6 +6,7 @@ import org.example.projektarendehantering.infrastructure.security.SecurityActorA
 import org.example.projektarendehantering.presentation.dto.CaseDTO;
 import org.example.projektarendehantering.presentation.dto.CreateCaseForm;
 import org.example.projektarendehantering.presentation.dto.UpdateCaseForm;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -16,6 +17,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import jakarta.validation.Valid;
+import org.springframework.web.server.ResponseStatusException;
+
 import java.security.Principal;
 import java.util.UUID;
 
@@ -80,7 +83,7 @@ public class UiController {
     @GetMapping("/ui/cases/{caseId}/edit")
     public String editCase(@PathVariable UUID caseId, Model model) {
         CaseDTO caseDTO = caseService.getCase(securityActorAdapter.currentUser(), caseId)
-                .orElseThrow(() -> new IllegalArgumentException("Case not found"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Case not found"));
 
         UpdateCaseForm form = new UpdateCaseForm();
         form.setTitle(caseDTO.getTitle());

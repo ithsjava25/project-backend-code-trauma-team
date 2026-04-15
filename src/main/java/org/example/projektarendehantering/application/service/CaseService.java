@@ -81,13 +81,29 @@ public class CaseService {
 
     @Transactional
     public CaseDTO updateCase(Actor actor, UUID caseId, CaseDTO caseDTO) {
+
+        if (caseDTO == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Title and description are required");
+        }
+
+        String title = caseDTO.getTitle() == null ? null : caseDTO.getTitle().trim();
+        String description = caseDTO.getDescription() == null ? null : caseDTO.getDescription().trim();
+
+        if (title == null || title.isBlank()
+                || description == null || description.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Title and description are required");
+        }
+        if (title.length() > 200 || description.length() > 2000) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "title/description length exceeds limits");
+        }
+
         CaseEntity entity = caseRepository.findById(caseId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Case not found"));
 
         requireCanEdit(actor, entity);
 
-        entity.setTitle(caseDTO.getTitle());
-        entity.setDescription(caseDTO.getDescription());
+        entity.setTitle(title);
+        entity.setDescription(description);
 
         CaseEntity savedEntity = caseRepository.save(entity);
         return caseMapper.toDTO(savedEntity);
