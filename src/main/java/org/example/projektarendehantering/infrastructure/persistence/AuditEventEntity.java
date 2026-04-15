@@ -50,6 +50,8 @@ public class AuditEventEntity {
 
     private UUID caseId;
 
+    private String statusChange;
+
     private String clientIp;
     private String userAgent;
 }

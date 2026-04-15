@@ -22,6 +22,7 @@ public class AuditEventMapper {
                 .responseStatus(entity.getResponseStatus())
                 .errorType(entity.getErrorType())
                 .caseId(entity.getCaseId())
+                .statusChange(entity.getStatusChange())
                 .clientIp(entity.getClientIp())
                 .userAgent(entity.getUserAgent())
                 .build();

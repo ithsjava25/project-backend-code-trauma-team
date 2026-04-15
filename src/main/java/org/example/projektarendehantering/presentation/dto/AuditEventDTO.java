@@ -31,6 +31,8 @@ public class AuditEventDTO {
 
     private UUID caseId;
 
+    private String statusChange;
+
     private String clientIp;
     private String userAgent;
 

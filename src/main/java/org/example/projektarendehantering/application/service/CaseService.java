@@ -4,6 +4,7 @@ import org.example.projektarendehantering.common.Actor;
 import org.example.projektarendehantering.common.CaseStatus;
 import org.example.projektarendehantering.common.NotAuthorizedException;
 import org.example.projektarendehantering.common.Role;
+import org.example.projektarendehantering.infrastructure.persistence.AuditEventEntity;
 import org.example.projektarendehantering.infrastructure.persistence.CaseEntity;
 import org.example.projektarendehantering.infrastructure.persistence.CaseNoteEntity;
 import org.example.projektarendehantering.infrastructure.persistence.CaseNoteRepository;
@@ -37,6 +38,7 @@ public class CaseService {
     private final PatientRepository patientRepository;
     private final CaseNoteRepository caseNoteRepository;
     private final EmployeeRepository employeeRepository;
+    private final AuditService auditService;
 
     @Transactional
     public void addNote(UUID caseId, String content, Actor actor) {
@@ -54,8 +56,10 @@ public class CaseService {
 
         caseNoteRepository.save(note);
 
+        CaseStatus previousStatus = caseEntity.getStatus();
         caseEntity.setStatus(CaseStatus.COMMUNICATION);
         caseRepository.save(caseEntity);
+        recordStatusChange(actor, caseEntity.getId(), previousStatus, CaseStatus.COMMUNICATION);
     }
 
     @Transactional
@@ -80,6 +84,7 @@ public class CaseService {
             entity.setCreatedAt(Instant.now());
         }
         CaseEntity savedEntity = caseRepository.save(entity);
+        recordStatusChange(actor, savedEntity.getId(), null, CaseStatus.CREATED);
         return caseMapper.toDTO(savedEntity);
     }
 
@@ -107,11 +112,13 @@ public class CaseService {
 
         requireCanEdit(actor, entity);
 
+        CaseStatus previousStatus = entity.getStatus();
         entity.setTitle(title);
         entity.setDescription(description);
         entity.setStatus(CaseStatus.UPDATED);
 
         CaseEntity savedEntity = caseRepository.save(entity);
+        recordStatusChange(actor, savedEntity.getId(), previousStatus, CaseStatus.UPDATED);
         return caseMapper.toDTO(savedEntity);
     }
 
@@ -121,8 +128,10 @@ public class CaseService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Case not found"));
 
         requireCanDelete(actor, entity);
+        CaseStatus previousStatus = entity.getStatus();
         entity.setStatus(CaseStatus.CLOSED);
         caseRepository.save(entity);
+        recordStatusChange(actor, entity.getId(), previousStatus, CaseStatus.CLOSED);
     }
 
     @Transactional(readOnly = true)
@@ -189,8 +198,11 @@ public class CaseService {
             entity.setHandlerId(handlerId);
         }
         
+        CaseStatus previousStatus = entity.getStatus();
         entity.setStatus(CaseStatus.HANDLER_ASSIGNED);
-        return caseMapper.toDTO(caseRepository.save(entity));
+        CaseEntity savedEntity = caseRepository.save(entity);
+        recordStatusChange(actor, savedEntity.getId(), previousStatus, CaseStatus.HANDLER_ASSIGNED);
+        return caseMapper.toDTO(savedEntity);
     }
 
     private UUID requireEmployeeWithRole(UUID id, Set<Role> allowedRoles, String fieldName) {
@@ -247,5 +259,16 @@ public class CaseService {
 
     private boolean isNurse(Actor actor) {
         return actor.role() == Role.NURSE;
+    }
+
+    private void recordStatusChange(Actor actor, UUID caseId, CaseStatus from, CaseStatus to) {
+        String statusChange = (from != null ? from.name() : "NEW") + " -> " + to.name();
+        AuditEventEntity event = AuditEventEntity.builder()
+                .caseId(caseId)
+                .statusChange(statusChange)
+                .actorId(actor != null ? actor.userId() : null)
+                .actorRole(actor != null && actor.role() != null ? actor.role().name() : null)
+                .build();
+        auditService.record(event);
     }
 }
