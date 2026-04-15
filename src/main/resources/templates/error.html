@@ -6,7 +6,7 @@
 <div th:replace="~{fragments/header :: header}"></div>
 
 <main class="container page">
-    <div class="panel" style="border-top: 4px solid var(--danger); text-align: center; padding: 40px;">
+    <div class="panel panel-error" style="text-align: center; padding: 40px;">
         <h1 th:text="${status != null ? status : 'Error'}">Error</h1>
         <p class="muted" style="font-size: 1.2rem; margin-top: 16px;" th:text="${message}">An unexpected error occurred.</p>
         <p th:if="${errorCode != null}" class="muted" style="margin-top: 8px;">
