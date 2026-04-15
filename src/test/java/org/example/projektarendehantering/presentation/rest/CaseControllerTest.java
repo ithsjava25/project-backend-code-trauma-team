@@ -3,12 +3,10 @@ package org.example.projektarendehantering.presentation.rest;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.example.projektarendehantering.application.service.CaseService;
 import org.example.projektarendehantering.common.Actor;
+import org.example.projektarendehantering.common.NotAuthorizedException;
 import org.example.projektarendehantering.common.Role;
 import org.example.projektarendehantering.infrastructure.security.SecurityActorAdapter;
 import org.example.projektarendehantering.presentation.dto.CaseDTO;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -120,6 +118,19 @@ class CaseControllerTest {
                         .content(objectMapper.writeValueAsString(inputDTO)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.description").value("New Case"));
+    }
+
+    @Test
+    @WithMockUser(roles = "DOCTOR")
+    void getCase_shouldReturnForbidden_whenNotAuthorized() throws Exception {
+        when(caseService.getCase(eq(doctorActor), eq(caseId)))
+                .thenThrow(new NotAuthorizedException("NOT_ALLOWED", "Not allowed to read this case"));
+
+        mockMvc.perform(get("/api/cases/{id}", caseId))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.errorCode").value("NOT_ALLOWED"))
+                .andExpect(jsonPath("$.message").value("Not allowed to read this case"))
+                .andExpect(jsonPath("$.status").value(403));
     }
 
     @Test

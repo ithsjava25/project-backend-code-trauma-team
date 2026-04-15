@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head(title='Error')}">
+</head>
+<body>
+<div th:replace="~{fragments/header :: header}"></div>
+
+<main class="container page">
+    <div class="panel" style="border-top: 4px solid var(--danger); text-align: center; padding: 40px;">
+        <h1 th:text="${status != null ? status : 'Error'}">Error</h1>
+        <p class="muted" style="font-size: 1.2rem; margin-top: 16px;" th:text="${message}">An unexpected error occurred.</p>
+        <p th:if="${errorCode != null}" class="muted" style="margin-top: 8px;">
+            Error code: <code th:text="${errorCode}">UNKNOWN</code>
+        </p>
+        <div class="actions" style="margin-top: 32px; justify-content: center;">
+            <a class="button" href="/">Back to Dashboard</a>
+        </div>
+    </div>
+</main>
+
+<div th:replace="~{fragments/footer :: footer}"></div>
+</body>
+</html>
