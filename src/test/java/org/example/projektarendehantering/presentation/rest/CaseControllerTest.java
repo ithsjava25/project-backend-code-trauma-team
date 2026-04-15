@@ -23,11 +23,14 @@ import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.setup.MockMvcBuilders.webAppContextSetup;
@@ -118,6 +121,62 @@ class CaseControllerTest {
                         .content(objectMapper.writeValueAsString(inputDTO)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.description").value("New Case"));
+    }
+
+
+    @Test
+    @WithMockUser(roles = "DOCTOR")
+    void updateCase_shouldReturnUpdatedCase() throws Exception {
+        CaseDTO inputDTO = new CaseDTO();
+        inputDTO.setTitle("Updated title");
+        inputDTO.setDescription("Updated description");
+
+        CaseDTO outputDTO = new CaseDTO();
+        outputDTO.setId(caseId);
+        outputDTO.setTitle("Updated title");
+        outputDTO.setDescription("Updated description");
+
+        when(caseService.updateCase(eq(doctorActor), eq(caseId), any(CaseDTO.class))).thenReturn(outputDTO);
+
+        mockMvc.perform(put("/api/cases/{id}", caseId)
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(inputDTO)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(caseId.toString()))
+                .andExpect(jsonPath("$.title").value("Updated title"))
+                .andExpect(jsonPath("$.description").value("Updated description"));
+    }
+
+    @Test
+    @WithMockUser(roles = "DOCTOR")
+    void deleteCase_shouldReturnNoContent() throws Exception {
+        doNothing().when(caseService).deleteCase(eq(doctorActor), eq(caseId));
+
+        mockMvc.perform(delete("/api/cases/{id}", caseId)
+                        .with(csrf()))
+                .andExpect(status().isNoContent());
+    }
+
+    @Test
+    void updateCase_shouldReturnUnauthorized_whenNotLoggedIn() throws Exception {
+        CaseDTO inputDTO = new CaseDTO();
+        inputDTO.setTitle("Updated title");
+        inputDTO.setDescription("Updated description");
+
+        mockMvc.perform(put("/api/cases/{id}", caseId)
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(inputDTO)))
+                .andExpect(status().is3xxRedirection());
+    }
+
+
+    @Test
+    void deleteCase_shouldReturnUnauthorized_whenNotLoggedIn() throws Exception {
+        mockMvc.perform(delete("/api/cases/{id}", caseId)
+                        .with(csrf()))
+                .andExpect(status().is3xxRedirection());
     }
 
     @Test
