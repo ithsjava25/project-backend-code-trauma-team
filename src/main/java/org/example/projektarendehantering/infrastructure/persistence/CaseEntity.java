@@ -33,7 +33,6 @@ public class CaseEntity {
     private String description;
     private Instant createdAt;
     private UUID handlerId;
-    private UUID otherId;
 
     @ManyToOne(optional = true)
     @JoinColumn(name = "patient_id", nullable = true) // Optional because the patient can be null
