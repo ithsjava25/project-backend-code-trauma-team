@@ -23,6 +23,8 @@ public class CaseDTO {
     private String description;
     private Instant createdAt;
     private UUID patientId;
+    private UUID ownerId;
+    private UUID handlerId;
 
     @Builder.Default
     private List<CaseNoteDTO> notes = new ArrayList<>();

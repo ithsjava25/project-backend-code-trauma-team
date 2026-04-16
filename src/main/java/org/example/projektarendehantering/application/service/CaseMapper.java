@@ -23,6 +23,8 @@ public class CaseMapper {
                 .description(entity.getDescription())
                 .createdAt(entity.getCreatedAt())
                 .patientId(entity.getPatient() != null ? entity.getPatient().getId() : null)
+                .ownerId(entity.getOwnerId())
+                .handlerId(entity.getHandlerId())
                 .build();
 
         if (entity.getNotes() != null) {
@@ -46,6 +48,8 @@ public class CaseMapper {
                 .title(dto.getTitle())
                 .description(dto.getDescription())
                 .createdAt(dto.getCreatedAt())
+                .ownerId(dto.getOwnerId())
+                .handlerId(dto.getHandlerId())
                 .build();
     }
 }

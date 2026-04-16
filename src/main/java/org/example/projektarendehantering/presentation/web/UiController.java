@@ -1,8 +1,10 @@
 package org.example.projektarendehantering.presentation.web;
 
 import org.example.projektarendehantering.application.service.CaseService;
+import org.example.projektarendehantering.application.service.EmployeeService;
 import org.example.projektarendehantering.application.service.PatientService;
 import org.example.projektarendehantering.infrastructure.security.SecurityActorAdapter;
+import org.example.projektarendehantering.presentation.dto.CaseAssignmentDTO;
 import org.example.projektarendehantering.presentation.dto.CaseDTO;
 import org.example.projektarendehantering.presentation.dto.CreateCaseForm;
 import org.example.projektarendehantering.presentation.dto.UpdateCaseForm;
@@ -27,11 +29,13 @@ public class UiController {
 
     private final CaseService caseService;
     private final PatientService patientService;
+    private final EmployeeService employeeService;
     private final SecurityActorAdapter securityActorAdapter;
 
-    public UiController(CaseService caseService, PatientService patientService, SecurityActorAdapter securityActorAdapter) {
+    public UiController(CaseService caseService, PatientService patientService, EmployeeService employeeService, SecurityActorAdapter securityActorAdapter) {
         this.caseService = caseService;
         this.patientService = patientService;
+        this.employeeService = employeeService;
         this.securityActorAdapter = securityActorAdapter;
     }
 
@@ -82,7 +86,11 @@ public class UiController {
 
     @GetMapping("/ui/cases/{caseId}")
     public String caseDetail(@PathVariable UUID caseId, Model model) {
-        caseService.getCase(securityActorAdapter.currentUser(), caseId).ifPresent(c -> model.addAttribute("case", c));
+        caseService.getCase(securityActorAdapter.currentUser(), caseId).ifPresent(c -> {
+            model.addAttribute("case", c);
+            model.addAttribute("doctors", employeeService.findByRole(org.example.projektarendehantering.common.Role.DOCTOR));
+            model.addAttribute("nurses", employeeService.findByRole(org.example.projektarendehantering.common.Role.NURSE));
+        });
         return "cases/detail";
     }
 
@@ -124,6 +132,19 @@ public class UiController {
     public String deleteCase(@PathVariable UUID caseId) {
         caseService.deleteCase(securityActorAdapter.currentUser(), caseId);
         return "redirect:/ui/cases";
+    }
+
+    @PostMapping("/ui/cases/{caseId}/assignments")
+    public String assignUsers(@PathVariable UUID caseId, @RequestParam(value = "ownerId", required = false) String ownerId, @RequestParam(value = "handlerId", required = false) String handlerId) {
+        CaseAssignmentDTO dto = new CaseAssignmentDTO();
+        if (ownerId != null && !ownerId.isBlank()) {
+            dto.setOwnerId(UUID.fromString(ownerId));
+        }
+        if (handlerId != null && !handlerId.isBlank()) {
+            dto.setHandlerId(UUID.fromString(handlerId));
+        }
+        caseService.assignUsers(securityActorAdapter.currentUser(), caseId, dto);
+        return "redirect:/ui/cases/" + caseId;
     }
 }
 

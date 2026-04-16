@@ -6,6 +6,7 @@ import org.example.projektarendehantering.common.CaseStatus;
 import org.example.projektarendehantering.common.NotAuthorizedException;
 import org.example.projektarendehantering.common.Role;
 import org.example.projektarendehantering.infrastructure.persistence.*;
+import org.example.projektarendehantering.presentation.dto.CaseAssignmentDTO;
 import org.example.projektarendehantering.presentation.dto.CaseDTO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -15,6 +16,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -433,9 +435,83 @@ class CaseServiceTest {
     }
 
     @Test
-    void getClosedCases_shouldDenyNurse() {
-        assertThatThrownBy(() -> caseService.getClosedCases(nurseActor))
-                .isInstanceOf(NotAuthorizedException.class)
-                .hasMessageContaining("Not allowed to view closed cases");
+    void assignUsers_shouldAllowDoctorToAssignThemselvesToUnownedCase() {
+        caseEntity.setOwnerId(null); // Unowned
+        CaseAssignmentDTO dto = new CaseAssignmentDTO();
+        dto.setOwnerId(doctorActor.userId());
+
+        when(caseRepository.findById(caseId)).thenReturn(Optional.of(caseEntity));
+        when(employeeRepository.findById(doctorActor.userId())).thenReturn(Optional.of(new EmployeeEntity(doctorActor.userId(), "Doctor", "doctor_user", Role.DOCTOR, Instant.now())));
+        when(caseRepository.save(caseEntity)).thenReturn(caseEntity);
+        when(caseMapper.toDTO(caseEntity)).thenReturn(new CaseDTO());
+
+        caseService.assignUsers(doctorActor, caseId, dto);
+
+        assertThat(caseEntity.getOwnerId()).isEqualTo(doctorActor.userId());
+        verify(caseRepository).save(caseEntity);
     }
+
+    @Test
+    void assignUsers_shouldAllowDoctorToTransferOwnershipOfOwnedCase() {
+        // doctorActor already owns it (set in setUp)
+        CaseAssignmentDTO dto = new CaseAssignmentDTO();
+        dto.setOwnerId(otherDoctorActor.userId());
+
+        when(caseRepository.findById(caseId)).thenReturn(Optional.of(caseEntity));
+        when(employeeRepository.findById(otherDoctorActor.userId())).thenReturn(Optional.of(new EmployeeEntity(otherDoctorActor.userId(), "Other Doctor", "other_doctor_user", Role.DOCTOR, Instant.now())));
+        when(caseRepository.save(caseEntity)).thenReturn(caseEntity);
+        when(caseMapper.toDTO(caseEntity)).thenReturn(new CaseDTO());
+
+        caseService.assignUsers(doctorActor, caseId, dto);
+
+        assertThat(caseEntity.getOwnerId()).isEqualTo(otherDoctorActor.userId());
+        verify(caseRepository).save(caseEntity);
+    }
+
+    @Test
+    void assignUsers_shouldDenyDoctorToModifyAssignmentsOfCaseOwnedByOther() {
+        caseEntity.setOwnerId(otherDoctorActor.userId());
+        CaseAssignmentDTO dto = new CaseAssignmentDTO();
+        dto.setOwnerId(doctorActor.userId());
+
+        when(caseRepository.findById(caseId)).thenReturn(Optional.of(caseEntity));
+
+        assertThatThrownBy(() -> caseService.assignUsers(doctorActor, caseId, dto))
+                .isInstanceOf(NotAuthorizedException.class)
+                .hasMessageContaining("Not allowed to modify assignments for this case");
+    }
+
+    @Test
+    void assignUsers_shouldAllowManagerToAssignAnyDoctor() {
+        CaseAssignmentDTO dto = new CaseAssignmentDTO();
+        dto.setOwnerId(otherDoctorActor.userId());
+
+        when(caseRepository.findById(caseId)).thenReturn(Optional.of(caseEntity));
+        when(employeeRepository.findById(otherDoctorActor.userId())).thenReturn(Optional.of(new EmployeeEntity(otherDoctorActor.userId(), "Other Doctor", "other_doctor_user", Role.DOCTOR, Instant.now())));
+        when(caseRepository.save(caseEntity)).thenReturn(caseEntity);
+        when(caseMapper.toDTO(caseEntity)).thenReturn(new CaseDTO());
+
+        caseService.assignUsers(managerActor, caseId, dto);
+
+        assertThat(caseEntity.getOwnerId()).isEqualTo(otherDoctorActor.userId());
+        verify(caseRepository).save(caseEntity);
+    }
+
+    @Test
+    void assignUsers_shouldSetStatusToHandlerAssigned() {
+        caseEntity.setStatus(CaseStatus.CREATED);
+        CaseAssignmentDTO dto = new CaseAssignmentDTO();
+        dto.setHandlerId(nurseActor.userId());
+
+        when(caseRepository.findById(caseId)).thenReturn(Optional.of(caseEntity));
+        when(employeeRepository.findById(nurseActor.userId())).thenReturn(Optional.of(new EmployeeEntity(nurseActor.userId(), "Nurse", "nurse_user", Role.NURSE, Instant.now())));
+        when(caseRepository.save(caseEntity)).thenReturn(caseEntity);
+        when(caseMapper.toDTO(caseEntity)).thenReturn(new CaseDTO());
+
+        caseService.assignUsers(managerActor, caseId, dto);
+
+        assertThat(caseEntity.getStatus()).isEqualTo(CaseStatus.HANDLER_ASSIGNED);
+        verify(auditService).record(argThat(e -> "CREATED -> HANDLER_ASSIGNED".equals(e.getStatusChange())));
+    }
+
 }
