@@ -1,5 +1,6 @@
 package org.example.projektarendehantering.application.service;
 
+import jakarta.validation.Valid;
 import org.example.projektarendehantering.common.Actor;
 import org.example.projektarendehantering.common.BadRequestException;
 import org.example.projektarendehantering.common.CaseStatus;
@@ -208,6 +209,10 @@ public class CaseService {
             if (entity.getOwnerId() != null && !entity.getOwnerId().equals(actor.userId())) {
                 throw new NotAuthorizedException("Not allowed to modify assignments for this case");
             }
+        }
+
+        if(dto.getOwnerId() == null && dto.getHandlerId() == null) {
+            throw new BadRequestException("At least one of ownerId or handlerId must be provided.");
         }
 
         if (dto.getOwnerId() != null) {

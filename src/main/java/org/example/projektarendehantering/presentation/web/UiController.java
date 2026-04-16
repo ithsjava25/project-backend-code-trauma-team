@@ -86,11 +86,11 @@ public class UiController {
 
     @GetMapping("/ui/cases/{caseId}")
     public String caseDetail(@PathVariable UUID caseId, Model model) {
-        caseService.getCase(securityActorAdapter.currentUser(), caseId).ifPresent(c -> {
-            model.addAttribute("case", c);
-            model.addAttribute("doctors", employeeService.findByRole(org.example.projektarendehantering.common.Role.DOCTOR));
-            model.addAttribute("nurses", employeeService.findByRole(org.example.projektarendehantering.common.Role.NURSE));
-        });
+        CaseDTO caseDTO = caseService.getCase(securityActorAdapter.currentUser(), caseId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Case not found"));
+        model.addAttribute("case", caseDTO);
+        model.addAttribute("doctors", employeeService.findByRole(org.example.projektarendehantering.common.Role.DOCTOR));
+        model.addAttribute("nurses", employeeService.findByRole(org.example.projektarendehantering.common.Role.NURSE));
         return "cases/detail";
     }
 
@@ -137,15 +137,19 @@ public class UiController {
     @PostMapping("/ui/cases/{caseId}/assignments")
     public String assignUsers(@PathVariable UUID caseId, @RequestParam(value = "ownerId", required = false) String ownerId, @RequestParam(value = "handlerId", required = false) String handlerId) {
         CaseAssignmentDTO dto = new CaseAssignmentDTO();
-        try {
-            if (ownerId != null && !ownerId.isBlank()) {
+        if (ownerId != null && !ownerId.isBlank()) {
+            try {
                 dto.setOwnerId(UUID.fromString(ownerId));
+            } catch (IllegalArgumentException e) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid ownerId UUID");
             }
-            if (handlerId != null && !handlerId.isBlank()) {
+        }
+        if (handlerId != null && !handlerId.isBlank()) {
+            try {
                 dto.setHandlerId(UUID.fromString(handlerId));
+            } catch (IllegalArgumentException e) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid handlerId UUID");
             }
-        } catch (IllegalArgumentException e) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid UUID format");
         }
         caseService.assignUsers(securityActorAdapter.currentUser(), caseId, dto);
         return "redirect:/ui/cases/" + caseId;
