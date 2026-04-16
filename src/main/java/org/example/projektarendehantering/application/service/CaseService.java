@@ -1,6 +1,7 @@
 package org.example.projektarendehantering.application.service;
 
 import org.example.projektarendehantering.common.Actor;
+import org.example.projektarendehantering.common.BadRequestException;
 import org.example.projektarendehantering.common.CaseStatus;
 import org.example.projektarendehantering.common.NotAuthorizedException;
 import org.example.projektarendehantering.common.Role;
@@ -48,7 +49,7 @@ public class CaseService {
         CaseEntity caseEntity = caseRepository.findById(caseId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Case not found"));
         if (caseEntity.getStatus() == CaseStatus.CLOSED) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Operation not allowed on a closed case");
+            throw new BadRequestException("Case is closed");
         }
         requireCanRead(actor, caseEntity);
 
@@ -111,7 +112,7 @@ public class CaseService {
         CaseEntity entity = caseRepository.findById(caseId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Case not found"));
         if (entity.getStatus() == CaseStatus.CLOSED) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Operation not allowed on a closed case");
+            throw new BadRequestException("Case is closed");
         }
 
         requireCanEdit(actor, entity);
@@ -131,7 +132,7 @@ public class CaseService {
         CaseEntity entity = caseRepository.findById(caseId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Case not found"));
         if (entity.getStatus() == CaseStatus.CLOSED) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Operation not allowed on a closed case");
+            throw new BadRequestException("Case is closed");
         }
 
         requireCanDelete(actor, entity);
@@ -143,9 +144,11 @@ public class CaseService {
 
     @Transactional(readOnly = true)
     public Optional<CaseDTO> getCase(Actor actor, UUID id) {
-        return caseRepository.findById(id)
-                .filter(entity -> entity.getStatus() != CaseStatus.CLOSED || isManager(actor))
-                .map(entity -> {
+        Optional<CaseEntity> entityOpt = caseRepository.findById(id);
+        if (entityOpt.isPresent() && entityOpt.get().getStatus() == CaseStatus.CLOSED && !isManager(actor)) {
+            throw new BadRequestException("Case is closed");
+        }
+        return entityOpt.map(entity -> {
                     requireCanRead(actor, entity);
                     return caseMapper.toDTO(entity);
                 });
@@ -197,7 +200,7 @@ public class CaseService {
         CaseEntity entity = caseRepository.findById(caseId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Case not found"));
         if (entity.getStatus() == CaseStatus.CLOSED) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Operation not allowed on a closed case");
+            throw new BadRequestException("Case is closed");
         }
         if (isDoctor(actor)) {
             if (entity.getOwnerId() == null || !entity.getOwnerId().equals(actor.userId())) {

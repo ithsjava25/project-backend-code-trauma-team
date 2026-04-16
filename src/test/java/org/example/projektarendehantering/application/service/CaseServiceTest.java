@@ -1,6 +1,7 @@
 package org.example.projektarendehantering.application.service;
 
 import org.example.projektarendehantering.common.Actor;
+import org.example.projektarendehantering.common.BadRequestException;
 import org.example.projektarendehantering.common.CaseStatus;
 import org.example.projektarendehantering.common.NotAuthorizedException;
 import org.example.projektarendehantering.common.Role;
@@ -353,9 +354,8 @@ class CaseServiceTest {
         when(caseRepository.findById(caseId)).thenReturn(Optional.of(caseEntity));
 
         assertThatThrownBy(() -> caseService.updateCase(doctorActor, caseId, updateDto))
-                .isInstanceOf(ResponseStatusException.class)
-                .hasMessageContaining("409 CONFLICT")
-                .hasMessageContaining("Operation not allowed on a closed case");
+                .isInstanceOf(BadRequestException.class)
+                .hasMessageContaining("Case is closed");
 
         verify(caseRepository, never()).save(any(CaseEntity.class));
     }
@@ -366,9 +366,8 @@ class CaseServiceTest {
         when(caseRepository.findById(caseId)).thenReturn(Optional.of(caseEntity));
 
         assertThatThrownBy(() -> caseService.deleteCase(doctorActor, caseId))
-                .isInstanceOf(ResponseStatusException.class)
-                .hasMessageContaining("409 CONFLICT")
-                .hasMessageContaining("Operation not allowed on a closed case");
+                .isInstanceOf(BadRequestException.class)
+                .hasMessageContaining("Case is closed");
 
         verify(caseRepository, never()).save(any(CaseEntity.class));
     }
@@ -379,9 +378,8 @@ class CaseServiceTest {
         when(caseRepository.findById(caseId)).thenReturn(Optional.of(caseEntity));
 
         assertThatThrownBy(() -> caseService.addNote(caseId, "Some note", doctorActor))
-                .isInstanceOf(ResponseStatusException.class)
-                .hasMessageContaining("409 CONFLICT")
-                .hasMessageContaining("Operation not allowed on a closed case");
+                .isInstanceOf(BadRequestException.class)
+                .hasMessageContaining("Case is closed");
 
         verify(caseNoteRepository, never()).save(any());
         verify(caseRepository, never()).save(any(CaseEntity.class));
@@ -405,9 +403,9 @@ class CaseServiceTest {
         caseEntity.setStatus(CaseStatus.CLOSED);
         when(caseRepository.findById(caseId)).thenReturn(Optional.of(caseEntity));
 
-        Optional<CaseDTO> result = caseService.getCase(doctorActor, caseId);
-
-        assertThat(result).isEmpty();
+        assertThatThrownBy(() -> caseService.getCase(doctorActor, caseId))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessageContaining("Case is closed");
     }
 
     // --- getClosedCases ---

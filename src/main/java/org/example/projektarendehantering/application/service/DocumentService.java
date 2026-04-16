@@ -50,8 +50,11 @@ public class DocumentService {
         }
 
         CaseEntity caseEntity = caseRepository.findById(caseId)
-                .filter(ce -> ce.getStatus() != CaseStatus.CLOSED)
                 .orElseThrow(() -> new BadRequestException("Case not found"));
+
+        if (caseEntity.getStatus() == CaseStatus.CLOSED) {
+            throw new BadRequestException("Case is closed");
+        }
 
         validateAccess(actor, caseEntity);
 
@@ -125,8 +128,11 @@ public class DocumentService {
 
     public List<DocumentDTO> listDocuments(Actor actor, UUID caseId) {
         CaseEntity caseEntity = caseRepository.findById(caseId)
-                .filter(ce -> ce.getStatus() != CaseStatus.CLOSED)
                 .orElseThrow(() -> new BadRequestException("Case not found"));
+
+        if (caseEntity.getStatus() == CaseStatus.CLOSED) {
+            throw new BadRequestException("Case is closed");
+        }
 
         validateAccess(actor, caseEntity);
 
@@ -192,7 +198,7 @@ public class DocumentService {
 
     private void validateAccess(Actor actor, CaseEntity caseEntity) {
         if (caseEntity.getStatus() == CaseStatus.CLOSED) {
-            throw new NotAuthorizedException("Case is closed");
+            throw new BadRequestException("Case is closed");
         }
         if (actor.isManager()) return;
         if (actor.isDoctor() && actor.userId().equals(caseEntity.getOwnerId())) return;
