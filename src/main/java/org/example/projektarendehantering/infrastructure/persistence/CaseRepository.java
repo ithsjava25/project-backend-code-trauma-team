@@ -15,5 +15,4 @@ public interface CaseRepository extends JpaRepository<CaseEntity, UUID> {
     List<CaseEntity> findAllByOwnerIdAndStatusNot(UUID ownerId, CaseStatus status);
     List<CaseEntity> findAllByHandlerId(UUID handlerId);
     List<CaseEntity> findAllByHandlerIdAndStatusNot(UUID handlerId, CaseStatus status);
-    List<CaseEntity> findAllByOtherId(UUID otherId);
 }

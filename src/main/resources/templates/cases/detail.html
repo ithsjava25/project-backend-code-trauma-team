@@ -31,6 +31,31 @@
             <div class="k">Created At</div>
             <div class="v" th:text="${case.createdAt}">Date</div>
         </div>
+        
+        <hr style="border: 0; border-top: 1px solid var(--border); margin: 20px 0;"/>
+        
+        <h3>Assignment</h3>
+        <form th:action="@{/ui/cases/{id}/assignments(id=${case.id})}" method="post" class="form">
+            <div style="display: flex; gap: 20px; align-items: flex-end;">
+                <label class="field" style="flex: 1;">
+                    <span class="label">Responsible Doctor</span>
+                    <select name="ownerId" class="input">
+                        <option value="">- Unassigned -</option>
+                        <option th:each="doc : ${doctors}" th:value="${doc.id}" th:text="${doc.displayName}" th:selected="${doc.id == case.ownerId}"></option>
+                    </select>
+                </label>
+                <label class="field" style="flex: 1;">
+                    <span class="label">Assigned Nurse</span>
+                    <select name="handlerId" class="input">
+                        <option value="">- Unassigned -</option>
+                        <option th:each="nurse : ${nurses}" th:value="${nurse.id}" th:text="${nurse.displayName}" th:selected="${nurse.id == case.handlerId}"></option>
+                    </select>
+                </label>
+                <div class="actions">
+                    <button class="button" type="submit">Update Assignment</button>
+                </div>
+            </div>
+        </form>
     </section>
 
     <section class="panel" th:if="${case != null}">

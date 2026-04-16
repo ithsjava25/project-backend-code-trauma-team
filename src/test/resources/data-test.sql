@@ -20,7 +20,7 @@ VALUES ('770e8400-e29b-41d4-a716-446655440002', 'Nurse Bob Jones', 'NURSE', CURR
 
 -- Seed Cases
 INSERT INTO cases (id, title, description, status, patient_id, owner_id, handler_id, created_at)
-VALUES ('990e8400-e29b-41d4-a716-446655440000', 'Acute Chest Pain', 'Patient arrived with severe chest pain and shortness of breath.', 'HANDLER_ASSIGNED', '550e8400-e29b-41d4-a716-446655440000', '770e8400-e29b-41d4-a716-446655440001', '770e8400-e29b-41d4-a716-446655440002', CURRENT_TIMESTAMP);
+VALUES ('990e8400-e29b-41d4-a716-446655440000', 'Acute Chest Pain', 'Patient arrived with severe chest pain and shortness of breath.', 'ASSIGNED', '550e8400-e29b-41d4-a716-446655440000', '770e8400-e29b-41d4-a716-446655440001', '770e8400-e29b-41d4-a716-446655440002', CURRENT_TIMESTAMP);
 
 INSERT INTO cases (id, title, description, status, patient_id, owner_id, handler_id, created_at)
-VALUES ('990e8400-e29b-41d4-a716-446655440001', 'Follow-up: Fracture', 'Routine follow-up for a healed radial fracture.', 'HANDLER_ASSIGNED', '550e8400-e29b-41d4-a716-446655440001', '770e8400-e29b-41d4-a716-446655440001', '770e8400-e29b-41d4-a716-446655440002', CURRENT_TIMESTAMP);
+VALUES ('990e8400-e29b-41d4-a716-446655440001', 'Follow-up: Fracture', 'Routine follow-up for a healed radial fracture.', 'ASSIGNED', '550e8400-e29b-41d4-a716-446655440001', '770e8400-e29b-41d4-a716-446655440001', '770e8400-e29b-41d4-a716-446655440002', CURRENT_TIMESTAMP);

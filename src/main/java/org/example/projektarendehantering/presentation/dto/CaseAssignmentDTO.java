@@ -15,6 +15,5 @@ public class CaseAssignmentDTO {
 
     private UUID ownerId;
     private UUID handlerId;
-    private UUID otherId;
 
 }

@@ -1,5 +1,6 @@
 package org.example.projektarendehantering.application.service;
 
+import jakarta.validation.Valid;
 import org.example.projektarendehantering.common.Actor;
 import org.example.projektarendehantering.common.BadRequestException;
 import org.example.projektarendehantering.common.CaseStatus;
@@ -202,16 +203,19 @@ public class CaseService {
         if (entity.getStatus() == CaseStatus.CLOSED) {
             throw new BadRequestException("Case is closed");
         }
+
         if (isDoctor(actor)) {
-            if (entity.getOwnerId() == null || !entity.getOwnerId().equals(actor.userId())) {
+            // Doctors can only modify if they are owner OR if it's unowned
+            if (entity.getOwnerId() != null && !entity.getOwnerId().equals(actor.userId())) {
                 throw new NotAuthorizedException("Not allowed to modify assignments for this case");
-            }
-            if (dto.getOwnerId() != null) {
-                throw new NotAuthorizedException("Not allowed to change owner for this case");
             }
         }
 
-        if (isManager(actor) && dto.getOwnerId() != null) {
+        if(dto.getOwnerId() == null && dto.getHandlerId() == null) {
+            throw new BadRequestException("At least one of ownerId or handlerId must be provided.");
+        }
+
+        if (dto.getOwnerId() != null) {
             UUID ownerId = requireEmployeeWithRole(dto.getOwnerId(), Set.of(Role.DOCTOR), "ownerId");
             entity.setOwnerId(ownerId);
         }
@@ -221,10 +225,14 @@ public class CaseService {
         }
 
         CaseStatus previousStatus = entity.getStatus();
-        entity.setStatus(CaseStatus.HANDLER_ASSIGNED);
-        CaseEntity savedEntity = caseRepository.save(entity);
-        recordStatusChange(actor, savedEntity.getId(), previousStatus, CaseStatus.HANDLER_ASSIGNED);
-        return caseMapper.toDTO(savedEntity);
+        if (previousStatus != CaseStatus.ASSIGNED) {
+            entity.setStatus(CaseStatus.ASSIGNED);
+            CaseEntity savedEntity = caseRepository.save(entity);
+            recordStatusChange(actor, savedEntity.getId(), previousStatus, CaseStatus.ASSIGNED);
+            return caseMapper.toDTO(savedEntity);
+        }
+
+        return caseMapper.toDTO(caseRepository.save(entity));
     }
 
     private UUID requireEmployeeWithRole(UUID id, Set<Role> allowedRoles, String fieldName) {
