@@ -317,7 +317,7 @@ class CaseServiceTest {
 
     @Test
     void updateCase_shouldRecordPreviousStatusInAudit() {
-        caseEntity.setStatus(CaseStatus.HANDLER_ASSIGNED);
+        caseEntity.setStatus(CaseStatus.ASSIGNED);
         CaseDTO updateDto = new CaseDTO();
         updateDto.setTitle("New title");
         updateDto.setDescription("New description");
@@ -329,7 +329,7 @@ class CaseServiceTest {
         caseService.updateCase(doctorActor, caseId, updateDto);
 
         verify(auditService).record(argThat(e ->
-                "HANDLER_ASSIGNED -> UPDATED".equals(e.getStatusChange()) &&
+                "ASSIGNED -> UPDATED".equals(e.getStatusChange()) &&
                 caseId.equals(e.getCaseId())
         ));
     }
@@ -510,8 +510,8 @@ class CaseServiceTest {
 
         caseService.assignUsers(managerActor, caseId, dto);
 
-        assertThat(caseEntity.getStatus()).isEqualTo(CaseStatus.HANDLER_ASSIGNED);
-        verify(auditService).record(argThat(e -> "CREATED -> HANDLER_ASSIGNED".equals(e.getStatusChange())));
+        assertThat(caseEntity.getStatus()).isEqualTo(CaseStatus.ASSIGNED);
+        verify(auditService).record(argThat(e -> "CREATED -> ASSIGNED".equals(e.getStatusChange())));
     }
 
 }

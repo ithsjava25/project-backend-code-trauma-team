@@ -220,10 +220,10 @@ public class CaseService {
         }
 
         CaseStatus previousStatus = entity.getStatus();
-        if (previousStatus != CaseStatus.HANDLER_ASSIGNED) {
-            entity.setStatus(CaseStatus.HANDLER_ASSIGNED);
+        if (previousStatus != CaseStatus.ASSIGNED) {
+            entity.setStatus(CaseStatus.ASSIGNED);
             CaseEntity savedEntity = caseRepository.save(entity);
-            recordStatusChange(actor, savedEntity.getId(), previousStatus, CaseStatus.HANDLER_ASSIGNED);
+            recordStatusChange(actor, savedEntity.getId(), previousStatus, CaseStatus.ASSIGNED);
             return caseMapper.toDTO(savedEntity);
         }
 

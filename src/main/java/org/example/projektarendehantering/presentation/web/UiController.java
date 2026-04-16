@@ -137,11 +137,15 @@ public class UiController {
     @PostMapping("/ui/cases/{caseId}/assignments")
     public String assignUsers(@PathVariable UUID caseId, @RequestParam(value = "ownerId", required = false) String ownerId, @RequestParam(value = "handlerId", required = false) String handlerId) {
         CaseAssignmentDTO dto = new CaseAssignmentDTO();
-        if (ownerId != null && !ownerId.isBlank()) {
-            dto.setOwnerId(UUID.fromString(ownerId));
-        }
-        if (handlerId != null && !handlerId.isBlank()) {
-            dto.setHandlerId(UUID.fromString(handlerId));
+        try {
+            if (ownerId != null && !ownerId.isBlank()) {
+                dto.setOwnerId(UUID.fromString(ownerId));
+            }
+            if (handlerId != null && !handlerId.isBlank()) {
+                dto.setHandlerId(UUID.fromString(handlerId));
+            }
+        } catch (IllegalArgumentException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid UUID format");
         }
         caseService.assignUsers(securityActorAdapter.currentUser(), caseId, dto);
         return "redirect:/ui/cases/" + caseId;
