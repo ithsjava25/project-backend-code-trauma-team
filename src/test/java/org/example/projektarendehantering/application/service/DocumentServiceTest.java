@@ -42,6 +42,8 @@ class DocumentServiceTest {
     private S3Template s3Template;
     @Mock
     private DocumentMapper documentMapper;
+    @Mock
+    private AuditService auditService;
 
     @InjectMocks
     private DocumentService documentService;

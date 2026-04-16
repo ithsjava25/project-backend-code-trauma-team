@@ -1,6 +1,8 @@
 package org.example.projektarendehantering.application.service;
 
 import org.example.projektarendehantering.common.Actor;
+import org.example.projektarendehantering.common.BadRequestException;
+import org.example.projektarendehantering.common.CaseStatus;
 import org.example.projektarendehantering.common.NotAuthorizedException;
 import org.example.projektarendehantering.common.Role;
 import org.example.projektarendehantering.infrastructure.persistence.*;
@@ -13,12 +15,14 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -36,6 +40,8 @@ class CaseServiceTest {
     private EmployeeRepository employeeRepository;
     @Mock
     private CaseNoteMapper caseNoteMapper;
+    @Mock
+    private AuditService auditService;
 
     @InjectMocks
     private CaseService caseService;
@@ -128,6 +134,7 @@ class CaseServiceTest {
         caseService.createCase(doctorActor, dto);
 
         verify(caseRepository).save(any(CaseEntity.class));
+        verify(auditService).record(argThat(e -> "NEW -> CREATED".equals(e.getStatusChange())));
     }
 
     @Test
@@ -158,6 +165,7 @@ class CaseServiceTest {
         assertThat(caseEntity.getTitle()).isEqualTo("Updated title");
         assertThat(caseEntity.getDescription()).isEqualTo("Updated description");
         verify(caseRepository).save(caseEntity);
+        verify(auditService).record(argThat(e -> e.getStatusChange() != null && e.getStatusChange().endsWith("-> UPDATED")));
     }
 
     @Test
@@ -229,7 +237,9 @@ class CaseServiceTest {
 
         caseService.deleteCase(doctorActor, caseId);
 
-        verify(caseRepository).delete(caseEntity);
+        assertThat(caseEntity.getStatus()).isEqualTo(CaseStatus.CLOSED);
+        verify(caseRepository).save(caseEntity);
+        verify(auditService).record(argThat(e -> e.getStatusChange() != null && e.getStatusChange().endsWith("-> CLOSED")));
     }
 
     @Test
@@ -238,7 +248,9 @@ class CaseServiceTest {
 
         caseService.deleteCase(managerActor, caseId);
 
-        verify(caseRepository).delete(caseEntity);
+        assertThat(caseEntity.getStatus()).isEqualTo(CaseStatus.CLOSED);
+        verify(caseRepository).save(caseEntity);
+        verify(auditService).record(argThat(e -> e.getStatusChange() != null && e.getStatusChange().endsWith("-> CLOSED")));
     }
 
     @Test
@@ -249,7 +261,8 @@ class CaseServiceTest {
                 .isInstanceOf(NotAuthorizedException.class)
                 .hasMessageContaining("Not allowed to delete this case");
 
-        verify(caseRepository, never()).delete(any(CaseEntity.class));
+        assertThat(caseEntity.getStatus()).isNotEqualTo(CaseStatus.CLOSED);
+        verify(caseRepository, never()).save(any(CaseEntity.class));
     }
 
     @Test
@@ -260,7 +273,8 @@ class CaseServiceTest {
                 .isInstanceOf(NotAuthorizedException.class)
                 .hasMessageContaining("Not allowed to delete this case");
 
-        verify(caseRepository, never()).delete(any(CaseEntity.class));
+        assertThat(caseEntity.getStatus()).isNotEqualTo(CaseStatus.CLOSED);
+        verify(caseRepository, never()).save(any(CaseEntity.class));
     }
 
     @Test
@@ -272,6 +286,156 @@ class CaseServiceTest {
                 .hasMessageContaining("404 NOT_FOUND")
                 .hasMessageContaining("Case not found");
 
-        verify(caseRepository, never()).delete(any(CaseEntity.class));
+        verify(caseRepository, never()).save(any(CaseEntity.class));
+    }
+
+    @Test
+    void createCase_shouldRecordStatusChangeAuditWithCaseId() {
+        CaseDTO dto = new CaseDTO();
+        dto.setPatientId(patientId);
+        PatientEntity patient = new PatientEntity();
+        patient.setId(patientId);
+
+        CaseEntity savedEntity = new CaseEntity();
+        savedEntity.setId(caseId);
+
+        when(caseMapper.toEntity(dto)).thenReturn(new CaseEntity());
+        when(patientRepository.findById(patientId)).thenReturn(Optional.of(patient));
+        when(caseRepository.save(any(CaseEntity.class))).thenReturn(savedEntity);
+        when(caseMapper.toDTO(any(CaseEntity.class))).thenReturn(new CaseDTO());
+
+        caseService.createCase(doctorActor, dto);
+
+        verify(auditService).record(argThat(e ->
+                "NEW -> CREATED".equals(e.getStatusChange()) &&
+                caseId.equals(e.getCaseId()) &&
+                doctorActor.userId().equals(e.getActorId())
+        ));
+    }
+
+    @Test
+    void updateCase_shouldRecordPreviousStatusInAudit() {
+        caseEntity.setStatus(CaseStatus.HANDLER_ASSIGNED);
+        CaseDTO updateDto = new CaseDTO();
+        updateDto.setTitle("New title");
+        updateDto.setDescription("New description");
+
+        when(caseRepository.findById(caseId)).thenReturn(Optional.of(caseEntity));
+        when(caseRepository.save(caseEntity)).thenReturn(caseEntity);
+        when(caseMapper.toDTO(caseEntity)).thenReturn(new CaseDTO());
+
+        caseService.updateCase(doctorActor, caseId, updateDto);
+
+        verify(auditService).record(argThat(e ->
+                "HANDLER_ASSIGNED -> UPDATED".equals(e.getStatusChange()) &&
+                caseId.equals(e.getCaseId())
+        ));
+    }
+
+    @Test
+    void deleteCase_shouldNotRecordAuditOnAuthorizationFailure() {
+        when(caseRepository.findById(caseId)).thenReturn(Optional.of(caseEntity));
+
+        assertThatThrownBy(() -> caseService.deleteCase(nurseActor, caseId))
+                .isInstanceOf(NotAuthorizedException.class);
+
+        verify(auditService, never()).record(any());
+    }
+
+    // --- Closed-case state conflict (409) ---
+
+    @Test
+    void updateCase_shouldReturnConflictWhenCaseIsClosed() {
+        caseEntity.setStatus(CaseStatus.CLOSED);
+        CaseDTO updateDto = new CaseDTO();
+        updateDto.setTitle("Updated title");
+        updateDto.setDescription("Updated description");
+
+        when(caseRepository.findById(caseId)).thenReturn(Optional.of(caseEntity));
+
+        assertThatThrownBy(() -> caseService.updateCase(doctorActor, caseId, updateDto))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessageContaining("Case is closed");
+
+        verify(caseRepository, never()).save(any(CaseEntity.class));
+    }
+
+    @Test
+    void deleteCase_shouldReturnConflictWhenCaseIsClosed() {
+        caseEntity.setStatus(CaseStatus.CLOSED);
+        when(caseRepository.findById(caseId)).thenReturn(Optional.of(caseEntity));
+
+        assertThatThrownBy(() -> caseService.deleteCase(doctorActor, caseId))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessageContaining("Case is closed");
+
+        verify(caseRepository, never()).save(any(CaseEntity.class));
+    }
+
+    @Test
+    void addNote_shouldReturnConflictWhenCaseIsClosed() {
+        caseEntity.setStatus(CaseStatus.CLOSED);
+        when(caseRepository.findById(caseId)).thenReturn(Optional.of(caseEntity));
+
+        assertThatThrownBy(() -> caseService.addNote(caseId, "Some note", doctorActor))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessageContaining("Case is closed");
+
+        verify(caseNoteRepository, never()).save(any());
+        verify(caseRepository, never()).save(any(CaseEntity.class));
+    }
+
+    // --- Manager visibility of closed cases ---
+
+    @Test
+    void getCase_shouldAllowManagerToReadClosedCase() {
+        caseEntity.setStatus(CaseStatus.CLOSED);
+        when(caseRepository.findById(caseId)).thenReturn(Optional.of(caseEntity));
+        when(caseMapper.toDTO(caseEntity)).thenReturn(new CaseDTO());
+
+        Optional<CaseDTO> result = caseService.getCase(managerActor, caseId);
+
+        assertThat(result).isPresent();
+    }
+
+    @Test
+    void getCase_shouldReturnEmptyForNonManagerOnClosedCase() {
+        caseEntity.setStatus(CaseStatus.CLOSED);
+        when(caseRepository.findById(caseId)).thenReturn(Optional.of(caseEntity));
+
+        assertThatThrownBy(() -> caseService.getCase(doctorActor, caseId))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessageContaining("Case is closed");
+    }
+
+    // --- getClosedCases ---
+
+    @Test
+    void getClosedCases_shouldReturnListForManager() {
+        CaseEntity closedCase = new CaseEntity();
+        closedCase.setId(UUID.randomUUID());
+        closedCase.setStatus(CaseStatus.CLOSED);
+
+        when(caseRepository.findAllByStatus(CaseStatus.CLOSED)).thenReturn(List.of(closedCase));
+        when(caseMapper.toDTO(closedCase)).thenReturn(new CaseDTO());
+
+        List<CaseDTO> result = caseService.getClosedCases(managerActor);
+
+        assertThat(result).hasSize(1);
+        verify(caseRepository).findAllByStatus(CaseStatus.CLOSED);
+    }
+
+    @Test
+    void getClosedCases_shouldDenyDoctor() {
+        assertThatThrownBy(() -> caseService.getClosedCases(doctorActor))
+                .isInstanceOf(NotAuthorizedException.class)
+                .hasMessageContaining("Not allowed to view closed cases");
+    }
+
+    @Test
+    void getClosedCases_shouldDenyNurse() {
+        assertThatThrownBy(() -> caseService.getClosedCases(nurseActor))
+                .isInstanceOf(NotAuthorizedException.class)
+                .hasMessageContaining("Not allowed to view closed cases");
     }
 }

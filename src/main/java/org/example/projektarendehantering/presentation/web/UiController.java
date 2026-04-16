@@ -52,6 +52,12 @@ public class UiController {
         return "cases/list";
     }
 
+    @GetMapping("/ui/cases/closed")
+    public String listClosedCases(Model model) {
+        model.addAttribute("cases", caseService.getClosedCases(securityActorAdapter.currentUser()));
+        return "cases/closed";
+    }
+
     @GetMapping("/ui/cases/new")
     public String newCase(Model model) {
         model.addAttribute("createCaseForm", new CreateCaseForm());
