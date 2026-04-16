@@ -40,6 +40,11 @@ public class CaseController {
         return ResponseEntity.ok(caseService.getAllCases(securityActorAdapter.currentUser()));
     }
 
+    @GetMapping("/closed")
+    public ResponseEntity<List<CaseDTO>> getClosedCases() {
+        return ResponseEntity.ok(caseService.getClosedCases(securityActorAdapter.currentUser()));
+    }
+
     @PutMapping("/{id}")
     public ResponseEntity<CaseDTO> updateCase(@PathVariable UUID id, @RequestBody @Valid UpdateCaseRequest request) {
         CaseDTO caseDTO = new CaseDTO();

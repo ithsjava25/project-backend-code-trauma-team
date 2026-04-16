@@ -14,6 +14,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -338,5 +339,105 @@ class CaseServiceTest {
                 .isInstanceOf(NotAuthorizedException.class);
 
         verify(auditService, never()).record(any());
+    }
+
+    // --- Closed-case state conflict (409) ---
+
+    @Test
+    void updateCase_shouldReturnConflictWhenCaseIsClosed() {
+        caseEntity.setStatus(CaseStatus.CLOSED);
+        CaseDTO updateDto = new CaseDTO();
+        updateDto.setTitle("Updated title");
+        updateDto.setDescription("Updated description");
+
+        when(caseRepository.findById(caseId)).thenReturn(Optional.of(caseEntity));
+
+        assertThatThrownBy(() -> caseService.updateCase(doctorActor, caseId, updateDto))
+                .isInstanceOf(ResponseStatusException.class)
+                .hasMessageContaining("409 CONFLICT")
+                .hasMessageContaining("Operation not allowed on a closed case");
+
+        verify(caseRepository, never()).save(any(CaseEntity.class));
+    }
+
+    @Test
+    void deleteCase_shouldReturnConflictWhenCaseIsClosed() {
+        caseEntity.setStatus(CaseStatus.CLOSED);
+        when(caseRepository.findById(caseId)).thenReturn(Optional.of(caseEntity));
+
+        assertThatThrownBy(() -> caseService.deleteCase(doctorActor, caseId))
+                .isInstanceOf(ResponseStatusException.class)
+                .hasMessageContaining("409 CONFLICT")
+                .hasMessageContaining("Operation not allowed on a closed case");
+
+        verify(caseRepository, never()).save(any(CaseEntity.class));
+    }
+
+    @Test
+    void addNote_shouldReturnConflictWhenCaseIsClosed() {
+        caseEntity.setStatus(CaseStatus.CLOSED);
+        when(caseRepository.findById(caseId)).thenReturn(Optional.of(caseEntity));
+
+        assertThatThrownBy(() -> caseService.addNote(caseId, "Some note", doctorActor))
+                .isInstanceOf(ResponseStatusException.class)
+                .hasMessageContaining("409 CONFLICT")
+                .hasMessageContaining("Operation not allowed on a closed case");
+
+        verify(caseNoteRepository, never()).save(any());
+        verify(caseRepository, never()).save(any(CaseEntity.class));
+    }
+
+    // --- Manager visibility of closed cases ---
+
+    @Test
+    void getCase_shouldAllowManagerToReadClosedCase() {
+        caseEntity.setStatus(CaseStatus.CLOSED);
+        when(caseRepository.findById(caseId)).thenReturn(Optional.of(caseEntity));
+        when(caseMapper.toDTO(caseEntity)).thenReturn(new CaseDTO());
+
+        Optional<CaseDTO> result = caseService.getCase(managerActor, caseId);
+
+        assertThat(result).isPresent();
+    }
+
+    @Test
+    void getCase_shouldReturnEmptyForNonManagerOnClosedCase() {
+        caseEntity.setStatus(CaseStatus.CLOSED);
+        when(caseRepository.findById(caseId)).thenReturn(Optional.of(caseEntity));
+
+        Optional<CaseDTO> result = caseService.getCase(doctorActor, caseId);
+
+        assertThat(result).isEmpty();
+    }
+
+    // --- getClosedCases ---
+
+    @Test
+    void getClosedCases_shouldReturnListForManager() {
+        CaseEntity closedCase = new CaseEntity();
+        closedCase.setId(UUID.randomUUID());
+        closedCase.setStatus(CaseStatus.CLOSED);
+
+        when(caseRepository.findAllByStatus(CaseStatus.CLOSED)).thenReturn(List.of(closedCase));
+        when(caseMapper.toDTO(closedCase)).thenReturn(new CaseDTO());
+
+        List<CaseDTO> result = caseService.getClosedCases(managerActor);
+
+        assertThat(result).hasSize(1);
+        verify(caseRepository).findAllByStatus(CaseStatus.CLOSED);
+    }
+
+    @Test
+    void getClosedCases_shouldDenyDoctor() {
+        assertThatThrownBy(() -> caseService.getClosedCases(doctorActor))
+                .isInstanceOf(NotAuthorizedException.class)
+                .hasMessageContaining("Not allowed to view closed cases");
+    }
+
+    @Test
+    void getClosedCases_shouldDenyNurse() {
+        assertThatThrownBy(() -> caseService.getClosedCases(nurseActor))
+                .isInstanceOf(NotAuthorizedException.class)
+                .hasMessageContaining("Not allowed to view closed cases");
     }
 }

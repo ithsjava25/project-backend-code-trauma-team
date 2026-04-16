@@ -184,4 +184,28 @@ class CaseControllerTest {
         mockMvc.perform(get("/api/cases"))
                 .andExpect(status().is3xxRedirection()); // Redirect to login in OAuth2 setup
     }
+
+    @Test
+    @WithMockUser(roles = "MANAGER")
+    void getClosedCases_shouldReturnList_forManager() throws Exception {
+        Actor managerActor = new Actor(UUID.randomUUID(), Role.MANAGER, "Manager", "manager_user");
+        when(securityActorAdapter.currentUser()).thenReturn(managerActor);
+
+        CaseDTO caseDTO = new CaseDTO();
+        caseDTO.setId(caseId);
+        caseDTO.setDescription("Closed Case");
+
+        when(caseService.getClosedCases(managerActor)).thenReturn(List.of(caseDTO));
+
+        mockMvc.perform(get("/api/cases/closed"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].id").value(caseId.toString()))
+                .andExpect(jsonPath("$[0].description").value("Closed Case"));
+    }
+
+    @Test
+    void getClosedCases_shouldReturnRedirect_whenNotLoggedIn() throws Exception {
+        mockMvc.perform(get("/api/cases/closed"))
+                .andExpect(status().is3xxRedirection());
+    }
 }

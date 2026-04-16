@@ -46,8 +46,10 @@ public class CaseService {
             throw new NotAuthorizedException("Not allowed to add notes");
         }
         CaseEntity caseEntity = caseRepository.findById(caseId)
-                .filter(entity -> entity.getStatus() != CaseStatus.CLOSED)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Case not found"));
+        if (caseEntity.getStatus() == CaseStatus.CLOSED) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Operation not allowed on a closed case");
+        }
         requireCanRead(actor, caseEntity);
 
         CaseNoteEntity note = caseNoteMapper.toEntity(actor, content);
@@ -107,8 +109,10 @@ public class CaseService {
         }
 
         CaseEntity entity = caseRepository.findById(caseId)
-                .filter(ce -> ce.getStatus() != CaseStatus.CLOSED)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Case not found"));
+        if (entity.getStatus() == CaseStatus.CLOSED) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Operation not allowed on a closed case");
+        }
 
         requireCanEdit(actor, entity);
 
@@ -125,8 +129,10 @@ public class CaseService {
     @Transactional
     public void deleteCase(Actor actor, UUID caseId) {
         CaseEntity entity = caseRepository.findById(caseId)
-                .filter(ce -> ce.getStatus() != CaseStatus.CLOSED)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Case not found"));
+        if (entity.getStatus() == CaseStatus.CLOSED) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Operation not allowed on a closed case");
+        }
 
         requireCanDelete(actor, entity);
         CaseStatus previousStatus = entity.getStatus();
@@ -138,11 +144,21 @@ public class CaseService {
     @Transactional(readOnly = true)
     public Optional<CaseDTO> getCase(Actor actor, UUID id) {
         return caseRepository.findById(id)
-                .filter(entity -> entity.getStatus() != CaseStatus.CLOSED)
+                .filter(entity -> entity.getStatus() != CaseStatus.CLOSED || isManager(actor))
                 .map(entity -> {
                     requireCanRead(actor, entity);
                     return caseMapper.toDTO(entity);
                 });
+    }
+
+    @Transactional(readOnly = true)
+    public List<CaseDTO> getClosedCases(Actor actor) {
+        if (!isManager(actor)) {
+            throw new NotAuthorizedException("Not allowed to view closed cases");
+        }
+        return caseRepository.findAllByStatus(CaseStatus.CLOSED).stream()
+                .map(caseMapper::toDTO)
+                .collect(Collectors.toList());
     }
 
     @Transactional(readOnly = true)
@@ -179,8 +195,10 @@ public class CaseService {
             throw new NotAuthorizedException("Not allowed to assign users to case");
         }
         CaseEntity entity = caseRepository.findById(caseId)
-                .filter(ce -> ce.getStatus() != CaseStatus.CLOSED)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Case not found"));
+        if (entity.getStatus() == CaseStatus.CLOSED) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Operation not allowed on a closed case");
+        }
         if (isDoctor(actor)) {
             if (entity.getOwnerId() == null || !entity.getOwnerId().equals(actor.userId())) {
                 throw new NotAuthorizedException("Not allowed to modify assignments for this case");

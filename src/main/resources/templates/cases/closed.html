@@ -1,15 +1,14 @@
 <!doctype html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
-<head th:replace="~{fragments/head :: head(title='Cases')}">
+<head th:replace="~{fragments/head :: head(title='Closed Cases')}">
 </head>
 <body>
 <div th:replace="~{fragments/header :: header}"></div>
 
 <main class="container page">
     <div class="page-title">
-        <h1>Cases</h1>
-        <a class="button button-secondary" href="/ui/cases/closed" sec:authorize="hasRole('MANAGER')">Closed Cases</a>
-        <a class="button" href="/ui/cases/new">Create case</a>
+        <h1>Closed Cases</h1>
+        <a class="button button-secondary" href="/ui/cases">Back to Active Cases</a>
     </div>
 
     <section class="panel">
@@ -31,11 +30,10 @@
                 </tr>
             </tbody>
         </table>
-        <p th:if="${#lists.isEmpty(cases)}" class="muted">No cases found.</p>
+        <p th:if="${#lists.isEmpty(cases)}" class="muted">No closed cases found.</p>
     </section>
 </main>
 
 <div th:replace="~{fragments/footer :: footer}"></div>
 </body>
 </html>
-
