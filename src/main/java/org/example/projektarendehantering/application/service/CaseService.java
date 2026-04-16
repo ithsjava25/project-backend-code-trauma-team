@@ -71,7 +71,7 @@ public class CaseService {
             throw new NotAuthorizedException("Not allowed to create cases");
         }
         if (caseDTO.getPatientId() == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "patientId is required");
+            throw new BadRequestException("patientId is required");
         }
         CaseEntity entity = caseMapper.toEntity(caseDTO);
         entity.setId(UUID.randomUUID());

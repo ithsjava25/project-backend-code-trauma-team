@@ -1,13 +1,12 @@
 package org.example.projektarendehantering.application.service;
 
+import org.example.projektarendehantering.common.ConflictException;
 import org.example.projektarendehantering.infrastructure.persistence.PatientEntity;
 import org.example.projektarendehantering.infrastructure.persistence.PatientRepository;
 import org.example.projektarendehantering.presentation.dto.PatientCreateDTO;
 import org.example.projektarendehantering.presentation.dto.PatientDTO;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
 import lombok.RequiredArgsConstructor;
 
 import java.time.Instant;
@@ -31,7 +30,7 @@ public class PatientService {
         if (entity.getPersonalIdentityNumber() != null && !entity.getPersonalIdentityNumber().isBlank()) {
             patientRepository.findByPersonalIdentityNumber(entity.getPersonalIdentityNumber())
                     .ifPresent(existing -> {
-                        throw new ResponseStatusException(HttpStatus.CONFLICT, "Patient with personalIdentityNumber already exists");
+                        throw new ConflictException("Patient with personalIdentityNumber already exists");
                     });
         }
         return patientMapper.toDTO(patientRepository.save(entity));
