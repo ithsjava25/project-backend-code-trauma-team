@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head(title='Login')}"></head>
+<body>
+<header th:replace="~{fragments/header :: header}"></header>
+
+<div class="container mt-5">
+    <div class="row">
+        <!-- Patient Login Column -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h4>Patient Login</h4>
+                </div>
+                <div class="card-body">
+                    <div th:if="${param.error}" class="alert alert-danger">
+                        Invalid email or password.
+                    </div>
+                    <div th:if="${param.logout}" class="alert alert-success">
+                        You have been logged out.
+                    </div>
+                    <div th:if="${param.success}" class="alert alert-success">
+                        Registration successful! Please log in.
+                    </div>
+
+                    <form th:action="@{/login}" method="post">
+                        <div class="mb-3">
+                            <label for="username" class="form-label">Email</label>
+                            <input type="text" id="username" name="username" class="form-control" required autofocus>
+                        </div>
+                        <div class="mb-3">
+                            <label for="password" class="form-label">Password</label>
+                            <input type="password" id="password" name="password" class="form-control" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">Log In</button>
+                    </form>
+                </div>
+                <div class="card-footer text-center">
+                    <a th:href="@{/register}">Create a Patient Account</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Employee Login Column -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h4>Employee Login</h4>
+                </div>
+                <div class="card-body text-center">
+                    <p>Employees must sign in using their company GitHub account.</p>
+                    <a href="/oauth2/authorization/github" class="btn btn-secondary w-100">
+                        <i class="fab fa-github"></i> Sign in with GitHub
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<footer th:replace="~{fragments/footer :: footer}"></footer>
+</body>
+</html>
