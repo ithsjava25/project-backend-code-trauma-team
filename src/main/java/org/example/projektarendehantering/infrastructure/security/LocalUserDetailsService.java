@@ -29,7 +29,6 @@ public class LocalUserDetailsService implements UserDetailsService {
                             userAccount.getEmail(),
                             userAccount.getRole(),
                             userAccount.isEnabled());
-                    log.debug("Password hash from DB: {}", userAccount.getPasswordHash());
 
                     return new User(
                             userAccount.getEmail(),

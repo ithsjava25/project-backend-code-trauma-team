@@ -8,51 +8,45 @@
     <div class="row">
         <!-- Patient Login Column -->
         <div class="col-md-6">
-            <div class="card">
-                <div class="card-header">
-                    <h4>Patient Login</h4>
-                </div>
-                <div class="card-body">
-                    <div th:if="${param.error}" class="alert alert-danger">
-                        Invalid email or password.
-                    </div>
-                    <div th:if="${param.logout}" class="alert alert-success">
-                        You have been logged out.
-                    </div>
-                    <div th:if="${param.success}" class="alert alert-success">
-                        Registration successful! Please log in.
-                    </div>
+            <div class="panel">
+                <h4>Patient Login</h4>
 
-                    <form th:action="@{/login}" method="post">
-                        <div class="mb-3">
-                            <label for="username" class="form-label">Email</label>
-                            <input type="text" id="username" name="username" class="form-control" required autofocus>
-                        </div>
-                        <div class="mb-3">
-                            <label for="password" class="form-label">Password</label>
-                            <input type="password" id="password" name="password" class="form-control" required>
-                        </div>
-                        <button type="submit" class="btn btn-primary w-100">Log In</button>
-                    </form>
+                <div th:if="${param.error}" class="panel panel-error" style="margin-bottom: 14px;">
+                    Invalid email or password.
                 </div>
-                <div class="card-footer text-center">
-                    <a th:href="@{/register}">Create a Patient Account</a>
+                <div th:if="${param.logout}" class="panel" style="margin-bottom: 14px; border-color: rgba(110, 255, 138, 0.35); background: rgba(110, 255, 138, 0.1);">
+                    You have been logged out.
+                </div>
+                <div th:if="${param.success}" class="panel" style="margin-bottom: 14px; border-color: rgba(110, 255, 138, 0.35); background: rgba(110, 255, 138, 0.1);">
+                    Registration successful! Please log in.
+                </div>
+
+                <form th:action="@{/login}" method="post" class="form">
+                    <div class="field">
+                        <label for="username" class="label">Email</label>
+                        <input type="text" id="username" name="username" class="input" required autofocus>
+                    </div>
+                    <div class="field">
+                        <label for="password" class="label">Password</label>
+                        <input type="password" id="password" name="password" class="input" required>
+                    </div>
+                    <button type="submit" class="button" style="width: 100%;">Log In</button>
+                </form>
+
+                <div style="text-align: center; margin-top: 16px;">
+                    <a th:href="@{/register}" style="color: var(--accent);">Create a Patient Account</a>
                 </div>
             </div>
         </div>
 
         <!-- Employee Login Column -->
         <div class="col-md-6">
-            <div class="card">
-                <div class="card-header">
-                    <h4>Employee Login</h4>
-                </div>
-                <div class="card-body text-center">
-                    <p>Employees must sign in using their company GitHub account.</p>
-                    <a href="/oauth2/authorization/github" class="btn btn-secondary w-100">
-                        <i class="fab fa-github"></i> Sign in with GitHub
-                    </a>
-                </div>
+            <div class="panel" style="text-align: center;">
+                <h4>Employee Login</h4>
+                <p>Employees must sign in using their company GitHub account.</p>
+                <a href="/oauth2/authorization/github" class="button button-secondary" style="width: 100%;">
+                    <i class="fab fa-github"></i> Sign in with GitHub
+                </a>
             </div>
         </div>
     </div>
