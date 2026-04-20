@@ -1,8 +1,12 @@
 package org.example.projektarendehantering.application.service;
 
+import jakarta.validation.Valid;
 import org.example.projektarendehantering.common.Actor;
+import org.example.projektarendehantering.common.BadRequestException;
+import org.example.projektarendehantering.common.CaseStatus;
 import org.example.projektarendehantering.common.NotAuthorizedException;
 import org.example.projektarendehantering.common.Role;
+import org.example.projektarendehantering.infrastructure.persistence.AuditEventEntity;
 import org.example.projektarendehantering.infrastructure.persistence.CaseEntity;
 import org.example.projektarendehantering.infrastructure.persistence.CaseNoteEntity;
 import org.example.projektarendehantering.infrastructure.persistence.CaseNoteRepository;
@@ -36,6 +40,7 @@ public class CaseService {
     private final PatientRepository patientRepository;
     private final CaseNoteRepository caseNoteRepository;
     private final EmployeeRepository employeeRepository;
+    private final AuditService auditService;
 
     @Transactional
     public void addNote(UUID caseId, String content, Actor actor) {
@@ -44,6 +49,9 @@ public class CaseService {
         }
         CaseEntity caseEntity = caseRepository.findById(caseId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Case not found"));
+        if (caseEntity.getStatus() == CaseStatus.CLOSED) {
+            throw new BadRequestException("Case is closed");
+        }
         requireCanRead(actor, caseEntity);
 
         CaseNoteEntity note = caseNoteMapper.toEntity(actor, content);
@@ -51,6 +59,11 @@ public class CaseService {
         note.setCaseEntity(caseEntity);
 
         caseNoteRepository.save(note);
+
+        CaseStatus previousStatus = caseEntity.getStatus();
+        caseEntity.setStatus(CaseStatus.COMMUNICATION);
+        caseRepository.save(caseEntity);
+        recordStatusChange(actor, caseEntity.getId(), previousStatus, CaseStatus.COMMUNICATION);
     }
 
     @Transactional
@@ -59,7 +72,7 @@ public class CaseService {
             throw new NotAuthorizedException("Not allowed to create cases");
         }
         if (caseDTO.getPatientId() == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "patientId is required");
+            throw new BadRequestException("patientId is required");
         }
         CaseEntity entity = caseMapper.toEntity(caseDTO);
         entity.setId(UUID.randomUUID());
@@ -69,13 +82,13 @@ public class CaseService {
         if (isDoctor(actor) || isManager(actor)) {
             entity.setOwnerId(actor.userId());
         }
-        if (entity.getStatus() == null) {
-            entity.setStatus("OPEN");
-        }
+        entity.setStatus(CaseStatus.CREATED);
+
         if (entity.getCreatedAt() == null) {
             entity.setCreatedAt(Instant.now());
         }
         CaseEntity savedEntity = caseRepository.save(entity);
+        recordStatusChange(actor, savedEntity.getId(), null, CaseStatus.CREATED);
         return caseMapper.toDTO(savedEntity);
     }
 
@@ -99,13 +112,19 @@ public class CaseService {
 
         CaseEntity entity = caseRepository.findById(caseId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Case not found"));
+        if (entity.getStatus() == CaseStatus.CLOSED) {
+            throw new BadRequestException("Case is closed");
+        }
 
         requireCanEdit(actor, entity);
 
+        CaseStatus previousStatus = entity.getStatus();
         entity.setTitle(title);
         entity.setDescription(description);
+        entity.setStatus(CaseStatus.UPDATED);
 
         CaseEntity savedEntity = caseRepository.save(entity);
+        recordStatusChange(actor, savedEntity.getId(), previousStatus, CaseStatus.UPDATED);
         return caseMapper.toDTO(savedEntity);
     }
 
@@ -113,34 +132,53 @@ public class CaseService {
     public void deleteCase(Actor actor, UUID caseId) {
         CaseEntity entity = caseRepository.findById(caseId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Case not found"));
+        if (entity.getStatus() == CaseStatus.CLOSED) {
+            throw new BadRequestException("Case is closed");
+        }
 
         requireCanDelete(actor, entity);
-        caseRepository.delete(entity);
+        CaseStatus previousStatus = entity.getStatus();
+        entity.setStatus(CaseStatus.CLOSED);
+        caseRepository.save(entity);
+        recordStatusChange(actor, entity.getId(), previousStatus, CaseStatus.CLOSED);
     }
 
     @Transactional(readOnly = true)
     public Optional<CaseDTO> getCase(Actor actor, UUID id) {
-        return caseRepository.findById(id)
-                .map(entity -> {
+        Optional<CaseEntity> entityOpt = caseRepository.findById(id);
+        if (entityOpt.isPresent() && entityOpt.get().getStatus() == CaseStatus.CLOSED && !isManager(actor)) {
+            throw new BadRequestException("Case is closed");
+        }
+        return entityOpt.map(entity -> {
                     requireCanRead(actor, entity);
                     return caseMapper.toDTO(entity);
                 });
     }
 
     @Transactional(readOnly = true)
+    public List<CaseDTO> getClosedCases(Actor actor) {
+        if (!isManager(actor)) {
+            throw new NotAuthorizedException("Not allowed to view closed cases");
+        }
+        return caseRepository.findAllByStatus(CaseStatus.CLOSED).stream()
+                .map(caseMapper::toDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
     public List<CaseDTO> getAllCases(Actor actor) {
         if (isManager(actor)) {
-            return caseRepository.findAll().stream()
+            return caseRepository.findAllByStatusNot(CaseStatus.CLOSED).stream()
                     .map(caseMapper::toDTO)
                     .collect(Collectors.toList());
         }
         if (isDoctor(actor)) {
-            return caseRepository.findAllByOwnerId(actor.userId()).stream()
+            return caseRepository.findAllByOwnerIdAndStatusNot(actor.userId(), CaseStatus.CLOSED).stream()
                     .map(caseMapper::toDTO)
                     .collect(Collectors.toList());
         }
         if (isNurse(actor)) {
-            return caseRepository.findAllByHandlerId(actor.userId()).stream()
+            return caseRepository.findAllByHandlerIdAndStatusNot(actor.userId(), CaseStatus.CLOSED).stream()
                     .map(caseMapper::toDTO)
                     .collect(Collectors.toList());
         }
@@ -149,8 +187,8 @@ public class CaseService {
 
     @Transactional(readOnly = true)
     public List<CaseDTO> getCasesForPatient(Actor actor, UUID patientId) {
-        return caseRepository.findAllByPatient_Id(patientId).stream()
-                .peek(entity -> requireCanRead(actor, entity))
+        return caseRepository.findAllByPatient_IdAndStatusNot(patientId, CaseStatus.CLOSED).stream()
+                .filter(entity -> canRead(actor, entity))
                 .map(caseMapper::toDTO)
                 .collect(Collectors.toList());
     }
@@ -162,16 +200,22 @@ public class CaseService {
         }
         CaseEntity entity = caseRepository.findById(caseId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Case not found"));
+        if (entity.getStatus() == CaseStatus.CLOSED) {
+            throw new BadRequestException("Case is closed");
+        }
+
         if (isDoctor(actor)) {
-            if (entity.getOwnerId() == null || !entity.getOwnerId().equals(actor.userId())) {
+            // Doctors can only modify if they are owner OR if it's unowned
+            if (entity.getOwnerId() != null && !entity.getOwnerId().equals(actor.userId())) {
                 throw new NotAuthorizedException("Not allowed to modify assignments for this case");
-            }
-            if (dto.getOwnerId() != null) {
-                throw new NotAuthorizedException("Not allowed to change owner for this case");
             }
         }
 
-        if (isManager(actor) && dto.getOwnerId() != null) {
+        if(dto.getOwnerId() == null && dto.getHandlerId() == null) {
+            throw new BadRequestException("At least one of ownerId or handlerId must be provided.");
+        }
+
+        if (dto.getOwnerId() != null) {
             UUID ownerId = requireEmployeeWithRole(dto.getOwnerId(), Set.of(Role.DOCTOR), "ownerId");
             entity.setOwnerId(ownerId);
         }
@@ -179,6 +223,15 @@ public class CaseService {
             UUID handlerId = requireEmployeeWithRole(dto.getHandlerId(), Set.of(Role.NURSE), "handlerId");
             entity.setHandlerId(handlerId);
         }
+
+        CaseStatus previousStatus = entity.getStatus();
+        if (previousStatus != CaseStatus.ASSIGNED) {
+            entity.setStatus(CaseStatus.ASSIGNED);
+            CaseEntity savedEntity = caseRepository.save(entity);
+            recordStatusChange(actor, savedEntity.getId(), previousStatus, CaseStatus.ASSIGNED);
+            return caseMapper.toDTO(savedEntity);
+        }
+
         return caseMapper.toDTO(caseRepository.save(entity));
     }
 
@@ -226,6 +279,13 @@ public class CaseService {
         return isManager(actor) || isDoctor(actor);
     }
 
+    private boolean canRead(Actor actor, CaseEntity entity) {
+        if (isManager(actor)) return true;
+        if (isDoctor(actor) && actor.userId().equals(entity.getOwnerId())) return true;
+        if (isNurse(actor) && actor.userId().equals(entity.getHandlerId())) return true;
+        return false;
+    }
+
     private boolean isManager(Actor actor) {
         return actor.role() == Role.MANAGER;
     }
@@ -236,5 +296,16 @@ public class CaseService {
 
     private boolean isNurse(Actor actor) {
         return actor.role() == Role.NURSE;
+    }
+
+    private void recordStatusChange(Actor actor, UUID caseId, CaseStatus from, CaseStatus to) {
+        String statusChange = (from != null ? from.name() : "NEW") + " -> " + to.name();
+        AuditEventEntity event = AuditEventEntity.builder()
+                .caseId(caseId)
+                .statusChange(statusChange)
+                .actorId(actor != null ? actor.userId() : null)
+                .actorRole(actor != null && actor.role() != null ? actor.role().name() : null)
+                .build();
+        auditService.record(event);
     }
 }

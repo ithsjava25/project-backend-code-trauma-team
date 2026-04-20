@@ -6,6 +6,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.example.projektarendehantering.common.CaseStatus;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -23,13 +24,15 @@ public class CaseEntity {
 
     @Id
     private UUID id;
-    private String status;
+
+    @Enumerated(EnumType.STRING)
+    private CaseStatus status;
+
     private UUID ownerId;
     private String title;
     private String description;
     private Instant createdAt;
     private UUID handlerId;
-    private UUID otherId;
 
     @ManyToOne(optional = true)
     @JoinColumn(name = "patient_id", nullable = true) // Optional because the patient can be null

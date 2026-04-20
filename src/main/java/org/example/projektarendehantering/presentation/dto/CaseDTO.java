@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.example.projektarendehantering.common.CaseStatus;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -17,11 +18,13 @@ import java.util.UUID;
 public class CaseDTO {
 
     private UUID id;
-    private String status;
+    private CaseStatus status;
     private String title;
     private String description;
     private Instant createdAt;
     private UUID patientId;
+    private UUID ownerId;
+    private UUID handlerId;
 
     @Builder.Default
     private List<CaseNoteDTO> notes = new ArrayList<>();

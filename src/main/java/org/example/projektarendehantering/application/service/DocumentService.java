@@ -5,14 +5,8 @@ import io.awspring.cloud.s3.S3Resource;
 import io.awspring.cloud.s3.S3Template;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.example.projektarendehantering.common.Actor;
-import org.example.projektarendehantering.common.AppException;
-import org.example.projektarendehantering.common.BadRequestException;
-import org.example.projektarendehantering.common.NotAuthorizedException;
-import org.example.projektarendehantering.infrastructure.persistence.CaseEntity;
-import org.example.projektarendehantering.infrastructure.persistence.CaseRepository;
-import org.example.projektarendehantering.infrastructure.persistence.DocumentEntity;
-import org.example.projektarendehantering.infrastructure.persistence.DocumentRepository;
+import org.example.projektarendehantering.common.*;
+import org.example.projektarendehantering.infrastructure.persistence.*;
 import org.example.projektarendehantering.presentation.dto.DocumentDTO;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -36,6 +30,7 @@ public class DocumentService {
     private final CaseRepository caseRepository;
     private final S3Template s3Template;
     private final DocumentMapper documentMapper;
+    private final AuditService auditService;
 
     @Value("${app.s3.bucket}")
     private String bucket;
@@ -56,6 +51,10 @@ public class DocumentService {
 
         CaseEntity caseEntity = caseRepository.findById(caseId)
                 .orElseThrow(() -> new BadRequestException("Case not found"));
+
+        if (caseEntity.getStatus() == CaseStatus.CLOSED) {
+            throw new BadRequestException("Case is closed");
+        }
 
         validateAccess(actor, caseEntity);
 
@@ -100,6 +99,20 @@ public class DocumentService {
         // --- SAFE DB SAVE WITH COMPENSATION IF IT FAILS ---
         try {
             DocumentEntity saved = documentRepository.save(entity);
+            CaseStatus previousStatus = caseEntity.getStatus();
+            if (previousStatus != CaseStatus.COMMUNICATION) {
+                caseEntity.setStatus(CaseStatus.COMMUNICATION);
+                caseRepository.save(caseEntity);
+
+                String statusChange = (previousStatus != null ? previousStatus.name() : "NEW")
+                        + " -> " + CaseStatus.COMMUNICATION.name();
+                auditService.record(AuditEventEntity.builder()
+                        .caseId(caseEntity.getId())
+                        .statusChange(statusChange)
+                        .actorId(actor.userId())
+                        .actorRole(actor.role() != null ? actor.role().name() : null)
+                        .build());
+            }
             return documentMapper.toDTO(saved);
         } catch (RuntimeException ex) {
             if (!syncActive) {
@@ -116,6 +129,10 @@ public class DocumentService {
     public List<DocumentDTO> listDocuments(Actor actor, UUID caseId) {
         CaseEntity caseEntity = caseRepository.findById(caseId)
                 .orElseThrow(() -> new BadRequestException("Case not found"));
+
+        if (caseEntity.getStatus() == CaseStatus.CLOSED) {
+            throw new BadRequestException("Case is closed");
+        }
 
         validateAccess(actor, caseEntity);
 
@@ -180,6 +197,9 @@ public class DocumentService {
     }
 
     private void validateAccess(Actor actor, CaseEntity caseEntity) {
+        if (caseEntity.getStatus() == CaseStatus.CLOSED) {
+            throw new BadRequestException("Case is closed");
+        }
         if (actor.isManager()) return;
         if (actor.isDoctor() && actor.userId().equals(caseEntity.getOwnerId())) return;
         if (actor.isNurse() && actor.userId().equals(caseEntity.getHandlerId())) return;

@@ -55,6 +55,13 @@ public class EmployeeService {
                 .collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
+    public List<EmployeeDTO> findByRole(Role role) {
+        return employeeRepository.findAllByRole(role).stream()
+                .map(employeeMapper::toDTO)
+                .collect(Collectors.toList());
+    }
+
     private void requireCanManageEmployees(Actor actor) {
         if (actor == null) {
             throw new NotAuthorizedException("Missing actor");

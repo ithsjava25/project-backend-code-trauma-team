@@ -3,6 +3,7 @@ package org.example.projektarendehantering.presentation.rest;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.example.projektarendehantering.application.service.CaseService;
 import org.example.projektarendehantering.common.Actor;
+import org.example.projektarendehantering.common.NotAuthorizedException;
 import org.example.projektarendehantering.common.Role;
 import org.example.projektarendehantering.infrastructure.security.SecurityActorAdapter;
 import org.example.projektarendehantering.presentation.dto.CaseDTO;
@@ -179,9 +180,46 @@ class CaseControllerTest {
     }
 
     @Test
+    @WithMockUser(roles = "DOCTOR")
+    void getCase_shouldReturnForbidden_whenNotAuthorized() throws Exception {
+        when(caseService.getCase(eq(doctorActor), eq(caseId)))
+                .thenThrow(new NotAuthorizedException("NOT_ALLOWED", "Not allowed to read this case"));
+
+        mockMvc.perform(get("/api/cases/{id}", caseId))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.errorCode").value("NOT_ALLOWED"))
+                .andExpect(jsonPath("$.message").value("Not allowed to read this case"))
+                .andExpect(jsonPath("$.status").value(403));
+    }
+
+    @Test
     void getAllCases_shouldReturnUnauthorized_whenNotLoggedIn() throws Exception {
         // Without @WithMockUser
         mockMvc.perform(get("/api/cases"))
                 .andExpect(status().is3xxRedirection()); // Redirect to login in OAuth2 setup
+    }
+
+    @Test
+    @WithMockUser(roles = "MANAGER")
+    void getClosedCases_shouldReturnList_forManager() throws Exception {
+        Actor managerActor = new Actor(UUID.randomUUID(), Role.MANAGER, "Manager", "manager_user");
+        when(securityActorAdapter.currentUser()).thenReturn(managerActor);
+
+        CaseDTO caseDTO = new CaseDTO();
+        caseDTO.setId(caseId);
+        caseDTO.setDescription("Closed Case");
+
+        when(caseService.getClosedCases(managerActor)).thenReturn(List.of(caseDTO));
+
+        mockMvc.perform(get("/api/cases/closed"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].id").value(caseId.toString()))
+                .andExpect(jsonPath("$[0].description").value("Closed Case"));
+    }
+
+    @Test
+    void getClosedCases_shouldReturnRedirect_whenNotLoggedIn() throws Exception {
+        mockMvc.perform(get("/api/cases/closed"))
+                .andExpect(status().is3xxRedirection());
     }
 }

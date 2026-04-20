@@ -108,10 +108,9 @@ class DocumentIntegrationTest {
     void uploadDocument_shouldDenyUnauthorized() throws Exception {
         MockMultipartFile file = new MockMultipartFile("file", "test.txt", MediaType.TEXT_PLAIN_VALUE, "hello".getBytes());
 
-        assertThatThrownBy(() -> 
-            mockMvc.perform(multipart("/ui/cases/{caseId}/documents/upload", caseId)
-                            .file(file)
-                            .with(csrf()))
-        ).hasCauseInstanceOf(org.example.projektarendehantering.common.NotAuthorizedException.class);
+        mockMvc.perform(multipart("/ui/cases/{caseId}/documents/upload", caseId)
+                        .file(file)
+                        .with(csrf()))
+                .andExpect(status().isForbidden());
     }
 }
