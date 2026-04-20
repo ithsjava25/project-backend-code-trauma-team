@@ -10,6 +10,10 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.Locale;
 import java.util.Collections;
 
 @Slf4j
@@ -21,12 +25,14 @@ public class LocalUserDetailsService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        log.debug("Loading user by email: {}", email);
+        String normalizedEmail = email == null ? "" : email.trim().toLowerCase(Locale.ROOT);
+        String emailToken = toPiiSafeToken(normalizedEmail);
+        log.debug("Loading user by email token: {}", emailToken);
 
-        return userAccountRepository.findByEmail(email)
+        return userAccountRepository.findByEmail(normalizedEmail)
                 .map(userAccount -> {
-                    log.debug("Found user: email={}, role={}, enabled={}",
-                            userAccount.getEmail(),
+                    log.debug("Found user for token {}: role={}, enabled={}",
+                            emailToken,
                             userAccount.getRole(),
                             userAccount.isEnabled());
 
@@ -41,8 +47,23 @@ public class LocalUserDetailsService implements UserDetailsService {
                     );
                 })
                 .orElseThrow(() -> {
-                    log.error("User not found with email: {}", email);
-                    return new UsernameNotFoundException("User not found with email: " + email);
+                    log.error("User not found for email token: {}", emailToken);
+                    return new UsernameNotFoundException("User not found");
                 });
+    }
+
+    private String toPiiSafeToken(String value) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] hash = digest.digest(value.getBytes(StandardCharsets.UTF_8));
+            StringBuilder hex = new StringBuilder(hash.length * 2);
+            for (byte b : hash) {
+                hex.append(String.format("%02x", b));
+            }
+            return hex.substring(0, 12);
+        } catch (NoSuchAlgorithmException ex) {
+            log.warn("Falling back to non-cryptographic token generation");
+            return Integer.toHexString(value.hashCode());
+        }
     }
 }

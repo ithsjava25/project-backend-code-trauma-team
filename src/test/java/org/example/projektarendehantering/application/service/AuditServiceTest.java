@@ -99,6 +99,15 @@ class AuditServiceTest {
     }
 
     @Test
+    void listEvents_shouldDenyPatientRole() {
+        Actor patientActor = new Actor(UUID.randomUUID(), Role.PATIENT, "Patient", "patient");
+
+        assertThatThrownBy(() -> auditService.listEvents(patientActor, null, null, null, Pageable.unpaged()))
+                .isInstanceOf(NotAuthorizedException.class)
+                .hasMessageContaining("Patients are not allowed to view audit events");
+    }
+
+    @Test
     void listEvents_shouldThrowOnInvalidRange() {
         Instant from = Instant.now();
         Instant to = from.minusSeconds(10);

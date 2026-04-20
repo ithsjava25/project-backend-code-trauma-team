@@ -58,6 +58,8 @@ public class SecurityActorAdapter {
             role = Role.DOCTOR;
         } else if (authentication.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_NURSE"))) {
             role = Role.NURSE;
+        } else if (authentication.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_PATIENT"))) {
+            role = Role.PATIENT;
         }
 
         return new Actor(userId, role, null, name);

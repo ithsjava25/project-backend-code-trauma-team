@@ -45,17 +45,5 @@ CREATE TABLE IF NOT EXISTS user_account (
     created_at TIMESTAMP WITH TIME ZONE NOT NULL
     );
 
--- Add a local admin user with the role MANAGER and password 'password'
--- This replaces the old in-memory user
-INSERT INTO user_account (id, email, password_hash, role, provider, enabled, created_at)
-VALUES (
-           'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
-           'admin@traumateam.com',
-           '$2a$10$mOvf0LGTHyTmRAcf2l.KPu8nq7arTJTjOizhm/i9jmx5sXLIwGOAK',
-           'MANAGER',
-           'LOCAL',
-           true,
-           NOW()
-       )
-ON CONFLICT (email) DO UPDATE SET
-    password_hash = '$2a$10$mOvf0LGTHyTmRAcf2l.KPu8nq7arTJTjOizhm/i9jmx5sXLIwGOAK';
+-- Local admin seed intentionally moved to data-local.sql so production/shared seeds
+-- do not embed a known credential hash.

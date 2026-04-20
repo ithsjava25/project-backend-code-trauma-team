@@ -7,6 +7,7 @@ import org.example.projektarendehantering.infrastructure.persistence.AuthProvide
 import org.example.projektarendehantering.infrastructure.persistence.UserAccountEntity;
 import org.example.projektarendehantering.infrastructure.persistence.UserAccountRepository;
 import org.example.projektarendehantering.presentation.dto.PatientRegistrationDTO;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,17 +27,23 @@ public class RegistrationService {
             throw new BadRequestException("PASSWORDS_DO_NOT_MATCH", "Passwords do not match");
         }
 
-        userAccountRepository.findByEmail(registrationDTO.getEmail()).ifPresent(user -> {
+        var normalizedEmail = registrationDTO.getEmail().trim().toLowerCase();
+
+        userAccountRepository.findByEmail(normalizedEmail).ifPresent(user -> {
             throw new BadRequestException("USER_EXISTS", "A user with this email already exists");
         });
 
         var newUserAccount = new UserAccountEntity();
-        newUserAccount.setEmail(registrationDTO.getEmail());
+        newUserAccount.setEmail(normalizedEmail);
         newUserAccount.setPasswordHash(passwordEncoder.encode(registrationDTO.getPassword()));
         newUserAccount.setRole(Role.PATIENT);
         newUserAccount.setProvider(AuthProvider.LOCAL);
         newUserAccount.setEnabled(true);
 
-        userAccountRepository.save(newUserAccount);
+        try {
+            userAccountRepository.save(newUserAccount);
+        } catch (DataIntegrityViolationException ex) {
+            throw new BadRequestException("USER_EXISTS", "A user with this email already exists");
+        }
     }
 }

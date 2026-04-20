@@ -173,6 +173,26 @@ class SecurityActorAdapterTest {
     }
 
     @Test
+    void currentUser_whenEmployeeNotFound_shouldFallbackToAuthorities_Patient() {
+        String username = "patient-user";
+        UUID userId = UUID.nameUUIDFromBytes(username.getBytes(StandardCharsets.UTF_8));
+
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        when(authentication.isAuthenticated()).thenReturn(true);
+        when(authentication.getName()).thenReturn(username);
+        when(employeeRepository.findById(userId)).thenReturn(Optional.empty());
+
+        doReturn(List.of(new SimpleGrantedAuthority("ROLE_PATIENT")))
+            .when(authentication).getAuthorities();
+
+        Actor actor = securityActorAdapter.currentUser();
+
+        assertThat(actor.role()).isEqualTo(Role.PATIENT);
+        assertThat(actor.isPatient()).isTrue();
+        assertThat(actor.isPending()).isFalse();
+    }
+
+    @Test
     void currentUser_whenEmployeeNotFoundAndNoRoles_shouldDefaultToPending() {
         String username = "pending-user";
         UUID userId = UUID.nameUUIDFromBytes(username.getBytes(StandardCharsets.UTF_8));

@@ -21,11 +21,9 @@ import org.springframework.security.web.SecurityFilterChain;
 @EnableMethodSecurity(prePostEnabled = true)
 public class SecurityConfig {
 
-    private final CustomOAuth2UserService customOAuth2UserService;
     private final LocalUserDetailsService localUserDetailsService;
 
-    public SecurityConfig(CustomOAuth2UserService customOAuth2UserService, LocalUserDetailsService localUserDetailsService) {
-        this.customOAuth2UserService = customOAuth2UserService;
+    public SecurityConfig(LocalUserDetailsService localUserDetailsService) {
         this.localUserDetailsService = localUserDetailsService;
     }
 
@@ -33,7 +31,7 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http, CustomOAuth2UserService customOAuth2UserService) throws Exception {
         http
             .authorizeHttpRequests(authorize -> authorize
-                .requestMatchers("/login**", "/login", "/register", "/error**", "/static/**", "/app.css", "/app.js", "/webjars/**").permitAll()
+                .requestMatchers("/login**", "/register", "/error**", "/static/**", "/app.css", "/app.js", "/webjars/**").permitAll()
                 .anyRequest().authenticated()
             )
             .oauth2Login(oauth2 -> oauth2
