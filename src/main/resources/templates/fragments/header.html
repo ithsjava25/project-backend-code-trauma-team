@@ -18,8 +18,8 @@
                href="/ui/patients">Manage Patients</a>
             <a class="nav-link"
                th:if="${currentActor != null && currentActor.role() != null && currentActor.role().toString() == 'MANAGER'}"
-               href="/ui/employees">Manage Users</a></nav>
-
+               href="/ui/employees">Manage Users</a>
+        </nav>
 
         <div class="auth" id="authBar">
             <div th:if="${#authorization.expression('isAuthenticated()')}">
