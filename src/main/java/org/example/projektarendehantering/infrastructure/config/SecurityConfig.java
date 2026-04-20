@@ -1,51 +1,62 @@
 package org.example.projektarendehantering.infrastructure.config;
 
 import org.example.projektarendehantering.infrastructure.security.CustomOAuth2UserService;
+import org.example.projektarendehantering.infrastructure.security.LocalUserDetailsService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
 @EnableWebSecurity
-@EnableMethodSecurity
+@EnableMethodSecurity(prePostEnabled = true)
 public class SecurityConfig {
 
-    private final CustomOAuth2UserService customOAuth2UserService;
+    private final LocalUserDetailsService localUserDetailsService;
 
-    public SecurityConfig(CustomOAuth2UserService customOAuth2UserService) {
-        this.customOAuth2UserService = customOAuth2UserService;
+    public SecurityConfig(LocalUserDetailsService localUserDetailsService) {
+        this.localUserDetailsService = localUserDetailsService;
     }
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http, CustomOAuth2UserService customOAuth2UserService) throws Exception {
         http
             .authorizeHttpRequests(authorize -> authorize
-                .requestMatchers("/login**", "/error**", "/static/**", "/app.css", "/app.js").permitAll()
+                .requestMatchers("/login**", "/register", "/error**", "/static/**", "/app.css", "/app.js", "/webjars/**").permitAll()
                 .anyRequest().authenticated()
             )
             .oauth2Login(oauth2 -> oauth2
-                .userInfoEndpoint(userInfo -> userInfo
+                    .loginPage("/login")
+                    .userInfoEndpoint(userInfo -> userInfo
                     .userService(customOAuth2UserService)
                 )
                 .defaultSuccessUrl("/", true)
             )
             .formLogin(form -> form
+                .loginPage("/login")
+                .loginProcessingUrl("/login")
                 .defaultSuccessUrl("/", true)
+                .failureUrl("/login?error=true")
             )
             .logout(logout -> logout
-                .logoutSuccessUrl("/")
-            );
+                .logoutSuccessUrl("/login?logout=true")
+                .invalidateHttpSession(true)
+                .deleteCookies("JSESSIONID")
+            )
+            .userDetailsService(localUserDetailsService);
         return http.build();
     }
 
-    @Bean
+/*    @Bean
     public UserDetailsService userDetailsService() {
         UserDetails admin = User.builder()
             .username("admin")
@@ -53,5 +64,11 @@ public class SecurityConfig {
             .roles("MANAGER")
             .build();
         return new InMemoryUserDetailsManager(admin);
+    }
+ */
+
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
     }
 }

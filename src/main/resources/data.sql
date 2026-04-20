@@ -32,3 +32,18 @@ ON CONFLICT (id) DO NOTHING;
 INSERT INTO cases (id, title, description, status, patient_id, owner_id, handler_id, created_at)
 VALUES ('990e8400-e29b-41d4-a716-446655440001', 'Follow-up: Fracture', 'Routine follow-up for a healed radial fracture.', 'ASSIGNED', '550e8400-e29b-41d4-a716-446655440001', '770e8400-e29b-41d4-a716-446655440001', '770e8400-e29b-41d4-a716-446655440002', CURRENT_TIMESTAMP)
 ON CONFLICT (id) DO NOTHING;
+
+-- Creates the new table for all user accounts (both local and GitHub)
+CREATE TABLE IF NOT EXISTS user_account (
+    id UUID PRIMARY KEY,
+    email VARCHAR(255) UNIQUE,
+    password_hash VARCHAR(255),
+    role VARCHAR(50) NOT NULL,
+    provider VARCHAR(50) NOT NULL,
+    provider_user_id VARCHAR(255),
+    enabled BOOLEAN NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL
+    );
+
+-- Local admin seed intentionally moved to data-local.sql so production/shared seeds
+-- do not embed a known credential hash.

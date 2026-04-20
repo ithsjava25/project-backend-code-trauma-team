@@ -16,6 +16,10 @@ public record Actor(UUID userId, Role role, String displayName, String githubUse
         return role == Role.NURSE;
     }
 
+    public boolean isPatient() {
+        return role == Role.PATIENT;
+    }
+
     public boolean isPending() {
         return role == Role.PENDING;
     }

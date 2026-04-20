@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head(title='Register')}"></head>
+<body>
+<header th:replace="~{fragments/header :: header}"></header>
+
+<div class="container mt-5" style="max-width: 600px;">
+    <div class="panel">
+        <h4>Create a Patient Account</h4>
+
+        <form th:action="@{/register}" th:object="${patientRegistrationDTO}" method="post" class="form">
+            <div th:if="${#fields.hasGlobalErrors()}" class="panel panel-error" style="margin-bottom: 14px;">
+                <p th:each="err : ${#fields.globalErrors()}" th:text="${err}"></p>
+            </div>
+
+            <div class="field">
+                <label for="email" class="label">Email</label>
+                <input type="email" id="email" th:field="*{email}" class="input" required autofocus>
+                <span class="muted" style="color: var(--danger)" th:if="${#fields.hasErrors('email')}" th:errors="*{email}"></span>
+            </div>
+            <div class="field">
+                <label for="password" class="label">Password</label>
+                <input type="password" id="password" th:field="*{password}" class="input" required>
+                <span class="muted" style="color: var(--danger)" th:if="${#fields.hasErrors('password')}" th:errors="*{password}"></span>
+            </div>
+            <div class="field">
+                <label for="confirmPassword" class="label">Confirm Password</label>
+                <input type="password" id="confirmPassword" th:field="*{confirmPassword}" class="input" required>
+                <span class="muted" style="color: var(--danger)" th:if="${#fields.hasErrors('confirmPassword')}" th:errors="*{confirmPassword}"></span>
+            </div>
+            <button type="submit" class="button" style="width: 100%;">Register</button>
+        </form>
+
+        <div style="text-align: center; margin-top: 16px;">
+            <a th:href="@{/login}" style="color: var(--accent);">Already have an account? Log In</a>
+        </div>
+    </div>
+</div>
+
+<footer th:replace="~{fragments/footer :: footer}"></footer>
+</body>
+</html>

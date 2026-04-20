@@ -9,5 +9,6 @@ public enum Role {
     PENDING,
     MANAGER,
     DOCTOR,
-    NURSE
+    NURSE,
+    PATIENT
 }

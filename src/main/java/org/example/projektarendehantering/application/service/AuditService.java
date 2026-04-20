@@ -235,6 +235,10 @@ public class AuditService {
                     .map(auditEventMapper::toDTO);
         }
 
+        if (isPatient(actor)) {
+            throw new NotAuthorizedException("Patients are not allowed to view audit events");
+        }
+
         throw new NotAuthorizedException("Not allowed to view audit events");
     }
 
@@ -270,6 +274,10 @@ public class AuditService {
 
     private boolean isNurse(Actor actor) {
         return actor.role() == Role.NURSE;
+    }
+
+    private boolean isPatient(Actor actor) {
+        return actor.role() == Role.PATIENT;
     }
 }
 
