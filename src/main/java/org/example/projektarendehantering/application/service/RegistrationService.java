@@ -4,6 +4,8 @@ import lombok.RequiredArgsConstructor;
 import org.example.projektarendehantering.common.BadRequestException;
 import org.example.projektarendehantering.common.Role;
 import org.example.projektarendehantering.infrastructure.persistence.AuthProvider;
+import org.example.projektarendehantering.infrastructure.persistence.PatientEntity;
+import org.example.projektarendehantering.infrastructure.persistence.PatientRepository;
 import org.example.projektarendehantering.infrastructure.persistence.UserAccountEntity;
 import org.example.projektarendehantering.infrastructure.persistence.UserAccountRepository;
 import org.example.projektarendehantering.presentation.dto.PatientRegistrationDTO;
@@ -17,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class RegistrationService {
 
     private final UserAccountRepository userAccountRepository;
+    private final PatientRepository patientRepository;
 
     private final PasswordEncoder passwordEncoder;
 
@@ -28,9 +31,15 @@ public class RegistrationService {
         }
 
         var normalizedEmail = registrationDTO.getEmail().trim().toLowerCase();
+        var firstName = registrationDTO.getFirstName().trim();
+        var lastName = registrationDTO.getLastName().trim();
+        var personalIdentityNumber = registrationDTO.getPersonalIdentityNumber().trim();
 
         userAccountRepository.findByEmail(normalizedEmail).ifPresent(user -> {
             throw new BadRequestException("USER_EXISTS", "A user with this email already exists");
+        });
+        patientRepository.findByPersonalIdentityNumber(personalIdentityNumber).ifPresent(existing -> {
+            throw new BadRequestException("PATIENT_EXISTS", "A patient with this personal identity number already exists");
         });
 
         var newUserAccount = new UserAccountEntity();
@@ -41,7 +50,15 @@ public class RegistrationService {
         newUserAccount.setEnabled(true);
 
         try {
-            userAccountRepository.save(newUserAccount);
+            UserAccountEntity savedAccount = userAccountRepository.save(newUserAccount);
+
+            PatientEntity patientEntity = new PatientEntity();
+            patientEntity.setId(savedAccount.getId());
+            patientEntity.setFirstName(firstName);
+            patientEntity.setLastName(lastName);
+            patientEntity.setPersonalIdentityNumber(personalIdentityNumber);
+            patientEntity.setCreatedAt(savedAccount.getCreatedAt());
+            patientRepository.save(patientEntity);
         } catch (DataIntegrityViolationException ex) {
             throw new BadRequestException("USER_EXISTS", "A user with this email already exists");
         }

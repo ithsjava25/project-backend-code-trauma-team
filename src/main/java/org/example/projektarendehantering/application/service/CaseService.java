@@ -83,8 +83,17 @@ public class CaseService {
         }
         CaseEntity entity = caseMapper.toEntity(caseDTO);
         entity.setId(UUID.randomUUID());
-        PatientEntity patient = patientRepository.findById(requestedPatientId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Patient not found"));
+        PatientEntity patient = patientRepository.findById(requestedPatientId).orElse(null);
+        if (patient == null) {
+            if (isPatient(actor) && actor.userId().equals(requestedPatientId)) {
+                PatientEntity self = new PatientEntity();
+                self.setId(requestedPatientId);
+                self.setCreatedAt(Instant.now());
+                patient = patientRepository.save(self);
+            } else {
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Patient not found");
+            }
+        }
         entity.setPatient(patient);
         if (isDoctor(actor) || isManager(actor)) {
             entity.setOwnerId(actor.userId());
