@@ -4,9 +4,10 @@
 <body>
 <header th:replace="~{fragments/header :: header}"></header>
 
-<div class="container mt-5" style="max-width: 600px;">
-    <div class="panel">
+<main class="container page" style="max-width: 680px;">
+    <section class="panel">
         <h4>Create a Patient Account</h4>
+        <p class="muted">Use your email to create an account and follow your case updates.</p>
 
         <form th:action="@{/register}" th:object="${patientRegistrationDTO}" method="post" class="form">
             <div th:if="${#fields.hasGlobalErrors()}" class="panel panel-error" style="margin-bottom: 14px;">
@@ -49,8 +50,8 @@
         <div style="text-align: center; margin-top: 16px;">
             <a th:href="@{/login}" style="color: var(--accent);">Already have an account? Log In</a>
         </div>
-    </div>
-</div>
+    </section>
+</main>
 
 <footer th:replace="~{fragments/footer :: footer}"></footer>
 </body>
