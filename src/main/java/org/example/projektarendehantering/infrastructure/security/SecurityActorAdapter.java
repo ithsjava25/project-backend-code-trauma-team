@@ -11,6 +11,7 @@ import org.springframework.security.oauth2.client.authentication.OAuth2Authentic
 import org.springframework.stereotype.Component;
 
 import java.nio.charset.StandardCharsets;
+import java.util.Locale;
 import java.util.UUID;
 
 /**
@@ -54,7 +55,7 @@ public class SecurityActorAdapter {
         }
 
         // 2. Try local account by authentication name (email) and use persisted id
-        var userAccount = userAccountRepository.findByEmail(authentication.getName().trim().toLowerCase());
+        var userAccount = userAccountRepository.findByEmail(authentication.getName().trim().toLowerCase(Locale.ROOT));
         if (userAccount.isPresent()) {
             var account = userAccount.get();
             return new Actor(account.getId(), account.getRole(), null, account.getEmail());
