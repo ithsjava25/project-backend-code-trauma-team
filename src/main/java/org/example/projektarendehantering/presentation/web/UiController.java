@@ -8,6 +8,8 @@ import org.example.projektarendehantering.presentation.dto.CaseAssignmentDTO;
 import org.example.projektarendehantering.presentation.dto.CaseDTO;
 import org.example.projektarendehantering.presentation.dto.CreateCaseForm;
 import org.example.projektarendehantering.presentation.dto.UpdateCaseForm;
+import org.example.projektarendehantering.common.Actor;
+import org.example.projektarendehantering.common.Role;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -21,7 +23,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import jakarta.validation.Valid;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.security.Principal;
 import java.util.UUID;
 
 @Controller
@@ -64,23 +65,33 @@ public class UiController {
 
     @GetMapping("/ui/cases/new")
     public String newCase(Model model) {
+        Actor actor = securityActorAdapter.currentUser();
         model.addAttribute("createCaseForm", new CreateCaseForm());
-        model.addAttribute("patients", patientService.getAllPatients());
+        if (actor.role() != Role.PATIENT) {
+            model.addAttribute("patients", patientService.getAllPatients());
+        }
         return "cases/new";
     }
 
     @PostMapping("/ui/cases/new")
-    public String createCase(@Valid @ModelAttribute("createCaseForm") CreateCaseForm form, BindingResult result) {
+    public String createCase(@Valid @ModelAttribute("createCaseForm") CreateCaseForm form, BindingResult result, Model model) {
+        Actor actor = securityActorAdapter.currentUser();
+        if (actor.role() != Role.PATIENT && form.getPatientId() == null) {
+            result.rejectValue("patientId", "required", "Patient is required");
+        }
         if (result.hasErrors()) {
+            if (actor.role() != Role.PATIENT) {
+                model.addAttribute("patients", patientService.getAllPatients());
+            }
             return "cases/new";
         }
 
         CaseDTO caseDTO = new CaseDTO();
         caseDTO.setTitle(form.getTitle());
         caseDTO.setDescription(form.getDescription());
-        caseDTO.setPatientId(form.getPatientId());
+        caseDTO.setPatientId(actor.role() == Role.PATIENT ? actor.userId() : form.getPatientId());
 
-        caseService.createCase(securityActorAdapter.currentUser(), caseDTO);
+        caseService.createCase(actor, caseDTO);
         return "redirect:/ui/cases";
     }
 
@@ -156,3 +167,5 @@ public class UiController {
     }
 }
 
+ 
+ 

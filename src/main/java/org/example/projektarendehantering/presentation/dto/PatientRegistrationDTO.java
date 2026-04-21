@@ -1,6 +1,7 @@
 package org.example.projektarendehantering.presentation.dto;
 
 import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
@@ -8,6 +9,16 @@ import lombok.Data;
 
 @Data
 public class PatientRegistrationDTO {
+
+    @NotBlank(message = "First name may not be empty")
+    private String firstName;
+
+    @NotBlank(message = "Last name may not be empty")
+    private String lastName;
+
+    @NotBlank(message = "Personal identity number may not be empty")
+    @Pattern(regexp = "^\\d{8}-\\d{4}$", message = "Use format YYYYMMDD-XXXX")
+    private String personalIdentityNumber;
 
     @NotEmpty(message = "Email may not be empty")
     @Email(message = "Please provide a valid email")

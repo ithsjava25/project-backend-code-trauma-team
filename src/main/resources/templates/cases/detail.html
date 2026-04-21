@@ -12,6 +12,15 @@
     </div>
 
     <section class="panel" th:if="${case != null}">
+        <div class="panel panel-notice" style="margin-bottom: 16px;"
+             th:if="${currentActor != null && currentActor.role() != null && currentActor.role().toString() == 'PATIENT' && case.status != null && case.status.toString() != 'CREATED'}">
+            <strong>Case updated</strong>
+            <p style="margin-top: 8px; margin-bottom: 0;">
+                There has been a new update to this case.
+                Current status: <span th:text="${case.status}">UPDATED</span>.
+            </p>
+        </div>
+
         <div class="actions" style="margin-bottom: 16px;">
             <a class="button" th:href="@{/ui/cases/{id}/edit(id=${case.id})}">Edit</a>
             <form th:action="@{/ui/cases/{id}/delete(id=${case.id})}" method="post" style="display: inline;">
