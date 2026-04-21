@@ -5,6 +5,7 @@ import org.example.projektarendehantering.common.NotAuthorizedException;
 import org.example.projektarendehantering.common.Role;
 import org.example.projektarendehantering.infrastructure.persistence.EmployeeEntity;
 import org.example.projektarendehantering.infrastructure.persistence.EmployeeRepository;
+import org.example.projektarendehantering.infrastructure.persistence.UserAccountRepository;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -35,6 +36,9 @@ class SecurityActorAdapterTest {
 
     @Mock
     private EmployeeRepository employeeRepository;
+
+    @Mock
+    private UserAccountRepository userAccountRepository;
 
     @Mock
     private Authentication authentication;
@@ -107,6 +111,7 @@ class SecurityActorAdapterTest {
         when(oauth2User.getAttribute("login")).thenReturn(login);
         
         when(employeeRepository.findById(userId)).thenReturn(Optional.empty());
+        when(userAccountRepository.findByEmail("some-other-name")).thenReturn(Optional.empty());
         doReturn(Collections.emptyList()).when(oauth2Token).getAuthorities();
 
         Actor actor = securityActorAdapter.currentUser();
@@ -125,6 +130,7 @@ class SecurityActorAdapterTest {
         when(authentication.isAuthenticated()).thenReturn(true);
         when(authentication.getName()).thenReturn(username);
         when(employeeRepository.findById(userId)).thenReturn(Optional.empty());
+        when(userAccountRepository.findByEmail(username)).thenReturn(Optional.empty());
         
         doReturn(List.of(new SimpleGrantedAuthority("ROLE_MANAGER")))
             .when(authentication).getAuthorities();
@@ -145,6 +151,7 @@ class SecurityActorAdapterTest {
         when(authentication.isAuthenticated()).thenReturn(true);
         when(authentication.getName()).thenReturn(username);
         when(employeeRepository.findById(userId)).thenReturn(Optional.empty());
+        when(userAccountRepository.findByEmail(username)).thenReturn(Optional.empty());
         
         doReturn(List.of(new SimpleGrantedAuthority("ROLE_DOCTOR")))
             .when(authentication).getAuthorities();
@@ -163,6 +170,7 @@ class SecurityActorAdapterTest {
         when(authentication.isAuthenticated()).thenReturn(true);
         when(authentication.getName()).thenReturn(username);
         when(employeeRepository.findById(userId)).thenReturn(Optional.empty());
+        when(userAccountRepository.findByEmail(username)).thenReturn(Optional.empty());
         
         doReturn(List.of(new SimpleGrantedAuthority("ROLE_NURSE")))
             .when(authentication).getAuthorities();
@@ -181,6 +189,7 @@ class SecurityActorAdapterTest {
         when(authentication.isAuthenticated()).thenReturn(true);
         when(authentication.getName()).thenReturn(username);
         when(employeeRepository.findById(userId)).thenReturn(Optional.empty());
+        when(userAccountRepository.findByEmail(username)).thenReturn(Optional.empty());
 
         doReturn(List.of(new SimpleGrantedAuthority("ROLE_PATIENT")))
             .when(authentication).getAuthorities();
@@ -201,6 +210,7 @@ class SecurityActorAdapterTest {
         when(authentication.isAuthenticated()).thenReturn(true);
         when(authentication.getName()).thenReturn(username);
         when(employeeRepository.findById(userId)).thenReturn(Optional.empty());
+        when(userAccountRepository.findByEmail(username)).thenReturn(Optional.empty());
         
         doReturn(Collections.emptyList()).when(authentication).getAuthorities();
 

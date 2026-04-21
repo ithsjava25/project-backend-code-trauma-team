@@ -51,6 +51,7 @@ class CaseServiceTest {
     private Actor doctorActor;
     private Actor nurseActor;
     private Actor managerActor;
+    private Actor patientActor;
     private Actor otherDoctorActor;
     private UUID caseId;
     private CaseEntity caseEntity;
@@ -67,6 +68,7 @@ class CaseServiceTest {
         doctorActor = new Actor(doctorId, Role.DOCTOR, "Doctor", "doctor_user");
         nurseActor = new Actor(nurseId, Role.NURSE, "Nurse", "nurse_user");
         managerActor = new Actor(managerId, Role.MANAGER, "Manager", "manager_user");
+        patientActor = new Actor(patientId, Role.PATIENT, "Patient", "patient_user");
         otherDoctorActor = new Actor(otherDoctorId, Role.DOCTOR, "Other Doctor", "other_doctor_user");
 
         caseId = UUID.randomUUID();
@@ -137,6 +139,33 @@ class CaseServiceTest {
 
         verify(caseRepository).save(any(CaseEntity.class));
         verify(auditService).record(argThat(e -> "NEW -> CREATED".equals(e.getStatusChange())));
+    }
+
+    @Test
+    void createCase_shouldAllowPatientAndForceOwnPatientId() {
+        CaseDTO dto = new CaseDTO();
+        PatientEntity patient = new PatientEntity();
+        patient.setId(patientActor.userId());
+
+        when(caseMapper.toEntity(dto)).thenReturn(new CaseEntity());
+        when(patientRepository.findById(patientActor.userId())).thenReturn(Optional.of(patient));
+        when(caseRepository.save(any(CaseEntity.class))).thenAnswer(i -> i.getArgument(0));
+        when(caseMapper.toDTO(any(CaseEntity.class))).thenReturn(new CaseDTO());
+
+        caseService.createCase(patientActor, dto);
+
+        verify(patientRepository).findById(patientActor.userId());
+        verify(caseRepository).save(argThat(saved -> saved.getPatient() != null && patientActor.userId().equals(saved.getPatient().getId())));
+    }
+
+    @Test
+    void createCase_shouldDenyPatientCreatingForAnotherPatient() {
+        CaseDTO dto = new CaseDTO();
+        dto.setPatientId(UUID.randomUUID());
+
+        assertThatThrownBy(() -> caseService.createCase(patientActor, dto))
+                .isInstanceOf(NotAuthorizedException.class)
+                .hasMessageContaining("Patients can only create cases for themselves");
     }
 
     @Test
@@ -432,6 +461,17 @@ class CaseServiceTest {
         assertThatThrownBy(() -> caseService.getClosedCases(doctorActor))
                 .isInstanceOf(NotAuthorizedException.class)
                 .hasMessageContaining("Not allowed to view closed cases");
+    }
+
+    @Test
+    void getAllCases_shouldReturnPatientCasesForPatientActor() {
+        when(caseRepository.findAllByPatient_IdAndStatusNot(patientActor.userId(), CaseStatus.CLOSED)).thenReturn(List.of(caseEntity));
+        when(caseMapper.toDTO(caseEntity)).thenReturn(new CaseDTO());
+
+        List<CaseDTO> result = caseService.getAllCases(patientActor);
+
+        assertThat(result).hasSize(1);
+        verify(caseRepository).findAllByPatient_IdAndStatusNot(patientActor.userId(), CaseStatus.CLOSED);
     }
 
     @Test
