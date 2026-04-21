@@ -327,11 +327,17 @@ public class CaseService {
 
     private void recordStatusChange(Actor actor, UUID caseId, CaseStatus from, CaseStatus to) {
         String statusChange = (from != null ? from.name() : "NEW") + " -> " + to.name();
+        String eventName = from == null ? "CASE_CREATED" : "STATUS_CHANGED";
+        String description = from == null ? "Case was created" : "Status changed from " + from + " to " + to;
+
         AuditEventEntity event = AuditEventEntity.builder()
                 .caseId(caseId)
                 .statusChange(statusChange)
+                .eventName(eventName)
+                .description(description)
                 .actorId(actor != null ? actor.userId() : null)
                 .actorRole(actor != null && actor.role() != null ? actor.role().name() : null)
+                .occurredAt(Instant.now())
                 .build();
         auditService.record(event);
     }

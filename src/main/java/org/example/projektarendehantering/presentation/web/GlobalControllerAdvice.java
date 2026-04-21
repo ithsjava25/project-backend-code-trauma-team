@@ -19,6 +19,9 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.server.ResponseStatusException;
 
+import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 import java.util.Map;
 
 @Slf4j
@@ -97,6 +100,35 @@ public class GlobalControllerAdvice {
         
         model.addAttribute("status", statusLabel);
         model.addAttribute("message", reason);
+        return "error";
+    }
+
+    @ExceptionHandler(NoResourceFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public void handleNoResourceFoundException(NoResourceFoundException e) {
+        // Just return 404, don't log as ERROR
+    }
+
+    @ExceptionHandler({HttpMessageNotReadableException.class, MethodArgumentNotValidException.class})
+    public Object handleBadRequestException(Exception e, HttpServletRequest request, HttpServletResponse response, Model model) {
+        HttpStatus status = HttpStatus.BAD_REQUEST;
+        String message = "Invalid request payload";
+        if (e instanceof MethodArgumentNotValidException) {
+            message = "Validation failed";
+        }
+
+        if (isRestRequest(request)) {
+            return ResponseEntity.status(status)
+                    .body(Map.of(
+                            "errorCode", "BAD_REQUEST",
+                            "message", message,
+                            "status", status.value()
+                    ));
+        }
+        response.setStatus(status.value());
+        model.addAttribute("status", status.value() + " " + status.getReasonPhrase());
+        model.addAttribute("message", message);
+        model.addAttribute("errorCode", "BAD_REQUEST");
         return "error";
     }
 

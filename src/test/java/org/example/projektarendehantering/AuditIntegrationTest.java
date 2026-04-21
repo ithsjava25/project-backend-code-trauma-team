@@ -20,7 +20,10 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.setup.MockMvcBuilders.webAppContextSetup;
 
@@ -48,28 +51,26 @@ class AuditIntegrationTest {
 
     @Test
     @WithMockUser(username = "testuser", roles = {"MANAGER"})
-    void anyRequest_shouldBeAudited() throws Exception {
+    void mutationRequest_shouldBeAudited() throws Exception {
         long countBefore = auditEventRepository.count();
 
-        mockMvc.perform(get("/api/cases"))
-                .andExpect(status().isOk());
+        mockMvc.perform(post("/api/cases").with(csrf()))
+                .andExpect(status().isBadRequest());
 
         List<AuditEventEntity> events = auditEventRepository.findAll();
         assertThat(events.size()).isGreaterThan((int) countBefore);
-        
+
         AuditEventEntity latest = events.stream()
                 .max(Comparator.comparing(AuditEventEntity::getOccurredAt, Comparator.nullsLast(Comparator.naturalOrder()))
                         .thenComparing(AuditEventEntity::getId, Comparator.nullsLast(Comparator.naturalOrder())))
                 .orElseThrow();
         assertThat(latest.getRequestPath()).isEqualTo("/api/cases");
-        assertThat(latest.getHttpMethod()).isEqualTo("GET");
     }
 
     @Test
     void record_shouldSanitizeSensitiveQueryParameters() {
         AuditEventEntity event = new AuditEventEntity();
         event.setRequestPath("/api/login");
-        event.setHttpMethod("POST");
         event.setQueryString("username=oscar&password=secretPassword123&token=abc-123");
 
         auditService.record(event);
@@ -89,7 +90,6 @@ class AuditIntegrationTest {
     void record_shouldSanitizeSensitiveJsonPayload() {
         AuditEventEntity event = new AuditEventEntity();
         event.setRequestPath("/api/users");
-        event.setHttpMethod("POST");
         event.setQueryString("{\"name\": \"Oscar\", \"secret\": \"top-secret\", \"ssn\": \"12345\"}");
 
         auditService.record(event);
@@ -98,7 +98,7 @@ class AuditIntegrationTest {
                 .max(Comparator.comparing(AuditEventEntity::getOccurredAt, Comparator.nullsLast(Comparator.naturalOrder()))
                         .thenComparing(AuditEventEntity::getId, Comparator.nullsLast(Comparator.naturalOrder())))
                 .orElseThrow();
-        
+
         assertThat(saved.getQueryString())
                 .contains("\"name\":\"Oscar\"")
                 .contains("\"secret\":\"[REDACTED]\"")
@@ -107,17 +107,17 @@ class AuditIntegrationTest {
 
     @Test
     @WithMockUser(username = "doctor", roles = {"DOCTOR"})
-    void auditInterceptor_shouldCaptureCaseId_fromUri() throws Exception {
+    void auditInterceptor_shouldCaptureCaseId_fromMutationUri() throws Exception {
         UUID caseId = UUID.randomUUID();
-        
-        mockMvc.perform(get("/api/cases/{id}", caseId))
+
+        mockMvc.perform(delete("/api/cases/{id}", caseId).with(csrf()))
                 .andExpect(status().isNotFound()); // Case doesn't exist, but that's fine for auditing
 
         AuditEventEntity latest = auditEventRepository.findAll().stream()
                 .max(Comparator.comparing(AuditEventEntity::getOccurredAt, Comparator.nullsLast(Comparator.naturalOrder()))
                         .thenComparing(AuditEventEntity::getId, Comparator.nullsLast(Comparator.naturalOrder())))
                 .orElseThrow();
-        
+
         assertThat(latest.getCaseId()).isEqualTo(caseId);
     }
 }

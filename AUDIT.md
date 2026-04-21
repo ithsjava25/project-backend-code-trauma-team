@@ -39,7 +39,6 @@ Table **`audit_events`** (entity `AuditEventEntity`):
 | `actorId` | UUID | From `Actor.userId()` when the interceptor can resolve the current user |
 | `actorRole` | String | `Role.name()` when present |
 | `principalName` | String | `request.getUserPrincipal().getName()` |
-| `httpMethod` | String | e.g. GET, POST |
 | `requestPath` | String | `request.getRequestURI()` |
 | `queryString` | String | Raw query string; **sanitized before persist** (see below) |
 | `handler` | String | For `HandlerMethod`: `SimpleClassName#methodName`; otherwise simple class name |
@@ -74,7 +73,7 @@ For each request the interceptor:
 
 1. Tries `SecurityActorAdapter.currentUser()` → on failure (e.g. not authenticated), continues with `actorId` / `actorRole` unset rather than failing the HTTP request.
 2. Sets identity fields: `actorId`, `actorRole`, `principalName`.
-3. Sets request metadata: method, URI, query string, resolved handler name.
+3. Sets request metadata: URI, query string, resolved handler name.
 4. Sets `responseStatus`, `errorType` (from `ex`).
 5. Sets **`caseId`** via `extractCaseId(request)`:
    - Reads `HandlerMapping.URI_TEMPLATE_VARIABLES_ATTRIBUTE`.
@@ -176,7 +175,7 @@ Goal: avoid storing secrets in `queryString`.
 
 - **Route:** `GET /ui/audit` → template `audit/list.html`.
 - **Navigation:** Link in `fragments/header.html` (“Audit”).
-- Table shows: time, actor role/id, method, path + query, status, caseId, handler, error type. Empty state copy mentions access as well as “no rows.”
+- Table shows: time, actor role/id, event, description, status, caseId, details. Empty state copy mentions access as well as “no rows.”
 
 **Security (HTTP layer):** `SecurityConfig` requires authentication for any request not on the permit-all list; there is **no extra** `@PreAuthorize` on audit endpoints—**fine-grained rules are entirely in `AuditService.listEvents`**.
 

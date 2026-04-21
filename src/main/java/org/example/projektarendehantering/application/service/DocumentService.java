@@ -109,8 +109,20 @@ public class DocumentService {
                 auditService.record(AuditEventEntity.builder()
                         .caseId(caseEntity.getId())
                         .statusChange(statusChange)
+                        .eventName("STATUS_CHANGED")
+                        .description("Status changed to COMMUNICATION after document upload")
                         .actorId(actor.userId())
                         .actorRole(actor.role() != null ? actor.role().name() : null)
+                        .occurredAt(Instant.now())
+                        .build());
+            } else {
+                auditService.record(AuditEventEntity.builder()
+                        .caseId(caseEntity.getId())
+                        .eventName("DOCUMENT_UPLOADED")
+                        .description("Document uploaded: " + entity.getFileName())
+                        .actorId(actor.userId())
+                        .actorRole(actor.role() != null ? actor.role().name() : null)
+                        .occurredAt(Instant.now())
                         .build());
             }
             return documentMapper.toDTO(saved);

@@ -38,30 +38,36 @@
             <thead>
             <tr>
                 <th>Time</th>
-                <th>ActorRole</th>
-                <th>ActorId</th>
-                <th>Method</th>
-                <th>Path</th>
+                <th>Actor</th>
+                <th>Event</th>
+                <th>Description</th>
                 <th>Status</th>
                 <th>CaseId</th>
-                <th>Handler</th>
-                <th>Error</th>
+                <th>Details</th>
             </tr>
             </thead>
             <tbody>
             <tr th:each="e : ${events.content}">
-                <td th:text="${e.occurredAt}">time</td>
-                <td th:text="${e.actorRole}">role</td>
-                <td th:text="${e.actorId}">actor</td>
-                <td th:text="${e.httpMethod}">GET</td>
+                <td th:text="${#temporals.format(e.occurredAt, 'yyyy-MM-dd HH:mm:ss')}">time</td>
                 <td>
-                    <div th:text="${e.requestPath}">/path</div>
-                    <div class="muted" th:if="${e.queryString != null}" th:text="'?' + ${e.queryString}">?q</div>
+                    <div th:text="${e.actorRole}">role</div>
+                    <div class="muted" th:text="${e.actorId}">actor</div>
+                </td>
+                <td>
+                    <span class="badge" th:text="${e.eventName != null ? e.eventName : 'ACTION'}">Event</span>
+                </td>
+                <td>
+                    <div th:text="${e.description}">desc</div>
+                    <div class="status-badge" th:if="${e.statusChange != null}" th:text="${e.statusChange}">change</div>
                 </td>
                 <td th:text="${e.responseStatus}">200</td>
-                <td th:text="${e.caseId}">case</td>
-                <td class="muted" th:text="${e.handler}">handler</td>
-                <td class="muted" th:text="${e.errorType}">err</td>
+                <td>
+                    <a th:if="${e.caseId != null}" th:href="@{/ui/cases/{id}(id=${e.caseId})}" th:text="${#strings.substring(e.caseId,0,8)} + '...'">case</a>
+                </td>
+                <td class="muted">
+                    <div th:text="${e.requestPath}">/path</div>
+                    <div th:if="${e.errorType != null}" style="color: var(--danger-color);" th:text="${e.errorType}">err</div>
+                </td>
             </tr>
             </tbody>
         </table>

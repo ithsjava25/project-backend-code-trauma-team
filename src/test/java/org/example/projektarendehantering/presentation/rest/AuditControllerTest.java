@@ -62,7 +62,6 @@ class AuditControllerTest {
     void list_shouldReturnAuditEvents() throws Exception {
         AuditEventDTO dto = new AuditEventDTO();
         dto.setRequestPath("/api/cases");
-        dto.setHttpMethod("GET");
         
         Page<AuditEventDTO> page = new PageImpl<>(List.of(dto));
         

@@ -15,7 +15,6 @@ public class AuditEventMapper {
                 .actorId(entity.getActorId())
                 .actorRole(entity.getActorRole())
                 .principalName(entity.getPrincipalName())
-                .httpMethod(entity.getHttpMethod())
                 .requestPath(entity.getRequestPath())
                 .queryString(entity.getQueryString())
                 .handler(entity.getHandler())
@@ -23,6 +22,8 @@ public class AuditEventMapper {
                 .errorType(entity.getErrorType())
                 .caseId(entity.getCaseId())
                 .statusChange(entity.getStatusChange())
+                .eventName(entity.getEventName())
+                .description(entity.getDescription())
                 .clientIp(entity.getClientIp())
                 .userAgent(entity.getUserAgent())
                 .build();

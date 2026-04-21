@@ -28,6 +28,17 @@ public class AuditInterceptor implements HandlerInterceptor {
 
     @Override
     public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) {
+        String method = request.getMethod();
+        boolean isMutation = "POST".equalsIgnoreCase(method) ||
+                             "PUT".equalsIgnoreCase(method) ||
+                             "DELETE".equalsIgnoreCase(method) ||
+                             "PATCH".equalsIgnoreCase(method);
+
+        // Only record mutations or errors to reduce noise
+        if (!isMutation && ex == null) {
+            return;
+        }
+
         Actor actor = null;
         try {
             actor = securityActorAdapter.currentUser();
@@ -43,10 +54,11 @@ public class AuditInterceptor implements HandlerInterceptor {
         }
         event.setPrincipalName(request.getUserPrincipal() != null ? request.getUserPrincipal().getName() : null);
 
-        event.setHttpMethod(request.getMethod());
         event.setRequestPath(request.getRequestURI());
         event.setQueryString(request.getQueryString());
         event.setHandler(handlerName(handler));
+        event.setEventName("WEB_ACTION");
+        event.setDescription(method + " " + request.getRequestURI());
 
         event.setResponseStatus(response != null ? response.getStatus() : null);
         event.setErrorType(ex != null ? ex.getClass().getSimpleName() : null);
