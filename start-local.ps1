@@ -23,6 +23,7 @@ function Invoke-CommandWithMode {
     )
 
     $previousErrorActionPreference = $ErrorActionPreference
+    $tempLog = $null
 
     try {
         $ErrorActionPreference = "Continue"
@@ -31,12 +32,22 @@ function Invoke-CommandWithMode {
             & $Command 2>&1
         }
         else {
-            & $Command > $null 2> $null
+            $tempLog = [System.IO.Path]::GetTempFileName()
+            & $Command *> $tempLog
+
+            if ($LASTEXITCODE -ne 0) {
+                Write-Host "Command failed in quiet mode (exit code: $LASTEXITCODE)." -ForegroundColor Red
+                Write-Host "Recent output from $tempLog:" -ForegroundColor DarkRed
+                Get-Content -Path $tempLog -Tail 25 | ForEach-Object { Write-Host $_ -ForegroundColor DarkGray }
+            }
         }
 
         return $LASTEXITCODE
     }
     finally {
+        if ($tempLog -and (Test-Path $tempLog)) {
+            Remove-Item -Path $tempLog -Force -ErrorAction SilentlyContinue
+        }
         $ErrorActionPreference = $previousErrorActionPreference
     }
 }
@@ -155,13 +166,44 @@ if (-not $Serious) {
 }
 Pause-ForEnjoyment
 
-Start-Job -ScriptBlock {
-    Start-Sleep -Seconds 8
-    Start-Process "http://localhost:8080"
-} | Out-Null
+$browserOpenTimeoutSeconds = 90
+$browserPollIntervalSeconds = 2
+$browserReadyJob = Start-Job -ScriptBlock {
+    param(
+        [int]$TimeoutSeconds,
+        [int]$PollIntervalSeconds
+    )
+
+    $uri = "http://localhost:8080"
+    $deadline = (Get-Date).AddSeconds($TimeoutSeconds)
+
+    while ((Get-Date) -lt $deadline) {
+        try {
+            $response = Invoke-WebRequest -Uri $uri -Method GET -TimeoutSec 3 -ErrorAction Stop
+            if ($response.StatusCode -ge 200 -and $response.StatusCode -lt 400) {
+                Start-Process $uri
+                return
+            }
+        }
+        catch {
+            # App not ready yet; continue polling until timeout.
+        }
+
+        Start-Sleep -Seconds $PollIntervalSeconds
+    }
+} -ArgumentList $browserOpenTimeoutSeconds, $browserPollIntervalSeconds
 
 $mavenExitCode = Invoke-CommandWithMode -Command { .\mvnw spring-boot:run "-Dspring-boot.run.profiles=local" }
 
 if ($mavenExitCode -ne 0) {
-    throw "Spring Boot failed to start. Re-run with --serious to see detailed logs."
+    if ($browserReadyJob) {
+        Stop-Job -Job $browserReadyJob -ErrorAction SilentlyContinue
+        Remove-Job -Job $browserReadyJob -Force -ErrorAction SilentlyContinue
+    }
+    if ($mavenExitCode -in @(130, 1)) {
+        Write-Warning "Spring Boot terminated by user (Ctrl+C)"
+    }
+    else {
+        throw "Spring Boot failed with exit code $mavenExitCode. Re-run with --serious to see detailed logs."
+    }
 }
