@@ -4,12 +4,14 @@ import org.example.projektarendehantering.common.Actor;
 import org.example.projektarendehantering.common.NotAuthorizedException;
 import org.example.projektarendehantering.common.Role;
 import org.example.projektarendehantering.infrastructure.persistence.EmployeeRepository;
+import org.example.projektarendehantering.infrastructure.persistence.UserAccountRepository;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.stereotype.Component;
 
 import java.nio.charset.StandardCharsets;
+import java.util.Locale;
 import java.util.UUID;
 
 /**
@@ -19,9 +21,11 @@ import java.util.UUID;
 public class SecurityActorAdapter {
 
     private final EmployeeRepository employeeRepository;
+    private final UserAccountRepository userAccountRepository;
 
-    public SecurityActorAdapter(EmployeeRepository employeeRepository) {
+    public SecurityActorAdapter(EmployeeRepository employeeRepository, UserAccountRepository userAccountRepository) {
         this.employeeRepository = employeeRepository;
+        this.userAccountRepository = userAccountRepository;
     }
 
     public Actor currentUser() {
@@ -43,14 +47,21 @@ public class SecurityActorAdapter {
         // Create a deterministic UUID based on the username/name
         UUID userId = UUID.nameUUIDFromBytes(name.getBytes(StandardCharsets.UTF_8));
 
-        // 1. Try finding an employee with this UUID
+        // 1. Try finding an employee with this UUID (OAuth/GitHub users)
         var employee = employeeRepository.findById(userId);
         if (employee.isPresent()) {
             var e = employee.get();
             return new Actor(userId, e.getRole(), e.getDisplayName(), e.getGithubUsername());
         }
 
-        // 2. Fallback to existing logic (checking Spring authorities)
+        // 2. Try local account by authentication name (email) and use persisted id
+        var userAccount = userAccountRepository.findByEmail(authentication.getName().trim().toLowerCase(Locale.ROOT));
+        if (userAccount.isPresent()) {
+            var account = userAccount.get();
+            return new Actor(account.getId(), account.getRole(), null, account.getEmail());
+        }
+
+        // 3. Fallback to Spring authorities for any remaining auth type
         Role role = Role.PENDING;
         if (authentication.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_MANAGER"))) {
             role = Role.MANAGER;
