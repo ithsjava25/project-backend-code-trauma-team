@@ -50,6 +50,55 @@
 </main>
 
 <div th:replace="~{fragments/footer :: footer}"></div>
+<script>
+    (function () {
+        let source = null;
+        let reconnectTimer = null;
+        let lastRefreshAt = 0;
+
+        function refreshPage() {
+            const now = Date.now();
+            if (now - lastRefreshAt < 800) return;
+            lastRefreshAt = now;
+            window.location.reload();
+        }
+
+        function connect() {
+            if (source) {
+                source.close();
+            }
+
+            source = new EventSource('/ui/realtime/cases/stream');
+            source.onmessage = refreshPage;
+            source.addEventListener('keepalive', function () {});
+            source.addEventListener('connected', function () {});
+            source.addEventListener('case-created', refreshPage);
+            source.addEventListener('case-updated', refreshPage);
+            source.addEventListener('assignment-updated', refreshPage);
+            source.addEventListener('status-changed', refreshPage);
+            source.addEventListener('note-added', refreshPage);
+            source.addEventListener('document-added', refreshPage);
+            source.addEventListener('document-deleted', refreshPage);
+
+            source.onerror = function () {
+                if (source) {
+                    source.close();
+                    source = null;
+                }
+                if (reconnectTimer) return;
+                reconnectTimer = setTimeout(function () {
+                    reconnectTimer = null;
+                    connect();
+                }, 2000);
+            };
+        }
+
+        connect();
+        window.addEventListener('beforeunload', function () {
+            if (source) source.close();
+        });
+    })();
+</script>
 </body>
 </html>
 

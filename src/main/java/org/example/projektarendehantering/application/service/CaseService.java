@@ -41,6 +41,7 @@ public class CaseService {
     private final CaseNoteRepository caseNoteRepository;
     private final EmployeeRepository employeeRepository;
     private final AuditService auditService;
+    private final CaseRealtimeService caseRealtimeService;
 
     @Transactional
     public void addNote(UUID caseId, String content, Actor actor) {
@@ -64,6 +65,7 @@ public class CaseService {
         caseEntity.setStatus(CaseStatus.COMMUNICATION);
         caseRepository.save(caseEntity);
         recordStatusChange(actor, caseEntity.getId(), previousStatus, CaseStatus.COMMUNICATION);
+        caseRealtimeService.publishCaseEvent(caseEntity.getId(), "note-added", "A note was added");
     }
 
     @Transactional
@@ -105,6 +107,7 @@ public class CaseService {
         }
         CaseEntity savedEntity = caseRepository.save(entity);
         recordStatusChange(actor, savedEntity.getId(), null, CaseStatus.CREATED);
+        caseRealtimeService.publishCaseEvent(savedEntity.getId(), "case-created", "Case created");
         return caseMapper.toDTO(savedEntity);
     }
 
@@ -141,6 +144,7 @@ public class CaseService {
 
         CaseEntity savedEntity = caseRepository.save(entity);
         recordStatusChange(actor, savedEntity.getId(), previousStatus, CaseStatus.UPDATED);
+        caseRealtimeService.publishCaseEvent(savedEntity.getId(), "case-updated", "Case updated");
         return caseMapper.toDTO(savedEntity);
     }
 
@@ -157,6 +161,7 @@ public class CaseService {
         entity.setStatus(CaseStatus.CLOSED);
         caseRepository.save(entity);
         recordStatusChange(actor, entity.getId(), previousStatus, CaseStatus.CLOSED);
+        caseRealtimeService.publishCaseEvent(entity.getId(), "status-changed", "Case closed");
     }
 
     @Transactional(readOnly = true)
@@ -250,10 +255,12 @@ public class CaseService {
             entity.setStatus(CaseStatus.ASSIGNED);
             CaseEntity savedEntity = caseRepository.save(entity);
             recordStatusChange(actor, savedEntity.getId(), previousStatus, CaseStatus.ASSIGNED);
+            caseRealtimeService.publishCaseEvent(savedEntity.getId(), "assignment-updated", "Case assignment updated");
             return caseMapper.toDTO(savedEntity);
         }
-
-        return caseMapper.toDTO(caseRepository.save(entity));
+        CaseEntity savedEntity = caseRepository.save(entity);
+        caseRealtimeService.publishCaseEvent(savedEntity.getId(), "assignment-updated", "Case assignment updated");
+        return caseMapper.toDTO(savedEntity);
     }
 
     private UUID requireEmployeeWithRole(UUID id, Set<Role> allowedRoles, String fieldName) {

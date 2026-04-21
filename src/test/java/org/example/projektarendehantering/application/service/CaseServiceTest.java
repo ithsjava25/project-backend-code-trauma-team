@@ -44,6 +44,8 @@ class CaseServiceTest {
     private CaseNoteMapper caseNoteMapper;
     @Mock
     private AuditService auditService;
+    @Mock
+    private CaseRealtimeService caseRealtimeService;
 
     @InjectMocks
     private CaseService caseService;

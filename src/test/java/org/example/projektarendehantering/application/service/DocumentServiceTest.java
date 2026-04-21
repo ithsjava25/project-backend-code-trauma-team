@@ -44,6 +44,8 @@ class DocumentServiceTest {
     private DocumentMapper documentMapper;
     @Mock
     private AuditService auditService;
+    @Mock
+    private CaseRealtimeService caseRealtimeService;
 
     @InjectMocks
     private DocumentService documentService;

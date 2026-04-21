@@ -31,6 +31,7 @@ public class DocumentService {
     private final S3Template s3Template;
     private final DocumentMapper documentMapper;
     private final AuditService auditService;
+    private final CaseRealtimeService caseRealtimeService;
 
     @Value("${app.s3.bucket}")
     private String bucket;
@@ -113,6 +114,7 @@ public class DocumentService {
                         .actorRole(actor.role() != null ? actor.role().name() : null)
                         .build());
             }
+            caseRealtimeService.publishCaseEvent(caseEntity.getId(), "document-added", "Document uploaded");
             return documentMapper.toDTO(saved);
         } catch (RuntimeException ex) {
             if (!syncActive) {
@@ -175,6 +177,7 @@ public class DocumentService {
                                 // DB is already committed — log but do not throw
                                 log.error("Failed to delete S3 object {} after DB commit", s3Key, e);
                             }
+                            caseRealtimeService.publishCaseEvent(entity.getCaseEntity().getId(), "document-deleted", "Document deleted");
                         }
                     }
             );
@@ -185,6 +188,7 @@ public class DocumentService {
             } catch (Exception e) {
                 log.error("Failed to delete S3 object {} (no active transaction)", s3Key, e);
             }
+            caseRealtimeService.publishCaseEvent(entity.getCaseEntity().getId(), "document-deleted", "Document deleted");
         }
     }
 
