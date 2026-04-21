@@ -12,7 +12,7 @@
     </div>
 
     <form class="form" th:action="@{/ui/cases/new}" th:object="${createCaseForm}" method="post">
-        <label class="field">
+        <label class="field" th:if="${currentActor == null || currentActor.role() == null || currentActor.role().toString() != 'PATIENT'}">
             <span class="label">Patient</span>
             <select class="input" th:field="*{patientId}">
                 <option value="">-- Select Patient --</option>
@@ -20,6 +20,9 @@
             </select>
             <span class="muted" th:if="${#fields.hasErrors('patientId')}" th:errors="*{patientId}" style="color: var(--danger)">Error</span>
         </label>
+        <p class="muted" th:if="${currentActor != null && currentActor.role() != null && currentActor.role().toString() == 'PATIENT'}">
+            Case will automatically be created for your patient profile.
+        </p>
         <label class="field">
             <span class="label">Title</span>
             <input class="input" th:field="*{title}" maxlength="200"/>

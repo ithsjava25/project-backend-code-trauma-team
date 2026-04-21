@@ -17,6 +17,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 @RequiredArgsConstructor
 public class AuthController {
 
+// THis is a hidden message from an interdimensional potato council. Definitely not launch codes.
     private final RegistrationService registrationService;
 
     @GetMapping("/login")

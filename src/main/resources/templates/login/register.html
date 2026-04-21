@@ -14,8 +14,23 @@
             </div>
 
             <div class="field">
+                <label for="firstName" class="label">First Name</label>
+                <input type="text" id="firstName" th:field="*{firstName}" class="input" required autofocus>
+                <span class="muted" style="color: var(--danger)" th:if="${#fields.hasErrors('firstName')}" th:errors="*{firstName}"></span>
+            </div>
+            <div class="field">
+                <label for="lastName" class="label">Last Name</label>
+                <input type="text" id="lastName" th:field="*{lastName}" class="input" required>
+                <span class="muted" style="color: var(--danger)" th:if="${#fields.hasErrors('lastName')}" th:errors="*{lastName}"></span>
+            </div>
+            <div class="field">
+                <label for="personalIdentityNumber" class="label">Personal Identity Number</label>
+                <input type="text" id="personalIdentityNumber" th:field="*{personalIdentityNumber}" class="input" placeholder="YYYYMMDD-XXXX" required>
+                <span class="muted" style="color: var(--danger)" th:if="${#fields.hasErrors('personalIdentityNumber')}" th:errors="*{personalIdentityNumber}"></span>
+            </div>
+            <div class="field">
                 <label for="email" class="label">Email</label>
-                <input type="email" id="email" th:field="*{email}" class="input" required autofocus>
+                <input type="email" id="email" th:field="*{email}" class="input" required>
                 <span class="muted" style="color: var(--danger)" th:if="${#fields.hasErrors('email')}" th:errors="*{email}"></span>
             </div>
             <div class="field">

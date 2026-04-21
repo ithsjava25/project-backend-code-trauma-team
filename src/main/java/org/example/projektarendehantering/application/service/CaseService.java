@@ -71,13 +71,29 @@ public class CaseService {
         if (!canCreate(actor)) {
             throw new NotAuthorizedException("Not allowed to create cases");
         }
-        if (caseDTO.getPatientId() == null) {
+        UUID requestedPatientId = caseDTO.getPatientId();
+        if (isPatient(actor)) {
+            if (requestedPatientId != null && !actor.userId().equals(requestedPatientId)) {
+                throw new NotAuthorizedException("Patients can only create cases for themselves");
+            }
+            requestedPatientId = actor.userId();
+        }
+        if (requestedPatientId == null) {
             throw new BadRequestException("patientId is required");
         }
         CaseEntity entity = caseMapper.toEntity(caseDTO);
         entity.setId(UUID.randomUUID());
-        PatientEntity patient = patientRepository.findById(caseDTO.getPatientId())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Patient not found"));
+        PatientEntity patient = patientRepository.findById(requestedPatientId).orElse(null);
+        if (patient == null) {
+            if (isPatient(actor) && actor.userId().equals(requestedPatientId)) {
+                PatientEntity self = new PatientEntity();
+                self.setId(requestedPatientId);
+                self.setCreatedAt(Instant.now());
+                patient = patientRepository.save(self);
+            } else {
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Patient not found");
+            }
+        }
         entity.setPatient(patient);
         if (isDoctor(actor) || isManager(actor)) {
             entity.setOwnerId(actor.userId());
@@ -182,6 +198,11 @@ public class CaseService {
                     .map(caseMapper::toDTO)
                     .collect(Collectors.toList());
         }
+        if (isPatient(actor)) {
+            return caseRepository.findAllByPatient_IdAndStatusNot(actor.userId(), CaseStatus.CLOSED).stream()
+                    .map(caseMapper::toDTO)
+                    .collect(Collectors.toList());
+        }
         throw new NotAuthorizedException("Not allowed to list cases");
     }
 
@@ -254,6 +275,7 @@ public class CaseService {
         if (isManager(actor)) return;
         if (isDoctor(actor) && actor.userId().equals(entity.getOwnerId())) return;
         if (isNurse(actor) && actor.userId().equals(entity.getHandlerId())) return;
+        if (isPatient(actor) && entity.getPatient() != null && actor.userId().equals(entity.getPatient().getId())) return;
         throw new NotAuthorizedException("Not allowed to read this case");
     }
 
@@ -276,13 +298,14 @@ public class CaseService {
     }
 
     private boolean canCreate(Actor actor) {
-        return isManager(actor) || isDoctor(actor);
+        return isManager(actor) || isDoctor(actor) || isPatient(actor);
     }
 
     private boolean canRead(Actor actor, CaseEntity entity) {
         if (isManager(actor)) return true;
         if (isDoctor(actor) && actor.userId().equals(entity.getOwnerId())) return true;
         if (isNurse(actor) && actor.userId().equals(entity.getHandlerId())) return true;
+        if (isPatient(actor) && entity.getPatient() != null && actor.userId().equals(entity.getPatient().getId())) return true;
         return false;
     }
 
@@ -296,6 +319,10 @@ public class CaseService {
 
     private boolean isNurse(Actor actor) {
         return actor.role() == Role.NURSE;
+    }
+
+    private boolean isPatient(Actor actor) {
+        return actor.role() == Role.PATIENT;
     }
 
     private void recordStatusChange(Actor actor, UUID caseId, CaseStatus from, CaseStatus to) {
