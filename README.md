@@ -10,6 +10,7 @@ Spring Boot application for case management with a Thymeleaf UI, PostgreSQL, and
 
 ## Start the application (local development)
 
+<<<<<<< issue/69
 ### Quick start (recommended on Windows)
 
 Run one command to perform all startup steps:
@@ -29,6 +30,8 @@ The script will:
 - Start infrastructure with `docker compose up -d`
 - Start Spring Boot with profile `local`
 
+=======
+>>>>>>> main
 ### 0) Verify Docker is running (Windows)
 
 Before running `docker compose up -d`, make sure Docker Desktop is started and the Linux engine is running.
@@ -131,8 +134,14 @@ docker compose up -d
 ```
 
   - If you want to keep your local PostgreSQL running, map Docker PostgreSQL to another host port:
+<<<<<<< issue/69
   1. Edit `docker-compose.yml` PostgreSQL ports from `"5432:5432"` to `"5433:5432"`.
   2. Edit `src/main/resources/application.properties` database URL from `localhost:5432` to `localhost:5433`.
   3. Run `docker compose up -d` again.
+=======
+    1. Edit `docker-compose.yml` PostgreSQL ports from `"5432:5432"` to `"5433:5432"`.
+    2. Edit `src/main/resources/application.properties` database URL from `localhost:5432` to `localhost:5433`.
+    3. Run `docker compose up -d` again.
+>>>>>>> main
 - App starts but login fails:
   - Confirm you started Spring with profile `local` so `data-local.sql` is loaded.
