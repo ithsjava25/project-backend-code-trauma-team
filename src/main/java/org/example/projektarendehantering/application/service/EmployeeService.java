@@ -8,6 +8,7 @@ import org.example.projektarendehantering.infrastructure.persistence.EmployeeEnt
 import org.example.projektarendehantering.infrastructure.persistence.EmployeeRepository;
 import org.example.projektarendehantering.presentation.dto.EmployeeCreateDTO;
 import org.example.projektarendehantering.presentation.dto.EmployeeDTO;
+import org.example.projektarendehantering.presentation.dto.EmployeeUpdateDTO;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -39,6 +40,30 @@ public class EmployeeService {
         }
         entity.setCreatedAt(Instant.now());
         return employeeMapper.toDTO(employeeRepository.save(entity));
+    }
+
+    @Transactional
+    public EmployeeDTO updateEmployee(Actor actor, UUID id, EmployeeUpdateDTO dto) {
+        requireCanManageEmployees(actor);
+        EmployeeEntity entity = employeeRepository.findById(id)
+                .orElseThrow(() -> new BadRequestException("EMPLOYEE_NOT_FOUND", "Employee not found"));
+
+        if (!entity.getGithubUsername().equals(dto.getGithubUsername())) {
+            if (employeeRepository.findByGithubUsername(dto.getGithubUsername()).isPresent()) {
+                throw new BadRequestException("EMPLOYEE_EXISTS", "Employee with username " + dto.getGithubUsername() + " already exists");
+            }
+        }
+
+        employeeMapper.updateEntity(dto, entity);
+        return employeeMapper.toDTO(employeeRepository.save(entity));
+    }
+
+    @Transactional
+    public void deleteEmployee(Actor actor, UUID id) {
+        requireCanManageEmployees(actor);
+        EmployeeEntity entity = employeeRepository.findById(id)
+                .orElseThrow(() -> new BadRequestException("EMPLOYEE_NOT_FOUND", "Employee not found"));
+        employeeRepository.delete(entity);
     }
 
     @Transactional(readOnly = true)
