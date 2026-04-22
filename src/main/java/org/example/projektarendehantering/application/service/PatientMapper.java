@@ -3,6 +3,7 @@ package org.example.projektarendehantering.application.service;
 import org.example.projektarendehantering.infrastructure.persistence.PatientEntity;
 import org.example.projektarendehantering.presentation.dto.PatientCreateDTO;
 import org.example.projektarendehantering.presentation.dto.PatientDTO;
+import org.example.projektarendehantering.presentation.dto.PatientUpdateDTO;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -26,5 +27,12 @@ public class PatientMapper {
                 .lastName(dto.getLastName())
                 .personalIdentityNumber(dto.getPersonalIdentityNumber())
                 .build();
+    }
+
+    public void updateEntity(PatientUpdateDTO dto, PatientEntity entity) {
+        if (dto == null || entity == null) return;
+        entity.setFirstName(dto.getFirstName());
+        entity.setLastName(dto.getLastName());
+        entity.setPersonalIdentityNumber(dto.getPersonalIdentityNumber());
     }
 }
