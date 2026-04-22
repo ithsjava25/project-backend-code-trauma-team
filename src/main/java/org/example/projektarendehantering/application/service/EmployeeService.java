@@ -49,9 +49,7 @@ public class EmployeeService {
                 .orElseThrow(() -> new BadRequestException("EMPLOYEE_NOT_FOUND", "Employee not found"));
 
         if (!entity.getGithubUsername().equals(dto.getGithubUsername())) {
-            if (employeeRepository.findByGithubUsername(dto.getGithubUsername()).isPresent()) {
-                throw new BadRequestException("EMPLOYEE_EXISTS", "Employee with username " + dto.getGithubUsername() + " already exists");
-            }
+            throw new BadRequestException("EMPLOYEE_USERNAME_IMMUTABLE", "Github username cannot be changed");
         }
 
         employeeMapper.updateEntity(dto, entity);

@@ -20,7 +20,8 @@
         </label>
         <label class="field">
             <span class="label">GitHub Username</span>
-            <input class="input" th:field="*{githubUsername}" placeholder="e.g. alice_roberts"/>
+            <input class="input" th:field="*{githubUsername}" readonly style="background-color: var(--background-alt); cursor: not-allowed;"/>
+            <span class="muted">GitHub username cannot be changed after creation.</span>
             <span class="muted" th:if="${#fields.hasErrors('githubUsername')}" th:errors="*{githubUsername}"
                   style="color: var(--danger)">Error</span>
         </label>

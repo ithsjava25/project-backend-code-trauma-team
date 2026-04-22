@@ -1,6 +1,7 @@
 package org.example.projektarendehantering.application.service;
 
 import org.example.projektarendehantering.common.Actor;
+import org.example.projektarendehantering.common.BadRequestException;
 import org.example.projektarendehantering.common.NotAuthorizedException;
 import org.example.projektarendehantering.common.Role;
 import org.example.projektarendehantering.infrastructure.persistence.EmployeeEntity;
@@ -102,6 +103,20 @@ class EmployeeServiceTest {
 
         assertThat(result.getDisplayName()).isEqualTo("New Name");
         verify(employeeMapper).updateEntity(dto, entity);
+    }
+
+    @Test
+    void updateEmployee_shouldThrowIfUsernameChanged() {
+        UUID id = UUID.randomUUID();
+        EmployeeUpdateDTO dto = new EmployeeUpdateDTO("New Name", "new_gh", Role.DOCTOR);
+        EmployeeEntity entity = new EmployeeEntity();
+        entity.setGithubUsername("old_gh");
+
+        when(employeeRepository.findById(id)).thenReturn(Optional.of(entity));
+
+        assertThatThrownBy(() -> employeeService.updateEmployee(managerActor, id, dto))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessageContaining("Github username cannot be changed");
     }
 
     @Test
