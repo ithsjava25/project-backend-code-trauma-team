@@ -168,7 +168,7 @@ class CaseControllerTest {
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(inputDTO)))
-                .andExpect(status().is3xxRedirection());
+                .andExpect(status().isUnauthorized());
     }
 
 
@@ -176,7 +176,7 @@ class CaseControllerTest {
     void deleteCase_shouldReturnUnauthorized_whenNotLoggedIn() throws Exception {
         mockMvc.perform(delete("/api/cases/{id}", caseId)
                         .with(csrf()))
-                .andExpect(status().is3xxRedirection());
+                .andExpect(status().isUnauthorized());
     }
 
     @Test
@@ -196,7 +196,7 @@ class CaseControllerTest {
     void getAllCases_shouldReturnUnauthorized_whenNotLoggedIn() throws Exception {
         // Without @WithMockUser
         mockMvc.perform(get("/api/cases"))
-                .andExpect(status().is3xxRedirection()); // Redirect to login in OAuth2 setup
+                .andExpect(status().isUnauthorized());
     }
 
     @Test
@@ -220,6 +220,6 @@ class CaseControllerTest {
     @Test
     void getClosedCases_shouldReturnRedirect_whenNotLoggedIn() throws Exception {
         mockMvc.perform(get("/api/cases/closed"))
-                .andExpect(status().is3xxRedirection());
+                .andExpect(status().isUnauthorized());
     }
 }

@@ -99,6 +99,6 @@ class AuditControllerTest {
     @Test
     void list_shouldBeUnauthorized_whenNotLoggedIn() throws Exception {
         mockMvc.perform(get("/api/audit"))
-                .andExpect(status().is3xxRedirection());
+                .andExpect(status().isUnauthorized());
     }
 }
