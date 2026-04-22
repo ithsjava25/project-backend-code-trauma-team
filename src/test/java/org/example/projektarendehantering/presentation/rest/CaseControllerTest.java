@@ -218,7 +218,7 @@ class CaseControllerTest {
     }
 
     @Test
-    void getClosedCases_shouldReturnRedirect_whenNotLoggedIn() throws Exception {
+    void getClosedCases_shouldReturnUnauthorized_whenNotLoggedIn() throws Exception {
         mockMvc.perform(get("/api/cases/closed"))
                 .andExpect(status().isUnauthorized());
     }

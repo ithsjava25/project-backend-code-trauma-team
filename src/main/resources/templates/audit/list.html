@@ -63,49 +63,103 @@
 
                     eventSource.onerror = () => {
                         statusEl.innerHTML = '<span style="color: var(--danger-color);">●</span> Real-time: Disconnected (reconnecting...)';
-                        setTimeout(connect, 5000);
+                        if (eventSource.readyState === EventSource.CLOSED) {
+                            setTimeout(connect, 5000);
+                        }
                     };
 
                     eventSource.addEventListener('audit-event', (e) => {
-                        const data = JSON.parse(e.data);
-                        
-                        // If the table doesn't exist yet (because it was empty), reload to get the structure
-                        // or we could build the table shell here. For simplicity, reload once or build shell.
-                        const table = document.getElementById('audit-table');
-                        if (!table) {
-                            location.reload();
+                        let data;
+                        try {
+                            data = JSON.parse(e.data);
+                        } catch (err) {
+                            console.error('Failed to parse audit-event JSON', err);
                             return;
+                        }
+
+                        let table = document.getElementById('audit-table');
+                        if (!table) {
+                            table = document.createElement('table');
+                            table.className = 'table';
+                            table.id = 'audit-table';
+                            const thead = document.createElement('thead');
+                            const headerRow = document.createElement('tr');
+                            ['Time', 'Actor', 'Event', 'Description', 'Status', 'CaseId', 'Details'].forEach(label => {
+                                const th = document.createElement('th');
+                                th.textContent = label;
+                                headerRow.appendChild(th);
+                            });
+                            thead.appendChild(headerRow);
+                            table.appendChild(thead);
+                            table.appendChild(document.createElement('tbody'));
+                            statusEl.closest('.panel').appendChild(table);
                         }
 
                         const tbody = table.querySelector('tbody');
                         const row = document.createElement('tr');
-                        
+
                         const date = new Date(data.occurredAt);
                         const timeStr = date.toISOString().replace('T', ' ').substring(0, 19);
-                        const caseLink = data.caseId 
-                            ? `<a href="/ui/cases/${data.caseId}">${data.caseId.substring(0,8)}...</a>`
-                            : '';
 
-                        row.innerHTML = `
-                            <td>${timeStr}</td>
-                            <td>
-                                <div>${data.actorRole || ''}</div>
-                                <div class="muted">${data.actorId || ''}</div>
-                            </td>
-                            <td>
-                                <span class="badge">${data.eventName || 'ACTION'}</span>
-                            </td>
-                            <td>
-                                <div>${data.description || ''}</div>
-                                ${data.statusChange ? `<div class="status-badge">${data.statusChange}</div>` : ''}
-                            </td>
-                            <td>${data.responseStatus || ''}</td>
-                            <td>${caseLink}</td>
-                            <td class="muted">
-                                <div>${data.requestPath || ''}</div>
-                                ${data.errorType ? `<div style="color: var(--danger-color);">${data.errorType}</div>` : ''}
-                            </td>
-                        `;
+                        const tdTime = document.createElement('td');
+                        tdTime.textContent = timeStr;
+
+                        const tdActor = document.createElement('td');
+                        const divRole = document.createElement('div');
+                        divRole.textContent = data.actorRole || '';
+                        const divActorId = document.createElement('div');
+                        divActorId.className = 'muted';
+                        divActorId.textContent = data.actorId || '';
+                        tdActor.appendChild(divRole);
+                        tdActor.appendChild(divActorId);
+
+                        const tdEvent = document.createElement('td');
+                        const spanBadge = document.createElement('span');
+                        spanBadge.className = 'badge';
+                        spanBadge.textContent = data.eventName || 'ACTION';
+                        tdEvent.appendChild(spanBadge);
+
+                        const tdDesc = document.createElement('td');
+                        const divDesc = document.createElement('div');
+                        divDesc.textContent = data.description || '';
+                        tdDesc.appendChild(divDesc);
+                        if (data.statusChange) {
+                            const divStatus = document.createElement('div');
+                            divStatus.className = 'status-badge';
+                            divStatus.textContent = data.statusChange;
+                            tdDesc.appendChild(divStatus);
+                        }
+
+                        const tdStatus = document.createElement('td');
+                        tdStatus.textContent = data.responseStatus || '';
+
+                        const tdCase = document.createElement('td');
+                        if (data.caseId) {
+                            const a = document.createElement('a');
+                            a.href = '/ui/cases/' + encodeURIComponent(data.caseId);
+                            a.textContent = data.caseId.substring(0, 8) + '...';
+                            tdCase.appendChild(a);
+                        }
+
+                        const tdPath = document.createElement('td');
+                        tdPath.className = 'muted';
+                        const divPath = document.createElement('div');
+                        divPath.textContent = data.requestPath || '';
+                        tdPath.appendChild(divPath);
+                        if (data.errorType) {
+                            const divError = document.createElement('div');
+                            divError.style.color = 'var(--danger-color)';
+                            divError.textContent = data.errorType;
+                            tdPath.appendChild(divError);
+                        }
+
+                        row.appendChild(tdTime);
+                        row.appendChild(tdActor);
+                        row.appendChild(tdEvent);
+                        row.appendChild(tdDesc);
+                        row.appendChild(tdStatus);
+                        row.appendChild(tdCase);
+                        row.appendChild(tdPath);
                         
                         if (tbody.firstChild) {
                             tbody.insertBefore(row, tbody.firstChild);
@@ -139,7 +193,7 @@
             </thead>
             <tbody>
             <tr th:each="e : ${events.content}">
-                <td th:text="${#temporals.format(e.occurredAt, 'yyyy-MM-dd HH:mm:ss')}">time</td>
+                <td th:text="${#temporals.format(e.occurredAt, 'yyyy-MM-dd HH:mm:ss', 'UTC')}">time</td>
                 <td>
                     <div th:text="${e.actorRole}">role</div>
                     <div class="muted" th:text="${e.actorId}">actor</div>

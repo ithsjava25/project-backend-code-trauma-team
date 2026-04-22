@@ -104,11 +104,14 @@ public class GlobalControllerAdvice {
         return "error";
     }
 
-    @ExceptionHandler({NoResourceFoundException.class, AsyncRequestNotUsableException.class})
+    @ExceptionHandler(NoResourceFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
-    public void handleSilentExceptions(Exception e) {
-        // Just return 404/ignore, don't log as ERROR.
-        // This includes NoResourceFound (favicon) and AsyncRequestNotUsable (SSE disconnects).
+    public void handleNotFound(NoResourceFoundException e) {
+    }
+
+    @ExceptionHandler(AsyncRequestNotUsableException.class)
+    public void handleAsyncDisconnect(AsyncRequestNotUsableException e) {
+        log.debug("SSE client disconnected: {}", e.getMessage());
     }
 
     @ExceptionHandler({HttpMessageNotReadableException.class, MethodArgumentNotValidException.class})
