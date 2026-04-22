@@ -71,33 +71,33 @@ class DocumentServiceTest {
 
     @Test
     void uploadDocument_shouldAllowOwner() throws IOException {
-        MockMultipartFile file = new MockMultipartFile("file", "test.txt", "text/plain", "hello".getBytes());
+        MockMultipartFile file = new MockMultipartFile("file", "test.pdf", "application/pdf", "hello".getBytes());
         when(caseRepository.findById(caseId)).thenReturn(Optional.of(caseEntity));
         when(documentRepository.save(any(DocumentEntity.class))).thenAnswer(i -> {
             DocumentEntity e = i.getArgument(0);
             e.setId(UUID.randomUUID());
             return e;
         });
-        when(documentMapper.toDTO(any(DocumentEntity.class))).thenReturn(new DocumentDTO(UUID.randomUUID(), "test.txt", "text/plain", 5, Instant.now(), doctorActor.userId(), caseId));
+        when(documentMapper.toDTO(any(DocumentEntity.class))).thenReturn(new DocumentDTO(UUID.randomUUID(), "test.pdf", "application/pdf", 5, Instant.now(), doctorActor.userId(), caseId));
 
         DocumentDTO result = documentService.uploadDocument(doctorActor, caseId, file);
 
         assertThat(result).isNotNull();
-        assertThat(result.fileName()).isEqualTo("test.txt");
+        assertThat(result.fileName()).isEqualTo("test.pdf");
         verify(s3Template).upload(eq("test-bucket"), anyString(), any(InputStream.class), any(ObjectMetadata.class));
         verify(documentRepository).save(any(DocumentEntity.class));
     }
 
     @Test
     void uploadDocument_shouldAllowManager() throws IOException {
-        MockMultipartFile file = new MockMultipartFile("file", "test.txt", "text/plain", "hello".getBytes());
+        MockMultipartFile file = new MockMultipartFile("file", "test.pdf", "application/pdf", "hello".getBytes());
         when(caseRepository.findById(caseId)).thenReturn(Optional.of(caseEntity));
         when(documentRepository.save(any(DocumentEntity.class))).thenAnswer(i -> {
             DocumentEntity e = i.getArgument(0);
             e.setId(UUID.randomUUID());
             return e;
         });
-        when(documentMapper.toDTO(any(DocumentEntity.class))).thenReturn(new DocumentDTO(UUID.randomUUID(), "test.txt", "text/plain", 5, Instant.now(), managerActor.userId(), caseId));
+        when(documentMapper.toDTO(any(DocumentEntity.class))).thenReturn(new DocumentDTO(UUID.randomUUID(), "test.pdf", "application/pdf", 5, Instant.now(), managerActor.userId(), caseId));
 
         DocumentDTO result = documentService.uploadDocument(managerActor, caseId, file);
 
@@ -108,7 +108,7 @@ class DocumentServiceTest {
     @Test
     void uploadDocument_shouldDenyUnauthorized() {
         Actor unauthorizedActor = new Actor(UUID.randomUUID(), Role.DOCTOR, "Unauthorized", "unauthorized_user");
-        MockMultipartFile file = new MockMultipartFile("file", "test.txt", "text/plain", "hello".getBytes());
+        MockMultipartFile file = new MockMultipartFile("file", "test.pdf", "application/pdf", "hello".getBytes());
         when(caseRepository.findById(caseId)).thenReturn(Optional.of(caseEntity));
 
         assertThatThrownBy(() -> documentService.uploadDocument(unauthorizedActor, caseId, file))

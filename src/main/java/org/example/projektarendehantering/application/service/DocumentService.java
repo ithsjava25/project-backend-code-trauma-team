@@ -18,6 +18,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.time.Instant;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -35,6 +36,15 @@ public class DocumentService {
     @Value("${app.s3.bucket}")
     private String bucket;
 
+    private static final long MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
+    private static final Set<String> ALLOWED_CONTENT_TYPES = Set.of(
+            "application/pdf",
+            "image/png",
+            "image/jpeg",
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+    );
+    private static final Set<String> ALLOWED_EXTENSIONS = Set.of("pdf", "png", "jpg", "jpeg", "docx");
+
     @Transactional
     public DocumentDTO uploadDocument(Actor actor, UUID caseId, MultipartFile file) throws IOException {
         if (file == null || file.isEmpty()) {
@@ -47,6 +57,20 @@ public class DocumentService {
         String contentType = file.getContentType();
         if (contentType == null || contentType.isBlank()) {
             throw new BadRequestException("Content type is required");
+        }
+
+        if (file.getSize() > MAX_FILE_SIZE) {
+            throw new BadRequestException("File size exceeds the maximum allowed size of 10 MB");
+        }
+
+        String extension = originalFilename.contains(".")
+                ? originalFilename.substring(originalFilename.lastIndexOf('.') + 1).toLowerCase()
+                : "";
+        if (!ALLOWED_EXTENSIONS.contains(extension)) {
+            throw new BadRequestException("File type not allowed. Allowed types: pdf, png, jpg, jpeg, docx");
+        }
+        if (!ALLOWED_CONTENT_TYPES.contains(contentType.toLowerCase())) {
+            throw new BadRequestException("File type not allowed. Allowed types: pdf, png, jpg, jpeg, docx");
         }
 
         CaseEntity caseEntity = caseRepository.findById(caseId)
