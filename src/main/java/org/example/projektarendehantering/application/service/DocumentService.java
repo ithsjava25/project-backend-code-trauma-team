@@ -15,6 +15,9 @@ import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.web.multipart.MultipartFile;
 
+import org.apache.tika.Tika;
+
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.time.Instant;
 import java.util.List;
@@ -36,6 +39,7 @@ public class DocumentService {
     @Value("${app.s3.bucket}")
     private String bucket;
 
+    private static final Tika TIKA = new Tika();
     private static final long MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
     private static final Map<String, String> EXTENSION_TO_MIME = Map.of(
             "pdf",  "application/pdf",
@@ -74,6 +78,12 @@ public class DocumentService {
             throw new BadRequestException("File type not allowed. Allowed types: pdf, png, jpg, jpeg, docx");
         }
 
+        byte[] fileBytes = file.getBytes();
+        String detectedMime = TIKA.detect(fileBytes);
+        if (!expectedMime.equalsIgnoreCase(detectedMime)) {
+            throw new BadRequestException("File content does not match declared type");
+        }
+
         CaseEntity caseEntity = caseRepository.findById(caseId)
                 .orElseThrow(() -> new BadRequestException("Case not found"));
 
@@ -89,7 +99,7 @@ public class DocumentService {
             ObjectMetadata metadata = ObjectMetadata.builder()
                     .contentType(file.getContentType())
                     .build();
-            s3Template.upload(bucket, s3Key, file.getInputStream(), metadata);
+            s3Template.upload(bucket, s3Key, new ByteArrayInputStream(fileBytes), metadata);
         } catch (Exception e) {
             log.error("S3 upload failed for bucket: {}, key: {}. Error: {}", bucket, s3Key, e.getMessage(), e);
             throw new AppException("S3_UPLOAD_FAILED", "Failed to upload file to S3");

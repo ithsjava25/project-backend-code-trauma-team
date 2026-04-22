@@ -71,7 +71,7 @@ class DocumentServiceTest {
 
     @Test
     void uploadDocument_shouldAllowOwner() throws IOException {
-        MockMultipartFile file = new MockMultipartFile("file", "test.pdf", "application/pdf", "hello".getBytes());
+        MockMultipartFile file = new MockMultipartFile("file", "test.pdf", "application/pdf", "%PDF-1.4 test".getBytes());
         when(caseRepository.findById(caseId)).thenReturn(Optional.of(caseEntity));
         when(documentRepository.save(any(DocumentEntity.class))).thenAnswer(i -> {
             DocumentEntity e = i.getArgument(0);
@@ -90,7 +90,7 @@ class DocumentServiceTest {
 
     @Test
     void uploadDocument_shouldAllowManager() throws IOException {
-        MockMultipartFile file = new MockMultipartFile("file", "test.pdf", "application/pdf", "hello".getBytes());
+        MockMultipartFile file = new MockMultipartFile("file", "test.pdf", "application/pdf", "%PDF-1.4 test".getBytes());
         when(caseRepository.findById(caseId)).thenReturn(Optional.of(caseEntity));
         when(documentRepository.save(any(DocumentEntity.class))).thenAnswer(i -> {
             DocumentEntity e = i.getArgument(0);
@@ -108,7 +108,7 @@ class DocumentServiceTest {
     @Test
     void uploadDocument_shouldDenyUnauthorized() {
         Actor unauthorizedActor = new Actor(UUID.randomUUID(), Role.DOCTOR, "Unauthorized", "unauthorized_user");
-        MockMultipartFile file = new MockMultipartFile("file", "test.pdf", "application/pdf", "hello".getBytes());
+        MockMultipartFile file = new MockMultipartFile("file", "test.pdf", "application/pdf", "%PDF-1.4 test".getBytes());
         when(caseRepository.findById(caseId)).thenReturn(Optional.of(caseEntity));
 
         assertThatThrownBy(() -> documentService.uploadDocument(unauthorizedActor, caseId, file))

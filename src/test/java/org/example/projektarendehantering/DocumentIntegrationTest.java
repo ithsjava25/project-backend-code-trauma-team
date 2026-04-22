@@ -91,7 +91,7 @@ class DocumentIntegrationTest {
     @Test
     @WithMockUser(username = "manager", roles = {"MANAGER"})
     void uploadDocument_shouldSucceed() throws Exception {
-        MockMultipartFile file = new MockMultipartFile("file", "test.pdf", "application/pdf", "hello".getBytes());
+        MockMultipartFile file = new MockMultipartFile("file", "test.pdf", "application/pdf", "%PDF-1.4 test".getBytes());
 
         mockMvc.perform(multipart("/ui/cases/{caseId}/documents/upload", caseId)
                         .file(file)
@@ -106,7 +106,7 @@ class DocumentIntegrationTest {
     @Test
     @WithMockUser(username = "other", roles = {"DOCTOR"})
     void uploadDocument_shouldDenyUnauthorized() throws Exception {
-        MockMultipartFile file = new MockMultipartFile("file", "test.pdf", "application/pdf", "hello".getBytes());
+        MockMultipartFile file = new MockMultipartFile("file", "test.pdf", "application/pdf", "%PDF-1.4 test".getBytes());
 
         mockMvc.perform(multipart("/ui/cases/{caseId}/documents/upload", caseId)
                         .file(file)
