@@ -1,10 +1,12 @@
 package org.example.projektarendehantering.application.service;
 
+import org.example.projektarendehantering.common.BadRequestException;
 import org.example.projektarendehantering.common.ConflictException;
 import org.example.projektarendehantering.infrastructure.persistence.PatientEntity;
 import org.example.projektarendehantering.infrastructure.persistence.PatientRepository;
 import org.example.projektarendehantering.presentation.dto.PatientCreateDTO;
 import org.example.projektarendehantering.presentation.dto.PatientDTO;
+import org.example.projektarendehantering.presentation.dto.PatientUpdateDTO;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -34,6 +36,29 @@ public class PatientService {
                     });
         }
         return patientMapper.toDTO(patientRepository.save(entity));
+    }
+
+    @Transactional
+    public PatientDTO updatePatient(UUID id, PatientUpdateDTO dto) {
+        PatientEntity entity = patientRepository.findById(id)
+                .orElseThrow(() -> new BadRequestException("PATIENT_NOT_FOUND", "Patient not found"));
+
+        if (!entity.getPersonalIdentityNumber().equals(dto.getPersonalIdentityNumber())) {
+            patientRepository.findByPersonalIdentityNumber(dto.getPersonalIdentityNumber())
+                    .ifPresent(existing -> {
+                        throw new ConflictException("Patient with personalIdentityNumber already exists");
+                    });
+        }
+
+        patientMapper.updateEntity(dto, entity);
+        return patientMapper.toDTO(patientRepository.save(entity));
+    }
+
+    @Transactional
+    public void deletePatient(UUID id) {
+        PatientEntity entity = patientRepository.findById(id)
+                .orElseThrow(() -> new BadRequestException("PATIENT_NOT_FOUND", "Patient not found"));
+        patientRepository.delete(entity);
     }
 
     @Transactional(readOnly = true)
