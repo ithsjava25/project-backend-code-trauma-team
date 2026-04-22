@@ -15,8 +15,10 @@ import java.util.Optional;
 import java.util.UUID;
 
 import static org.mockito.Mockito.when;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 import static org.springframework.test.web.servlet.setup.MockMvcBuilders.webAppContextSetup;
 
@@ -65,7 +67,7 @@ class PatientUiControllerTest {
     @WithMockUser(roles = "MANAGER")
     void deletePatient_shouldRedirect() throws Exception {
         UUID id = UUID.randomUUID();
-        mockMvc.perform(get("/ui/patients/delete/{id}", id))
+        mockMvc.perform(post("/ui/patients/delete/{id}", id).with(csrf()))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/ui/patients"));
     }

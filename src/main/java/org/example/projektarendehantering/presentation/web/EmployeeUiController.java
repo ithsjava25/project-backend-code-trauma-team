@@ -92,7 +92,7 @@ public class EmployeeUiController {
         return "redirect:/ui/employees";
     }
 
-    @GetMapping("/ui/employees/delete/{id}")
+    @PostMapping("/ui/employees/delete/{id}")
     @PreAuthorize("hasRole('MANAGER')")
     public String deleteEmployee(@PathVariable UUID id) {
         Actor actor = securityActorAdapter.currentUser();

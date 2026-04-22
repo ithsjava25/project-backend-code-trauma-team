@@ -21,8 +21,10 @@ import java.util.UUID;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 import static org.springframework.test.web.servlet.setup.MockMvcBuilders.webAppContextSetup;
 
@@ -77,7 +79,7 @@ class EmployeeUiControllerTest {
     @WithMockUser(roles = "MANAGER")
     void deleteEmployee_shouldRedirect() throws Exception {
         UUID id = UUID.randomUUID();
-        mockMvc.perform(get("/ui/employees/delete/{id}", id))
+        mockMvc.perform(post("/ui/employees/delete/{id}", id).with(csrf()))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/ui/employees"));
     }

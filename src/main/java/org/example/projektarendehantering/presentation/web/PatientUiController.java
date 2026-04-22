@@ -83,7 +83,7 @@ public class PatientUiController {
         return "redirect:/ui/patients";
     }
 
-    @GetMapping("/ui/patients/delete/{id}")
+    @PostMapping("/ui/patients/delete/{id}")
     @PreAuthorize("hasRole('MANAGER')")
     public String deletePatient(@PathVariable UUID id) {
         patientService.deletePatient(securityActorAdapter.currentUser(), id);
