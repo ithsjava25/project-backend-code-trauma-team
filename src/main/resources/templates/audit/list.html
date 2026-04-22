@@ -34,34 +34,206 @@
     </section>
 
     <section class="panel" style="margin-top: 16px;">
-        <table class="table" th:if="${events != null and events.content != null and not #lists.isEmpty(events.content)}">
+        <div style="display:flex; justify-content: space-between; align-items:center; margin-bottom: 12px;">
+            <h2 style="margin:0;">Audit Log</h2>
+            <div id="connection-status" class="muted" style="font-size: 0.8em;">
+                <span style="color: var(--danger-color);">●</span> Real-time: Disconnected
+            </div>
+        </div>
+
+        <script th:inline="javascript">
+            (function() {
+                const statusEl = document.getElementById('connection-status');
+                if (!statusEl) return;
+
+                let eventSource = null;
+
+                function connect() {
+                    if (eventSource) eventSource.close();
+                    
+                    eventSource = new EventSource('/api/audit/stream');
+                    
+                    eventSource.onopen = () => {
+                        // Wait for the 'connected' event from the server
+                    };
+
+                    eventSource.addEventListener('connected', (e) => {
+                        statusEl.innerHTML = '<span style="color: #28a745;">●</span> Real-time: Connected';
+                    });
+
+                    eventSource.onerror = () => {
+                        statusEl.innerHTML = '<span style="color: var(--danger-color);">●</span> Real-time: Disconnected (reconnecting...)';
+                        if (eventSource.readyState === EventSource.CLOSED) {
+                            setTimeout(connect, 5000);
+                        }
+                    };
+
+                    eventSource.addEventListener('audit-event', (e) => {
+                        let data;
+                        try {
+                            data = JSON.parse(e.data);
+                        } catch (err) {
+                            console.error('Failed to parse audit-event JSON', err);
+                            return;
+                        }
+
+                        const fromInput = document.querySelector('input[name="from"]');
+                        const toInput = document.querySelector('input[name="to"]');
+                        const caseIdInput = document.querySelector('input[name="caseId"]');
+                        const sizeInput = document.querySelector('input[name="size"]');
+
+                        const fromVal = fromInput && fromInput.value.trim() ? new Date(fromInput.value.trim()) : null;
+                        const toVal = toInput && toInput.value.trim() ? new Date(toInput.value.trim()) : null;
+                        const caseIdVal = caseIdInput && caseIdInput.value.trim() ? caseIdInput.value.trim() : null;
+                        const maxRows = sizeInput && sizeInput.value ? parseInt(sizeInput.value, 10) : null;
+
+                        const eventTime = new Date(data.occurredAt);
+                        if (fromVal && !isNaN(fromVal.getTime()) && eventTime < fromVal) return;
+                        if (toVal && !isNaN(toVal.getTime()) && eventTime > toVal) return;
+                        if (caseIdVal && data.caseId !== caseIdVal) return;
+
+                        let table = document.getElementById('audit-table');
+                        if (!table) {
+                            table = document.createElement('table');
+                            table.className = 'table';
+                            table.id = 'audit-table';
+                            const thead = document.createElement('thead');
+                            const headerRow = document.createElement('tr');
+                            ['Time', 'Actor', 'Event', 'Description', 'Status', 'CaseId', 'Details'].forEach(label => {
+                                const th = document.createElement('th');
+                                th.textContent = label;
+                                headerRow.appendChild(th);
+                            });
+                            thead.appendChild(headerRow);
+                            table.appendChild(thead);
+                            table.appendChild(document.createElement('tbody'));
+                            statusEl.closest('.panel').appendChild(table);
+                        }
+
+                        const tbody = table.querySelector('tbody');
+                        const row = document.createElement('tr');
+
+                        const date = new Date(data.occurredAt);
+                        const timeStr = date.toISOString().replace('T', ' ').substring(0, 19);
+
+                        const tdTime = document.createElement('td');
+                        tdTime.textContent = timeStr;
+
+                        const tdActor = document.createElement('td');
+                        const divRole = document.createElement('div');
+                        divRole.textContent = data.actorRole || '';
+                        const divActorId = document.createElement('div');
+                        divActorId.className = 'muted';
+                        divActorId.textContent = data.actorId || '';
+                        tdActor.appendChild(divRole);
+                        tdActor.appendChild(divActorId);
+
+                        const tdEvent = document.createElement('td');
+                        const spanBadge = document.createElement('span');
+                        spanBadge.className = 'badge';
+                        spanBadge.textContent = data.eventName || 'ACTION';
+                        tdEvent.appendChild(spanBadge);
+
+                        const tdDesc = document.createElement('td');
+                        const divDesc = document.createElement('div');
+                        divDesc.textContent = data.description || '';
+                        tdDesc.appendChild(divDesc);
+                        if (data.statusChange) {
+                            const divStatus = document.createElement('div');
+                            divStatus.className = 'status-badge';
+                            divStatus.textContent = data.statusChange;
+                            tdDesc.appendChild(divStatus);
+                        }
+
+                        const tdStatus = document.createElement('td');
+                        tdStatus.textContent = data.responseStatus || '';
+
+                        const tdCase = document.createElement('td');
+                        if (data.caseId) {
+                            const a = document.createElement('a');
+                            a.href = '/ui/cases/' + encodeURIComponent(data.caseId);
+                            a.textContent = data.caseId.substring(0, 8) + '...';
+                            tdCase.appendChild(a);
+                        }
+
+                        const tdPath = document.createElement('td');
+                        tdPath.className = 'muted';
+                        const divPath = document.createElement('div');
+                        divPath.textContent = data.requestPath || '';
+                        tdPath.appendChild(divPath);
+                        if (data.errorType) {
+                            const divError = document.createElement('div');
+                            divError.style.color = 'var(--danger-color)';
+                            divError.textContent = data.errorType;
+                            tdPath.appendChild(divError);
+                        }
+
+                        row.appendChild(tdTime);
+                        row.appendChild(tdActor);
+                        row.appendChild(tdEvent);
+                        row.appendChild(tdDesc);
+                        row.appendChild(tdStatus);
+                        row.appendChild(tdCase);
+                        row.appendChild(tdPath);
+                        
+                        if (tbody.firstChild) {
+                            tbody.insertBefore(row, tbody.firstChild);
+                        } else {
+                            tbody.appendChild(row);
+                        }
+
+                        if (maxRows && !isNaN(maxRows) && maxRows > 0) {
+                            while (tbody.rows.length > maxRows) {
+                                tbody.removeChild(tbody.lastChild);
+                            }
+                        }
+
+                        row.style.transition = 'background-color 0.5s';
+                        row.style.backgroundColor = 'rgba(255, 255, 0, 0.2)';
+                        setTimeout(() => {
+                            row.style.backgroundColor = 'transparent';
+                        }, 2000);
+                    });
+                }
+
+                connect();
+            })();
+        </script>
+
+        <table class="table" id="audit-table" th:if="${events != null and events.content != null and not #lists.isEmpty(events.content)}">
             <thead>
             <tr>
                 <th>Time</th>
-                <th>ActorRole</th>
-                <th>ActorId</th>
-                <th>Method</th>
-                <th>Path</th>
+                <th>Actor</th>
+                <th>Event</th>
+                <th>Description</th>
                 <th>Status</th>
                 <th>CaseId</th>
-                <th>Handler</th>
-                <th>Error</th>
+                <th>Details</th>
             </tr>
             </thead>
             <tbody>
             <tr th:each="e : ${events.content}">
-                <td th:text="${e.occurredAt}">time</td>
-                <td th:text="${e.actorRole}">role</td>
-                <td th:text="${e.actorId}">actor</td>
-                <td th:text="${e.httpMethod}">GET</td>
+                <td th:text="${#temporals.format(e.occurredAt, 'yyyy-MM-dd HH:mm:ss', 'UTC')}">time</td>
                 <td>
-                    <div th:text="${e.requestPath}">/path</div>
-                    <div class="muted" th:if="${e.queryString != null}" th:text="'?' + ${e.queryString}">?q</div>
+                    <div th:text="${e.actorRole}">role</div>
+                    <div class="muted" th:text="${e.actorId}">actor</div>
+                </td>
+                <td>
+                    <span class="badge" th:text="${e.eventName != null ? e.eventName : 'ACTION'}">Event</span>
+                </td>
+                <td>
+                    <div th:text="${e.description}">desc</div>
+                    <div class="status-badge" th:if="${e.statusChange != null}" th:text="${e.statusChange}">change</div>
                 </td>
                 <td th:text="${e.responseStatus}">200</td>
-                <td th:text="${e.caseId}">case</td>
-                <td class="muted" th:text="${e.handler}">handler</td>
-                <td class="muted" th:text="${e.errorType}">err</td>
+                <td>
+                    <a th:if="${e.caseId != null}" th:href="@{/ui/cases/{id}(id=${e.caseId})}" th:text="${#strings.substring(e.caseId,0,8)} + '...'">case</a>
+                </td>
+                <td class="muted">
+                    <div th:text="${e.requestPath}">/path</div>
+                    <div th:if="${e.errorType != null}" style="color: var(--danger-color);" th:text="${e.errorType}">err</div>
+                </td>
             </tr>
             </tbody>
         </table>
