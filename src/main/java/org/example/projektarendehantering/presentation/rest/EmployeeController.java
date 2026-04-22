@@ -6,6 +6,7 @@ import org.example.projektarendehantering.application.service.EmployeeService;
 import org.example.projektarendehantering.infrastructure.security.SecurityActorAdapter;
 import org.example.projektarendehantering.presentation.dto.EmployeeCreateDTO;
 import org.example.projektarendehantering.presentation.dto.EmployeeDTO;
+import org.example.projektarendehantering.presentation.dto.EmployeeUpdateDTO;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -23,6 +24,17 @@ public class EmployeeController {
     @PostMapping
     public ResponseEntity<EmployeeDTO> createEmployee(@RequestBody @Valid EmployeeCreateDTO dto) {
         return ResponseEntity.ok(employeeService.createEmployee(securityActorAdapter.currentUser(), dto));
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<EmployeeDTO> updateEmployee(@PathVariable UUID id, @RequestBody @Valid EmployeeUpdateDTO dto) {
+        return ResponseEntity.ok(employeeService.updateEmployee(securityActorAdapter.currentUser(), id, dto));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteEmployee(@PathVariable UUID id) {
+        employeeService.deleteEmployee(securityActorAdapter.currentUser(), id);
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/{id}")
