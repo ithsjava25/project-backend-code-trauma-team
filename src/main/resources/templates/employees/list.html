@@ -21,6 +21,7 @@
                     <th>Role</th>
                     <th>ID (UUID)</th>
                     <th>Created At</th>
+                    <th>Actions</th>
                 </tr>
             </thead>
             <tbody>
@@ -30,6 +31,13 @@
                     <td th:text="${e.role}">Role</td>
                     <td class="code" th:text="${e.id}">UUID</td>
                     <td th:text="${e.createdAt}">Date</td>
+                    <td>
+                        <a class="button button-small" th:href="@{/ui/employees/edit/{id}(id=${e.id})}">Edit</a>
+                        <form th:action="@{/ui/employees/delete/{id}(id=${e.id})}" method="post" style="display:inline"
+                              onsubmit="return confirm('Are you sure you want to delete this mapping?')">
+                            <button class="button button-small button-danger" type="submit">Delete</button>
+                        </form>
+                    </td>
                 </tr>
             </tbody>
         </table>

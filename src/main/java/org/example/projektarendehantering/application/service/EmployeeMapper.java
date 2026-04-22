@@ -3,6 +3,7 @@ package org.example.projektarendehantering.application.service;
 import org.example.projektarendehantering.infrastructure.persistence.EmployeeEntity;
 import org.example.projektarendehantering.presentation.dto.EmployeeCreateDTO;
 import org.example.projektarendehantering.presentation.dto.EmployeeDTO;
+import org.example.projektarendehantering.presentation.dto.EmployeeUpdateDTO;
 import org.springframework.stereotype.Component;
 
 import java.nio.charset.StandardCharsets;
@@ -35,6 +36,13 @@ public class EmployeeMapper {
                 .githubUsername(dto.getGithubUsername())
                 .role(dto.getRole())
                 .build();
+    }
+
+    public void updateEntity(EmployeeUpdateDTO dto, EmployeeEntity entity) {
+        if (dto == null || entity == null) return;
+        entity.setDisplayName(dto.getDisplayName());
+        entity.setGithubUsername(dto.getGithubUsername());
+        entity.setRole(dto.getRole());
     }
 }
 

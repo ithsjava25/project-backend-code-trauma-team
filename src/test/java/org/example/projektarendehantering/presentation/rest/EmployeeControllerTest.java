@@ -7,6 +7,7 @@ import org.example.projektarendehantering.common.Role;
 import org.example.projektarendehantering.infrastructure.security.SecurityActorAdapter;
 import org.example.projektarendehantering.presentation.dto.EmployeeCreateDTO;
 import org.example.projektarendehantering.presentation.dto.EmployeeDTO;
+import org.example.projektarendehantering.presentation.dto.EmployeeUpdateDTO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,11 +25,11 @@ import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.setup.MockMvcBuilders.webAppContextSetup;
@@ -103,5 +104,34 @@ class EmployeeControllerTest {
         mockMvc.perform(get("/api/employees/{id}", empId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(empId.toString()));
+    }
+
+    @Test
+    @WithMockUser(roles = "MANAGER")
+    void updateEmployee_shouldReturnOk() throws Exception {
+        UUID id = UUID.randomUUID();
+        EmployeeUpdateDTO input = new EmployeeUpdateDTO("Updated Name", "gh_user", Role.DOCTOR);
+        EmployeeDTO output = new EmployeeDTO(id, "Updated Name", "gh_user", Role.DOCTOR, Instant.now());
+
+        when(employeeService.updateEmployee(eq(managerActor), eq(id), any(EmployeeUpdateDTO.class))).thenReturn(output);
+
+        mockMvc.perform(put("/api/employees/{id}", id)
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(input)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.displayName").value("Updated Name"));
+    }
+
+    @Test
+    @WithMockUser(roles = "MANAGER")
+    void deleteEmployee_shouldReturnNoContent() throws Exception {
+        UUID id = UUID.randomUUID();
+
+        mockMvc.perform(delete("/api/employees/{id}", id)
+                        .with(csrf()))
+                .andExpect(status().isNoContent());
+
+        verify(employeeService).deleteEmployee(managerActor, id);
     }
 }
