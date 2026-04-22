@@ -2,6 +2,9 @@ package org.example.projektarendehantering.presentation.rest;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.example.projektarendehantering.application.service.PatientService;
+import org.example.projektarendehantering.common.Actor;
+import org.example.projektarendehantering.common.Role;
+import org.example.projektarendehantering.infrastructure.security.SecurityActorAdapter;
 import org.example.projektarendehantering.presentation.dto.PatientCreateDTO;
 import org.example.projektarendehantering.presentation.dto.PatientDTO;
 import org.example.projektarendehantering.presentation.dto.PatientUpdateDTO;
@@ -15,7 +18,6 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.context.WebApplicationContext;
 
-import java.util.Optional;
 import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -40,13 +42,19 @@ class PatientControllerTest {
     @MockitoBean
     private PatientService patientService;
 
+    @MockitoBean
+    private SecurityActorAdapter securityActorAdapter;
+
     private ObjectMapper objectMapper = new ObjectMapper();
+    private Actor managerActor;
 
     @BeforeEach
     void setUp() {
         mockMvc = webAppContextSetup(context)
                 .apply(springSecurity())
                 .build();
+        managerActor = new Actor(UUID.randomUUID(), Role.MANAGER, "Manager", "mgr");
+        when(securityActorAdapter.currentUser()).thenReturn(managerActor);
     }
 
     @Test
@@ -74,7 +82,7 @@ class PatientControllerTest {
         PatientDTO output = new PatientDTO();
         output.setFirstName("Jane");
 
-        when(patientService.updatePatient(eq(id), any(PatientUpdateDTO.class))).thenReturn(output);
+        when(patientService.updatePatient(eq(managerActor), eq(id), any(PatientUpdateDTO.class))).thenReturn(output);
 
         mockMvc.perform(put("/api/patients/{id}", id)
                         .with(csrf())
@@ -93,6 +101,6 @@ class PatientControllerTest {
                         .with(csrf()))
                 .andExpect(status().isNoContent());
 
-        verify(patientService).deletePatient(id);
+        verify(patientService).deletePatient(managerActor, id);
     }
 }

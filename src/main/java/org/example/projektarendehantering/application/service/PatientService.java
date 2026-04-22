@@ -1,7 +1,10 @@
 package org.example.projektarendehantering.application.service;
 
+import org.example.projektarendehantering.common.Actor;
 import org.example.projektarendehantering.common.BadRequestException;
 import org.example.projektarendehantering.common.ConflictException;
+import org.example.projektarendehantering.common.NotAuthorizedException;
+import org.example.projektarendehantering.common.Role;
 import org.example.projektarendehantering.infrastructure.persistence.PatientEntity;
 import org.example.projektarendehantering.infrastructure.persistence.PatientRepository;
 import org.example.projektarendehantering.presentation.dto.PatientCreateDTO;
@@ -39,12 +42,15 @@ public class PatientService {
     }
 
     @Transactional
-    public PatientDTO updatePatient(UUID id, PatientUpdateDTO dto) {
+    public PatientDTO updatePatient(Actor actor, UUID id, PatientUpdateDTO dto) {
+        requireCanManagePatients(actor);
         PatientEntity entity = patientRepository.findById(id)
                 .orElseThrow(() -> new BadRequestException("PATIENT_NOT_FOUND", "Patient not found"));
 
-        if (!entity.getPersonalIdentityNumber().equals(dto.getPersonalIdentityNumber())) {
-            patientRepository.findByPersonalIdentityNumber(dto.getPersonalIdentityNumber())
+        String newPin = dto.getPersonalIdentityNumber();
+        if (newPin != null && !newPin.isBlank()
+                && !newPin.equals(entity.getPersonalIdentityNumber())) {
+            patientRepository.findByPersonalIdentityNumber(newPin)
                     .ifPresent(existing -> {
                         throw new ConflictException("Patient with personalIdentityNumber already exists");
                     });
@@ -55,7 +61,8 @@ public class PatientService {
     }
 
     @Transactional
-    public void deletePatient(UUID id) {
+    public void deletePatient(Actor actor, UUID id) {
+        requireCanManagePatients(actor);
         PatientEntity entity = patientRepository.findById(id)
                 .orElseThrow(() -> new BadRequestException("PATIENT_NOT_FOUND", "Patient not found"));
         patientRepository.delete(entity);
@@ -71,5 +78,15 @@ public class PatientService {
         return patientRepository.findAll().stream()
                 .map(patientMapper::toDTO)
                 .collect(Collectors.toList());
+    }
+
+    private void requireCanManagePatients(Actor actor) {
+        if (actor == null) {
+            throw new NotAuthorizedException("Missing actor");
+        }
+        if (actor.role() == Role.MANAGER) {
+            return;
+        }
+        throw new NotAuthorizedException("Not allowed to manage patients");
     }
 }

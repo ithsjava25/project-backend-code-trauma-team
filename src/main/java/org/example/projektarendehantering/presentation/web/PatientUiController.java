@@ -2,6 +2,8 @@ package org.example.projektarendehantering.presentation.web;
 
 import jakarta.validation.Valid;
 import org.example.projektarendehantering.application.service.PatientService;
+import org.example.projektarendehantering.common.BadRequestException;
+import org.example.projektarendehantering.infrastructure.security.SecurityActorAdapter;
 import org.example.projektarendehantering.presentation.dto.PatientCreateDTO;
 import org.example.projektarendehantering.presentation.dto.PatientDTO;
 import org.example.projektarendehantering.presentation.dto.PatientUpdateDTO;
@@ -20,9 +22,11 @@ import java.util.UUID;
 public class PatientUiController {
 
     private final PatientService patientService;
+    private final SecurityActorAdapter securityActorAdapter;
 
-    public PatientUiController(PatientService patientService) {
+    public PatientUiController(PatientService patientService, SecurityActorAdapter securityActorAdapter) {
         this.patientService = patientService;
+        this.securityActorAdapter = securityActorAdapter;
     }
 
     @GetMapping("/ui/patients")
@@ -54,7 +58,7 @@ public class PatientUiController {
     @PreAuthorize("hasRole('MANAGER')")
     public String editPatient(@PathVariable UUID id, Model model) {
         PatientDTO patient = patientService.getPatient(id)
-                .orElseThrow(() -> new IllegalArgumentException("Invalid patient Id:" + id));
+                .orElseThrow(() -> new BadRequestException("PATIENT_NOT_FOUND", "Invalid patient Id:" + id));
         
         PatientUpdateDTO updateDto = PatientUpdateDTO.builder()
                 .firstName(patient.getFirstName())
@@ -75,14 +79,14 @@ public class PatientUiController {
             return "patients/edit";
         }
 
-        patientService.updatePatient(id, dto);
+        patientService.updatePatient(securityActorAdapter.currentUser(), id, dto);
         return "redirect:/ui/patients";
     }
 
     @GetMapping("/ui/patients/delete/{id}")
     @PreAuthorize("hasRole('MANAGER')")
     public String deletePatient(@PathVariable UUID id) {
-        patientService.deletePatient(id);
+        patientService.deletePatient(securityActorAdapter.currentUser(), id);
         return "redirect:/ui/patients";
     }
 }

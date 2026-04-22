@@ -1,12 +1,16 @@
 package org.example.projektarendehantering.application.service;
 
+import org.example.projektarendehantering.common.Actor;
 import org.example.projektarendehantering.common.BadRequestException;
 import org.example.projektarendehantering.common.ConflictException;
+import org.example.projektarendehantering.common.NotAuthorizedException;
+import org.example.projektarendehantering.common.Role;
 import org.example.projektarendehantering.infrastructure.persistence.PatientEntity;
 import org.example.projektarendehantering.infrastructure.persistence.PatientRepository;
 import org.example.projektarendehantering.presentation.dto.PatientCreateDTO;
 import org.example.projektarendehantering.presentation.dto.PatientDTO;
 import org.example.projektarendehantering.presentation.dto.PatientUpdateDTO;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -32,6 +36,15 @@ class PatientServiceTest {
 
     @InjectMocks
     private PatientService patientService;
+
+    private Actor managerActor;
+    private Actor doctorActor;
+
+    @BeforeEach
+    void setUp() {
+        managerActor = new Actor(UUID.randomUUID(), Role.MANAGER, "Manager", "mgr");
+        doctorActor = new Actor(UUID.randomUUID(), Role.DOCTOR, "Doctor", "doc");
+    }
 
     @Test
     void createPatient_shouldSaveAndReturnDTO() {
@@ -82,10 +95,19 @@ class PatientServiceTest {
         when(patientRepository.save(entity)).thenReturn(entity);
         when(patientMapper.toDTO(entity)).thenReturn(expectedDto);
 
-        PatientDTO result = patientService.updatePatient(id, updateDto);
+        PatientDTO result = patientService.updatePatient(managerActor, id, updateDto);
 
         assertThat(result).isEqualTo(expectedDto);
         verify(patientMapper).updateEntity(updateDto, entity);
+    }
+
+    @Test
+    void updatePatient_shouldThrowIfForbidden() {
+        UUID id = UUID.randomUUID();
+        PatientUpdateDTO updateDto = new PatientUpdateDTO();
+
+        assertThatThrownBy(() -> patientService.updatePatient(doctorActor, id, updateDto))
+                .isInstanceOf(NotAuthorizedException.class);
     }
 
     @Test
@@ -95,7 +117,7 @@ class PatientServiceTest {
 
         when(patientRepository.findById(id)).thenReturn(Optional.of(entity));
 
-        patientService.deletePatient(id);
+        patientService.deletePatient(managerActor, id);
 
         verify(patientRepository).delete(entity);
     }
@@ -106,7 +128,7 @@ class PatientServiceTest {
 
         when(patientRepository.findById(id)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> patientService.deletePatient(id))
+        assertThatThrownBy(() -> patientService.deletePatient(managerActor, id))
                 .isInstanceOf(BadRequestException.class);
     }
 }
