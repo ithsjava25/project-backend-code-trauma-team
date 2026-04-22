@@ -3,15 +3,18 @@ package org.example.projektarendehantering.presentation.web;
 import jakarta.validation.Valid;
 import org.example.projektarendehantering.application.service.PatientService;
 import org.example.projektarendehantering.presentation.dto.PatientCreateDTO;
+import org.example.projektarendehantering.presentation.dto.PatientDTO;
+import org.example.projektarendehantering.presentation.dto.PatientUpdateDTO;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 
-// Something wierd
+import java.util.UUID;
 
 @Controller
 public class PatientUiController {
@@ -44,6 +47,42 @@ public class PatientUiController {
         }
 
         patientService.createPatient(dto);
+        return "redirect:/ui/patients";
+    }
+
+    @GetMapping("/ui/patients/edit/{id}")
+    @PreAuthorize("hasRole('MANAGER')")
+    public String editPatient(@PathVariable UUID id, Model model) {
+        PatientDTO patient = patientService.getPatient(id)
+                .orElseThrow(() -> new IllegalArgumentException("Invalid patient Id:" + id));
+        
+        PatientUpdateDTO updateDto = PatientUpdateDTO.builder()
+                .firstName(patient.getFirstName())
+                .lastName(patient.getLastName())
+                .personalIdentityNumber(patient.getPersonalIdentityNumber())
+                .build();
+        
+        model.addAttribute("patientUpdateDTO", updateDto);
+        model.addAttribute("patientId", id);
+        return "patients/edit";
+    }
+
+    @PostMapping("/ui/patients/update/{id}")
+    @PreAuthorize("hasRole('MANAGER')")
+    public String updatePatient(@PathVariable UUID id, @Valid @ModelAttribute("patientUpdateDTO") PatientUpdateDTO dto, BindingResult result, Model model) {
+        if (result.hasErrors()) {
+            model.addAttribute("patientId", id);
+            return "patients/edit";
+        }
+
+        patientService.updatePatient(id, dto);
+        return "redirect:/ui/patients";
+    }
+
+    @GetMapping("/ui/patients/delete/{id}")
+    @PreAuthorize("hasRole('MANAGER')")
+    public String deletePatient(@PathVariable UUID id) {
+        patientService.deletePatient(id);
         return "redirect:/ui/patients";
     }
 }

@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head(title='Edit Mapping')}">
+</head>
+<body>
+<div th:replace="~{fragments/header :: header}"></div>
+
+<main class="container page">
+    <div class="page-title">
+        <h1>Edit User Mapping</h1>
+        <a class="button button-secondary" th:href="@{/ui/employees}">Back to list</a>
+    </div>
+
+    <form class="form" th:action="@{/ui/employees/update/{id}(id=${employeeId})}" th:object="${employeeUpdateDTO}" method="post">
+        <label class="field">
+            <span class="label">Display Name</span>
+            <input class="input" th:field="*{displayName}" placeholder="e.g. Dr. Alice Roberts"/>
+            <span class="muted" th:if="${#fields.hasErrors('displayName')}" th:errors="*{displayName}"
+                  style="color: var(--danger)">Error</span>
+        </label>
+        <label class="field">
+            <span class="label">GitHub Username</span>
+            <input class="input" th:field="*{githubUsername}" placeholder="e.g. alice_roberts"/>
+            <span class="muted" th:if="${#fields.hasErrors('githubUsername')}" th:errors="*{githubUsername}"
+                  style="color: var(--danger)">Error</span>
+        </label>
+        <label class="field">
+            <span class="label">Role</span>
+            <select class="input" th:field="*{role}">
+                <option value="">-- Select Role --</option>
+                <option th:each="r : ${roles}" th:value="${r}" th:text="${r}"></option>
+            </select>
+            <span class="muted" th:if="${#fields.hasErrors('role')}" th:errors="*{role}" style="color: var(--danger)">Error</span>
+        </label>
+        <div class="actions">
+            <button class="button" type="submit">Update Mapping</button>
+        </div>
+    </form>
+</main>
+
+<div th:replace="~{fragments/footer :: footer}"></div>
+</body>
+</html>
