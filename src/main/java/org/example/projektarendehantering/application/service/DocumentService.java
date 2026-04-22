@@ -18,7 +18,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.time.Instant;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -37,13 +37,13 @@ public class DocumentService {
     private String bucket;
 
     private static final long MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
-    private static final Set<String> ALLOWED_CONTENT_TYPES = Set.of(
-            "application/pdf",
-            "image/png",
-            "image/jpeg",
-            "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+    private static final Map<String, String> EXTENSION_TO_MIME = Map.of(
+            "pdf",  "application/pdf",
+            "png",  "image/png",
+            "jpg",  "image/jpeg",
+            "jpeg", "image/jpeg",
+            "docx", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
     );
-    private static final Set<String> ALLOWED_EXTENSIONS = Set.of("pdf", "png", "jpg", "jpeg", "docx");
 
     @Transactional
     public DocumentDTO uploadDocument(Actor actor, UUID caseId, MultipartFile file) throws IOException {
@@ -66,10 +66,11 @@ public class DocumentService {
         String extension = originalFilename.contains(".")
                 ? originalFilename.substring(originalFilename.lastIndexOf('.') + 1).toLowerCase()
                 : "";
-        if (!ALLOWED_EXTENSIONS.contains(extension)) {
+        String expectedMime = EXTENSION_TO_MIME.get(extension);
+        if (expectedMime == null) {
             throw new BadRequestException("File type not allowed. Allowed types: pdf, png, jpg, jpeg, docx");
         }
-        if (!ALLOWED_CONTENT_TYPES.contains(contentType.toLowerCase())) {
+        if (!expectedMime.equalsIgnoreCase(contentType)) {
             throw new BadRequestException("File type not allowed. Allowed types: pdf, png, jpg, jpeg, docx");
         }
 
