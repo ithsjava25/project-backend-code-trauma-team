@@ -82,7 +82,11 @@ public class AuditService {
         TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
             @Override
             public void afterCommit() {
-                broadcast(event);
+                try {
+                    broadcast(event);
+                } catch (Throwable t) {
+                    log.warn("Failed to broadcast audit event {} after commit: {}", event.getId(), t.getMessage(), t);
+                }
             }
         });
     }
