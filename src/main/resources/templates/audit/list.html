@@ -34,7 +34,98 @@
     </section>
 
     <section class="panel" style="margin-top: 16px;">
-        <table class="table" th:if="${events != null and events.content != null and not #lists.isEmpty(events.content)}">
+        <div style="display:flex; justify-content: space-between; align-items:center; margin-bottom: 12px;">
+            <h2 style="margin:0;">Audit Log</h2>
+            <div id="connection-status" class="muted" style="font-size: 0.8em;">
+                <span style="color: var(--danger-color);">●</span> Real-time: Disconnected
+            </div>
+        </div>
+
+        <script th:inline="javascript">
+            (function() {
+                const statusEl = document.getElementById('connection-status');
+                if (!statusEl) return;
+
+                let eventSource = null;
+
+                function connect() {
+                    if (eventSource) eventSource.close();
+                    
+                    eventSource = new EventSource('/api/audit/stream');
+                    
+                    eventSource.onopen = () => {
+                        // Wait for the 'connected' event from the server
+                    };
+
+                    eventSource.addEventListener('connected', (e) => {
+                        statusEl.innerHTML = '<span style="color: #28a745;">●</span> Real-time: Connected';
+                    });
+
+                    eventSource.onerror = () => {
+                        statusEl.innerHTML = '<span style="color: var(--danger-color);">●</span> Real-time: Disconnected (reconnecting...)';
+                        setTimeout(connect, 5000);
+                    };
+
+                    eventSource.addEventListener('audit-event', (e) => {
+                        const data = JSON.parse(e.data);
+                        
+                        // If the table doesn't exist yet (because it was empty), reload to get the structure
+                        // or we could build the table shell here. For simplicity, reload once or build shell.
+                        const table = document.getElementById('audit-table');
+                        if (!table) {
+                            location.reload();
+                            return;
+                        }
+
+                        const tbody = table.querySelector('tbody');
+                        const row = document.createElement('tr');
+                        
+                        const date = new Date(data.occurredAt);
+                        const timeStr = date.toISOString().replace('T', ' ').substring(0, 19);
+                        const caseLink = data.caseId 
+                            ? `<a href="/ui/cases/${data.caseId}">${data.caseId.substring(0,8)}...</a>`
+                            : '';
+
+                        row.innerHTML = `
+                            <td>${timeStr}</td>
+                            <td>
+                                <div>${data.actorRole || ''}</div>
+                                <div class="muted">${data.actorId || ''}</div>
+                            </td>
+                            <td>
+                                <span class="badge">${data.eventName || 'ACTION'}</span>
+                            </td>
+                            <td>
+                                <div>${data.description || ''}</div>
+                                ${data.statusChange ? `<div class="status-badge">${data.statusChange}</div>` : ''}
+                            </td>
+                            <td>${data.responseStatus || ''}</td>
+                            <td>${caseLink}</td>
+                            <td class="muted">
+                                <div>${data.requestPath || ''}</div>
+                                ${data.errorType ? `<div style="color: var(--danger-color);">${data.errorType}</div>` : ''}
+                            </td>
+                        `;
+                        
+                        if (tbody.firstChild) {
+                            tbody.insertBefore(row, tbody.firstChild);
+                        } else {
+                            tbody.appendChild(row);
+                        }
+
+                        row.style.transition = 'background-color 0.5s';
+                        row.style.backgroundColor = 'rgba(255, 255, 0, 0.2)';
+                        setTimeout(() => {
+                            row.style.backgroundColor = 'transparent';
+                        }, 2000);
+                    });
+                }
+
+                connect();
+            })();
+        </script>
+
+        <table class="table" id="audit-table" th:if="${events != null and events.content != null and not #lists.isEmpty(events.content)}">
             <thead>
             <tr>
                 <th>Time</th>

@@ -1,5 +1,7 @@
 <!doctype html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<html lang="en" 
+      xmlns:th="http://www.thymeleaf.org" 
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <body>
 <header th:fragment="header" class="app-header">
     <div class="container header-row">
@@ -10,33 +12,76 @@
         <nav class="nav">
             <a class="nav-link" href="/ui/cases">Cases</a>
             <a class="nav-link" href="/ui/cases/new">Create</a>
-            <a class="nav-link"
-               th:if="${currentActor != null && currentActor.role() != null && currentActor.role().toString() == 'MANAGER'}"
-               href="/ui/audit">Audit</a>
-            <a class="nav-link"
-               th:if="${currentActor != null && currentActor.role() != null && currentActor.role().toString() == 'MANAGER'}"
-               href="/ui/patients">Manage Patients</a>
-            <a class="nav-link"
-               th:if="${currentActor != null && currentActor.role() != null && currentActor.role().toString() == 'MANAGER'}"
-               href="/ui/employees">Manage Users</a>
+            
+            <th:block th:if="${currentActor != null}">
+                <th:block th:if="${currentActor.role.name() == 'MANAGER'}">
+                    <a class="nav-link" href="/ui/audit" id="nav-audit-link">Audit</a>
+                    <a class="nav-link" href="/ui/patients">Manage Patients</a>
+                    <a class="nav-link" href="/ui/employees">Manage Users</a>
+                </th:block>
+            </th:block>
         </nav>
 
         <div class="auth" id="authBar">
-            <div th:if="${#authorization.expression('isAuthenticated()')}">
-                <span class="auth-label"
-                      th:text="${currentActor != null
-          ? 'Logged in as: ' + (currentActor.displayName ?: (currentActor.githubUsername ?: currentActor.role))
-          : 'Logged in as: ' + '#authentication.name'}">User</span>
+            <div sec:authorize="isAuthenticated()">
+                <span class="auth-label">
+                    Logged in as: 
+                    <span th:if="${currentActor != null}" th:text="${currentActor.displayName ?: (currentActor.githubUsername ?: currentActor.role)}">User</span>
+                    <span th:if="${currentActor == null}" sec:authentication="name">User</span>
+                </span>
                 <form th:action="@{/logout}" method="post" style="display: inline;">
                     <button class="button button-secondary" type="submit">Logout</button>
                 </form>
             </div>
-            <div th:unless="${#authorization.expression('isAuthenticated()')}">
+            <div sec:authorize="!isAuthenticated()">
                 <a th:href="@{/login}" class="button button-secondary">Login</a>
             </div>
         </div>
     </div>
+
+    <!-- Manager real-time notification script -->
+    <th:block th:if="${currentActor != null}">
+        <script th:if="${currentActor.role.name() == 'MANAGER'}" th:inline="javascript">
+            /*<![CDATA[*/
+            (function() {
+                if (window.location.pathname === '/ui/audit') return;
+
+                const auditLink = document.getElementById('nav-audit-link');
+                if (!auditLink) return;
+
+                const eventSource = new EventSource('/api/audit/stream');
+                
+                eventSource.onerror = (err) => {
+                    if (eventSource.readyState === EventSource.CLOSED || eventSource.readyState === EventSource.CONNECTING) {
+                        eventSource.close();
+                    }
+                };
+
+                eventSource.addEventListener('audit-event', () => {
+                    auditLink.style.fontWeight = 'bold';
+                    if (!document.getElementById('audit-badge')) {
+                        const badge = document.createElement('span');
+                        badge.id = 'audit-badge';
+                        badge.style.display = 'inline-block';
+                        badge.style.width = '8px';
+                        badge.style.height = '8px';
+                        badge.style.backgroundColor = '#dc3545';
+                        badge.style.borderRadius = '50%';
+                        badge.style.marginLeft = '4px';
+                        badge.style.verticalAlign = 'middle';
+                        auditLink.appendChild(badge);
+                    }
+                });
+
+                auditLink.onclick = () => {
+                    auditLink.style.fontWeight = 'normal';
+                    const badge = document.getElementById('audit-badge');
+                    if (badge) badge.remove();
+                };
+            })();
+            /*]]>*/
+        </script>
+    </th:block>
 </header>
 </body>
 </html>
-

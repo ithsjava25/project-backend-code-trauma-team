@@ -21,6 +21,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.context.request.async.AsyncRequestNotUsableException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 import java.util.Map;
 
@@ -103,10 +104,11 @@ public class GlobalControllerAdvice {
         return "error";
     }
 
-    @ExceptionHandler(NoResourceFoundException.class)
+    @ExceptionHandler({NoResourceFoundException.class, AsyncRequestNotUsableException.class})
     @ResponseStatus(HttpStatus.NOT_FOUND)
-    public void handleNoResourceFoundException(NoResourceFoundException e) {
-        // Just return 404, don't log as ERROR
+    public void handleSilentExceptions(Exception e) {
+        // Just return 404/ignore, don't log as ERROR.
+        // This includes NoResourceFound (favicon) and AsyncRequestNotUsable (SSE disconnects).
     }
 
     @ExceptionHandler({HttpMessageNotReadableException.class, MethodArgumentNotValidException.class})

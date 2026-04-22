@@ -9,11 +9,15 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.example.projektarendehantering.common.Actor;
+import org.example.projektarendehantering.common.Role;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.time.Instant;
 import java.util.UUID;
@@ -41,5 +45,14 @@ public class AuditController {
         );
 
         return ResponseEntity.ok(auditService.listEvents(securityActorAdapter.currentUser(), from, to, caseId, pageable));
+    }
+
+    @GetMapping(value = "/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public SseEmitter stream() {
+        Actor actor = securityActorAdapter.currentUser();
+        if (actor.role() != Role.MANAGER) {
+            throw new org.example.projektarendehantering.common.NotAuthorizedException("Only managers can view the audit stream");
+        }
+        return auditService.createEmitter();
     }
 }
