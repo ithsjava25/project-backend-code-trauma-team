@@ -77,6 +77,21 @@
                             return;
                         }
 
+                        const fromInput = document.querySelector('input[name="from"]');
+                        const toInput = document.querySelector('input[name="to"]');
+                        const caseIdInput = document.querySelector('input[name="caseId"]');
+                        const sizeInput = document.querySelector('input[name="size"]');
+
+                        const fromVal = fromInput && fromInput.value.trim() ? new Date(fromInput.value.trim()) : null;
+                        const toVal = toInput && toInput.value.trim() ? new Date(toInput.value.trim()) : null;
+                        const caseIdVal = caseIdInput && caseIdInput.value.trim() ? caseIdInput.value.trim() : null;
+                        const maxRows = sizeInput && sizeInput.value ? parseInt(sizeInput.value, 10) : null;
+
+                        const eventTime = new Date(data.occurredAt);
+                        if (fromVal && !isNaN(fromVal.getTime()) && eventTime < fromVal) return;
+                        if (toVal && !isNaN(toVal.getTime()) && eventTime > toVal) return;
+                        if (caseIdVal && data.caseId !== caseIdVal) return;
+
                         let table = document.getElementById('audit-table');
                         if (!table) {
                             table = document.createElement('table');
@@ -165,6 +180,12 @@
                             tbody.insertBefore(row, tbody.firstChild);
                         } else {
                             tbody.appendChild(row);
+                        }
+
+                        if (maxRows && !isNaN(maxRows) && maxRows > 0) {
+                            while (tbody.rows.length > maxRows) {
+                                tbody.removeChild(tbody.lastChild);
+                            }
                         }
 
                         row.style.transition = 'background-color 0.5s';
