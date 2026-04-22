@@ -43,6 +43,7 @@
         
         <hr style="border: 0; border-top: 1px solid var(--border); margin: 20px 0;"/>
         
+        <th:block th:if="${currentActor != null and (currentActor.role().name() == 'MANAGER' or currentActor.role().name() == 'DOCTOR')}">
         <h3>Assignment</h3>
         <form th:action="@{/ui/cases/{id}/assignments(id=${case.id})}" method="post" class="form">
             <div style="display: flex; gap: 20px; align-items: flex-end;">
@@ -65,6 +66,7 @@
                 </div>
             </div>
         </form>
+        </th:block>
     </section>
 
     <section class="panel" th:if="${case != null}">
