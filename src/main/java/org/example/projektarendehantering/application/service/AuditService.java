@@ -16,8 +16,13 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+import java.io.IOException;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -28,8 +33,10 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class AuditService {
@@ -38,6 +45,8 @@ public class AuditService {
     private final AuditEventMapper auditEventMapper;
     private final CaseRepository caseRepository;
     private final ObjectMapper objectMapper = new ObjectMapper();
+
+    private final List<SseEmitter> emitters = new CopyOnWriteArrayList<>();
 
     private static final String REDACTED = "[REDACTED]";
     private static final Set<String> SENSITIVE_KEYS = Set.of(
@@ -69,6 +78,66 @@ public class AuditService {
         }
         event.setQueryString(sanitizeAuditPayload(event.getQueryString()));
         auditEventRepository.save(event);
+
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                try {
+                    broadcast(event);
+                } catch (Throwable t) {
+                    log.warn("Failed to broadcast audit event {} after commit: {}", event.getId(), t.getMessage(), t);
+                }
+            }
+        });
+    }
+
+    private void broadcast(AuditEventEntity event) {
+        if (emitters.isEmpty()) return;
+
+        AuditEventDTO dto = auditEventMapper.toDTO(event);
+        List<SseEmitter> failedEmitters = new ArrayList<>();
+
+        for (SseEmitter emitter : emitters) {
+            try {
+                emitter.send(SseEmitter.event()
+                        .name("audit-event")
+                        .data(dto));
+            } catch (IOException | IllegalStateException e) {
+                failedEmitters.add(emitter);
+            }
+        }
+        emitters.removeAll(failedEmitters);
+    }
+
+    public SseEmitter createEmitter() {
+        SseEmitter emitter = new SseEmitter(30 * 60 * 1000L); // 30 minute timeout
+        emitters.add(emitter);
+
+        emitter.onCompletion(() -> {
+            log.debug("SSE emitter completed");
+            emitters.remove(emitter);
+        });
+        emitter.onTimeout(() -> {
+            log.debug("SSE emitter timed out");
+            emitters.remove(emitter);
+        });
+        emitter.onError((ex) -> {
+            log.debug("SSE emitter error: {}", ex.getMessage());
+            emitters.remove(emitter);
+        });
+
+        // Send an initial event to confirm connection
+        try {
+            emitter.send(SseEmitter.event()
+                    .name("connected")
+                    .data("Audit stream connected"));
+            log.debug("SSE emitter created and initial event sent");
+        } catch (IOException e) {
+            log.error("Failed to send initial SSE event", e);
+            emitters.remove(emitter);
+        }
+
+        return emitter;
     }
 
     private String sanitizeAuditPayload(String payload) {

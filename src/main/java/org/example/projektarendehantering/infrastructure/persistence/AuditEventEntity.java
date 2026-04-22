@@ -40,7 +40,6 @@ public class AuditEventEntity {
     private String actorRole;
     private String principalName;
 
-    private String httpMethod;
     private String requestPath;
     private String queryString;
     private String handler;
@@ -51,6 +50,8 @@ public class AuditEventEntity {
     private UUID caseId;
 
     private String statusChange;
+    private String eventName;
+    private String description;
 
     private String clientIp;
     private String userAgent;

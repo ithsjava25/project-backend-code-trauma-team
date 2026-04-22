@@ -62,7 +62,6 @@ class AuditControllerTest {
     void list_shouldReturnAuditEvents() throws Exception {
         AuditEventDTO dto = new AuditEventDTO();
         dto.setRequestPath("/api/cases");
-        dto.setHttpMethod("GET");
         
         Page<AuditEventDTO> page = new PageImpl<>(List.of(dto));
         
@@ -100,6 +99,6 @@ class AuditControllerTest {
     @Test
     void list_shouldBeUnauthorized_whenNotLoggedIn() throws Exception {
         mockMvc.perform(get("/api/audit"))
-                .andExpect(status().is3xxRedirection());
+                .andExpect(status().isUnauthorized());
     }
 }

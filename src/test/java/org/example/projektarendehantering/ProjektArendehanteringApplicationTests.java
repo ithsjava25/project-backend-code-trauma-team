@@ -10,7 +10,9 @@ import org.springframework.web.context.WebApplicationContext;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.setup.MockMvcBuilders.webAppContextSetup;
 
@@ -35,8 +37,9 @@ class ProjektArendehanteringApplicationTests {
                 .build();
         long before = auditEventRepository.count();
 
-        mockMvc.perform(get("/ui/cases"))
-                .andExpect(status().isOk());
+        // Must be a mutation (POST/PUT/DELETE) to trigger auditing
+        mockMvc.perform(post("/ui/cases/new").with(csrf()))
+                .andExpect(status().isOk()); // Returns 200 (re-renders form) because body is missing
 
         long after = auditEventRepository.count();
         assertThat(after).isGreaterThan(before);
