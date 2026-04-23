@@ -12,7 +12,11 @@ import java.util.UUID;
 @AllArgsConstructor
 @Builder
 @Entity
-@Table(name = "failed_s3_deletions")
+@Table(
+        name = "failed_s3_deletions",
+        uniqueConstraints = @UniqueConstraint(columnNames = {"bucket", "s3Key"}),
+        indexes = @Index(name = "idx_failed_s3_next_attempt", columnList = "nextAttemptAt,createdAt")
+)
 public class FailedS3DeletionEntity {
 
     @Id

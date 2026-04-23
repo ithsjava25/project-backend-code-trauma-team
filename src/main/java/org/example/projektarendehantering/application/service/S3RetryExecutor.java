@@ -11,6 +11,8 @@ import org.springframework.retry.policy.SimpleRetryPolicy;
 import org.springframework.retry.support.RetryTemplate;
 import org.springframework.stereotype.Component;
 import software.amazon.awssdk.awscore.exception.AwsServiceException;
+import software.amazon.awssdk.core.exception.NonRetryableException;
+import software.amazon.awssdk.core.exception.RetryableException;
 import software.amazon.awssdk.core.exception.SdkClientException;
 import software.amazon.awssdk.services.s3.model.S3Exception;
 
@@ -51,7 +53,16 @@ public class S3RetryExecutor {
         if (root instanceof AwsServiceException awsServiceException) {
             return RETRYABLE_HTTP_STATUS.contains(awsServiceException.statusCode());
         }
-        return root instanceof SdkClientException;
+        if (root instanceof NonRetryableException) {
+            return false;
+        }
+        if (root instanceof RetryableException) {
+            return true;
+        }
+        if (root instanceof SdkClientException sdkClientException) {
+            return sdkClientException.retryable();
+        }
+        return false;
     }
 
     private AppException mapToAppException(String operationName, RuntimeException ex) {
