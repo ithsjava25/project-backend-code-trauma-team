@@ -1,5 +1,6 @@
 -- ------------------------------------------------------------
 -- Core user accounts (shared seed)
+--
 -- ------------------------------------------------------------
 -- Uses GITHUB provider to avoid shipping known local credentials in shared data.
 INSERT INTO user_account (id, email, password_hash, role, provider, provider_user_id, enabled, created_at)
