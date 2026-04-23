@@ -59,13 +59,13 @@ public class PatientUiController {
     public String editPatient(@PathVariable UUID id, Model model) {
         PatientDTO patient = patientService.getPatient(id)
                 .orElseThrow(() -> new BadRequestException("PATIENT_NOT_FOUND", "Invalid patient Id:" + id));
-        
+
         PatientUpdateDTO updateDto = PatientUpdateDTO.builder()
                 .firstName(patient.getFirstName())
                 .lastName(patient.getLastName())
                 .personalIdentityNumber(patient.getPersonalIdentityNumber())
                 .build();
-        
+
         model.addAttribute("patientUpdateDTO", updateDto);
         model.addAttribute("patientId", id);
         return "patients/edit";

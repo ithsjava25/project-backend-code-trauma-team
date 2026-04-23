@@ -41,8 +41,8 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         }
 
         return new DefaultOAuth2User(
-            authorities, 
-            oAuth2User.getAttributes(), 
+            authorities,
+            oAuth2User.getAttributes(),
             userRequest.getClientRegistration().getProviderDetails().getUserInfoEndpoint().getUserNameAttributeName()
         );
     }

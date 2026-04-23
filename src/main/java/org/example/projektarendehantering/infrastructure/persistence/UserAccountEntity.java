@@ -19,29 +19,24 @@ public class UserAccountEntity {
     @Id
     private UUID id;
 
-    @Email
-    @Column(unique = true)
+    @Email @Column(unique = true)
     private String email;
 
     @Column(name = "password_hash")
     private String passwordHash;
 
-    @NotNull
-    @Enumerated(EnumType.STRING)
+    @NotNull @Enumerated(EnumType.STRING)
     private Role role;
 
-    @NotNull
-    @Enumerated(EnumType.STRING)
+    @NotNull @Enumerated(EnumType.STRING)
     private AuthProvider provider;
 
     @Column(name = "provider_user_id")
     private String providerUserId;
 
-    @NotNull
-    private boolean enabled = true;
+    @NotNull private boolean enabled = true;
 
-    @NotNull
-    @Column(name = "created_at")
+    @NotNull @Column(name = "created_at")
     private Instant createdAt;
 
     @PrePersist

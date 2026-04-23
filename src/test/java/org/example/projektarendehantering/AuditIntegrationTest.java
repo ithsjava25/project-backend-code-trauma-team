@@ -1,8 +1,6 @@
 package org.example.projektarendehantering;
 
 import org.example.projektarendehantering.application.service.AuditService;
-import org.example.projektarendehantering.common.Actor;
-import org.example.projektarendehantering.common.Role;
 import org.example.projektarendehantering.infrastructure.persistence.AuditEventEntity;
 import org.example.projektarendehantering.infrastructure.persistence.AuditEventRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -22,7 +20,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.setup.MockMvcBuilders.webAppContextSetup;
@@ -79,7 +76,7 @@ class AuditIntegrationTest {
                 .max(Comparator.comparing(AuditEventEntity::getOccurredAt, Comparator.nullsLast(Comparator.naturalOrder()))
                         .thenComparing(AuditEventEntity::getId, Comparator.nullsLast(Comparator.naturalOrder())))
                 .orElseThrow();
-        
+
         assertThat(saved.getQueryString())
                 .contains("username=oscar")
                 .contains("password=[REDACTED]")

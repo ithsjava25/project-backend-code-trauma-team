@@ -70,7 +70,7 @@ class AuditServiceTest {
     void listEvents_shouldAllowDoctorToSeeOnlyTheirCases() {
         CaseEntity caseEntity = new CaseEntity();
         caseEntity.setId(caseId);
-        
+
         when(caseRepository.findAllByOwnerId(doctorActor.userId())).thenReturn(List.of(caseEntity));
         when(auditEventRepository.findAllByCaseIdInAndOccurredAtBetweenOrderByOccurredAtDesc(eq(Set.of(caseId)), any(), any(), any()))
                 .thenReturn(new PageImpl<>(List.of(new AuditEventEntity())));

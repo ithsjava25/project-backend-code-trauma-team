@@ -34,7 +34,7 @@ class UiControllerTest {
 
     @MockitoBean
     private CaseService caseService;
-    
+
     @MockitoBean
     private PatientService patientService;
 

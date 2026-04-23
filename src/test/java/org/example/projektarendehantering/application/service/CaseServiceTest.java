@@ -76,7 +76,7 @@ class CaseServiceTest {
         caseEntity.setId(caseId);
         caseEntity.setOwnerId(doctorId);
         caseEntity.setHandlerId(nurseId);
-        
+
         PatientEntity patient = new PatientEntity();
         patient.setId(patientId);
         caseEntity.setPatient(patient);

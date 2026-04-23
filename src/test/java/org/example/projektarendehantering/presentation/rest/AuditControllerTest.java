@@ -62,9 +62,9 @@ class AuditControllerTest {
     void list_shouldReturnAuditEvents() throws Exception {
         AuditEventDTO dto = new AuditEventDTO();
         dto.setRequestPath("/api/cases");
-        
+
         Page<AuditEventDTO> page = new PageImpl<>(List.of(dto));
-        
+
         when(auditService.listEvents(eq(managerActor), any(), any(), any(), any(Pageable.class)))
                 .thenReturn(page);
 
@@ -77,7 +77,7 @@ class AuditControllerTest {
     @WithMockUser(roles = "MANAGER")
     void list_withFilters_shouldPassParameters() throws Exception {
         UUID caseId = UUID.randomUUID();
-        
+
         when(auditService.listEvents(eq(managerActor), any(), any(), eq(caseId), any(Pageable.class)))
                 .thenReturn(Page.empty());
 

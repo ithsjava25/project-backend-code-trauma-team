@@ -100,7 +100,7 @@ class SecurityActorAdapterTest {
     void currentUser_whenOAuth2Authentication_shouldUseLoginAttribute() {
         String login = "oauth-user";
         UUID userId = UUID.nameUUIDFromBytes(login.getBytes(StandardCharsets.UTF_8));
-        
+
         OAuth2AuthenticationToken oauth2Token = mock(OAuth2AuthenticationToken.class);
         OAuth2User oauth2User = mock(OAuth2User.class);
 
@@ -109,7 +109,7 @@ class SecurityActorAdapterTest {
         when(oauth2Token.getName()).thenReturn("some-other-name");
         when(oauth2Token.getPrincipal()).thenReturn(oauth2User);
         when(oauth2User.getAttribute("login")).thenReturn(login);
-        
+
         when(employeeRepository.findById(userId)).thenReturn(Optional.empty());
         when(userAccountRepository.findByEmail("some-other-name")).thenReturn(Optional.empty());
         doReturn(Collections.emptyList()).when(oauth2Token).getAuthorities();
@@ -156,7 +156,7 @@ class SecurityActorAdapterTest {
         when(authentication.getName()).thenReturn(username);
         when(employeeRepository.findById(userId)).thenReturn(Optional.empty());
         when(userAccountRepository.findByEmail(username)).thenReturn(Optional.empty());
-        
+
         doReturn(List.of(new SimpleGrantedAuthority("ROLE_MANAGER")))
             .when(authentication).getAuthorities();
 
@@ -177,7 +177,7 @@ class SecurityActorAdapterTest {
         when(authentication.getName()).thenReturn(username);
         when(employeeRepository.findById(userId)).thenReturn(Optional.empty());
         when(userAccountRepository.findByEmail(username)).thenReturn(Optional.empty());
-        
+
         doReturn(List.of(new SimpleGrantedAuthority("ROLE_DOCTOR")))
             .when(authentication).getAuthorities();
 
@@ -196,7 +196,7 @@ class SecurityActorAdapterTest {
         when(authentication.getName()).thenReturn(username);
         when(employeeRepository.findById(userId)).thenReturn(Optional.empty());
         when(userAccountRepository.findByEmail(username)).thenReturn(Optional.empty());
-        
+
         doReturn(List.of(new SimpleGrantedAuthority("ROLE_NURSE")))
             .when(authentication).getAuthorities();
 
@@ -236,7 +236,7 @@ class SecurityActorAdapterTest {
         when(authentication.getName()).thenReturn(username);
         when(employeeRepository.findById(userId)).thenReturn(Optional.empty());
         when(userAccountRepository.findByEmail(username)).thenReturn(Optional.empty());
-        
+
         doReturn(Collections.emptyList()).when(authentication).getAuthorities();
 
         Actor actor = securityActorAdapter.currentUser();

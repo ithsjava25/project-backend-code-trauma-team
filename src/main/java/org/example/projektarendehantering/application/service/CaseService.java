@@ -1,6 +1,5 @@
 package org.example.projektarendehantering.application.service;
 
-import jakarta.validation.Valid;
 import org.example.projektarendehantering.common.Actor;
 import org.example.projektarendehantering.common.BadRequestException;
 import org.example.projektarendehantering.common.CaseStatus;
