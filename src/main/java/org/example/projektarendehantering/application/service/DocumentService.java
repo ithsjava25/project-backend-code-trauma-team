@@ -154,6 +154,9 @@ public class DocumentService {
 
     @Transactional
     public void deleteDocument(Actor actor, UUID documentId) {
+        if (actor.isPatient()) {
+            throw new NotAuthorizedException("Patients are not allowed to delete documents");
+        }
         DocumentEntity entity = documentRepository.findById(documentId)
                 .orElseThrow(() -> new BadRequestException("Document not found"));
 
@@ -199,6 +202,8 @@ public class DocumentService {
         if (actor.isManager()) return;
         if (actor.isDoctor() && actor.userId().equals(caseEntity.getOwnerId())) return;
         if (actor.isNurse() && actor.userId().equals(caseEntity.getHandlerId())) return;
+        if (actor.isPatient() && caseEntity.getPatient() != null
+                && actor.userId().equals(caseEntity.getPatient().getId())) return;
         throw new NotAuthorizedException("Not authorized to access documents for this case");
     }
 }

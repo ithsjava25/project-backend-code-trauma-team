@@ -11,6 +11,7 @@ import org.example.projektarendehantering.infrastructure.persistence.CaseEntity;
 import org.example.projektarendehantering.infrastructure.persistence.CaseRepository;
 import org.example.projektarendehantering.infrastructure.persistence.DocumentEntity;
 import org.example.projektarendehantering.infrastructure.persistence.DocumentRepository;
+import org.example.projektarendehantering.infrastructure.persistence.PatientEntity;
 import org.example.projektarendehantering.presentation.dto.DocumentDTO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -24,6 +25,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 import java.io.IOException;
 import java.io.InputStream;
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -57,23 +59,30 @@ class DocumentServiceTest {
 
     private Actor doctorActor;
     private Actor managerActor;
+    private Actor patientActor;
     private UUID caseId;
     private CaseEntity caseEntity;
 
     @BeforeEach
     void setUp() {
         ReflectionTestUtils.setField(documentService, "bucket", "test-bucket");
-        
+
         UUID doctorId = UUID.randomUUID();
         UUID managerId = UUID.randomUUID();
+        UUID patientId = UUID.randomUUID();
 
         doctorActor = new Actor(doctorId, Role.DOCTOR, "Doctor", "doctor_user");
         managerActor = new Actor(managerId, Role.MANAGER, "Manager", "manager_user");
+        patientActor = new Actor(patientId, Role.PATIENT, "Patient", "patient_user");
+
+        PatientEntity patient = new PatientEntity();
+        patient.setId(patientId);
 
         caseId = UUID.randomUUID();
         caseEntity = new CaseEntity();
         caseEntity.setId(caseId);
         caseEntity.setOwnerId(doctorId);
+        caseEntity.setPatient(patient);
     }
 
     @Test
@@ -189,5 +198,53 @@ class DocumentServiceTest {
         verify(failedS3DeletionService).enqueue(eq("test-bucket"), eq("failed-key"), argThat(ex ->
                 ex instanceof AppException && "S3_SERVICE_DEGRADED".equals(((AppException) ex).errorCode())));
         verify(documentRepository).delete(docEntity);
+    }
+
+    @Test
+    void uploadDocument_shouldAllowPatientOnOwnCase() throws IOException {
+        MockMultipartFile file = new MockMultipartFile("file", "test.txt", "text/plain", "hello".getBytes());
+        when(caseRepository.findById(caseId)).thenReturn(Optional.of(caseEntity));
+        when(documentRepository.save(any(DocumentEntity.class))).thenAnswer(i -> {
+            DocumentEntity e = i.getArgument(0);
+            e.setId(UUID.randomUUID());
+            return e;
+        });
+        when(documentMapper.toDTO(any(DocumentEntity.class))).thenReturn(
+                new DocumentDTO(UUID.randomUUID(), "test.txt", "text/plain", 5, Instant.now(), patientActor.userId(), caseId));
+
+        DocumentDTO result = documentService.uploadDocument(patientActor, caseId, file);
+
+        assertThat(result).isNotNull();
+        verify(s3Template).upload(eq("test-bucket"), anyString(), any(InputStream.class), any(ObjectMetadata.class));
+    }
+
+    @Test
+    void uploadDocument_shouldDenyPatientOnOtherCase() {
+        Actor otherPatient = new Actor(UUID.randomUUID(), Role.PATIENT, "Other", "other_patient");
+        MockMultipartFile file = new MockMultipartFile("file", "test.txt", "text/plain", "hello".getBytes());
+        when(caseRepository.findById(caseId)).thenReturn(Optional.of(caseEntity));
+
+        assertThatThrownBy(() -> documentService.uploadDocument(otherPatient, caseId, file))
+                .isInstanceOf(NotAuthorizedException.class);
+    }
+
+    @Test
+    void listDocuments_shouldAllowPatientOnOwnCase() {
+        when(caseRepository.findById(caseId)).thenReturn(Optional.of(caseEntity));
+        when(documentRepository.findAllByCaseEntityId(caseId)).thenReturn(List.of());
+
+        documentService.listDocuments(patientActor, caseId);
+
+        verify(documentRepository).findAllByCaseEntityId(caseId);
+    }
+
+    @Test
+    void deleteDocument_shouldDenyPatient() {
+        UUID docId = UUID.randomUUID();
+
+        assertThatThrownBy(() -> documentService.deleteDocument(patientActor, docId))
+                .isInstanceOf(NotAuthorizedException.class);
+
+        verify(documentRepository, never()).findById(any());
     }
 }
