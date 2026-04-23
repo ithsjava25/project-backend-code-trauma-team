@@ -98,11 +98,7 @@ public class DocumentService {
                           .contentType(contentType)
                           .build();                                                                                                                                                                                                                                                                        
                   s3RetryExecutor.execute("upload", context -> {
-                      try {
-                          s3Template.upload(bucket, s3Key, new ByteArrayInputStream(fileBytes), metadata);
-                      } catch (IOException ioException) {                                                                                                                                                                                                                                                  
-                          throw new AppException("S3_UPLOAD_STREAM_FAILED", "Failed to read upload input stream", ioException);
-                      }                                                                                                                                                                                                                                                                                    
+                     s3Template.upload(bucket, s3Key, new ByteArrayInputStream(fileBytes), metadata);
                       return null;
                   });
 

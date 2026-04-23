@@ -1,5 +1,6 @@
 package org.example.projektarendehantering.application.service;
 
+import io.awspring.cloud.s3.ObjectMetadata;
 import io.awspring.cloud.s3.S3Resource;
 import io.awspring.cloud.s3.S3Template;
 import org.example.projektarendehantering.common.AppException;
@@ -180,7 +181,7 @@ class DocumentServiceTest {
 
     @Test
     void uploadDocument_shouldBubbleDegradedCodeWhenS3TransientlyUnavailable() {
-        MockMultipartFile file = new MockMultipartFile("file", "test.txt", "text/plain", "hello".getBytes());
+        MockMultipartFile file = new MockMultipartFile("file", "test.pdf", "application/pdf", "%PDF-1.4 test".getBytes());
         when(caseRepository.findById(caseId)).thenReturn(Optional.of(caseEntity));
         when(s3RetryExecutor.execute(eq("upload"), any()))
                 .thenThrow(new AppException("S3_SERVICE_DEGRADED", "Temporary S3 issue while trying to upload"));
