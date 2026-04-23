@@ -5,6 +5,7 @@ import org.example.projektarendehantering.presentation.dto.EmployeeCreateDTO;
 import org.example.projektarendehantering.presentation.dto.EmployeeDTO;
 import org.example.projektarendehantering.presentation.dto.EmployeeUpdateDTO;
 import org.springframework.stereotype.Component;
+import org.example.projektarendehantering.common.GithubUsernameNormalizer;
 
 import java.nio.charset.StandardCharsets;
 import java.util.UUID;
@@ -25,15 +26,16 @@ public class EmployeeMapper {
 
     public EmployeeEntity toEntity(EmployeeCreateDTO dto) {
         if (dto == null) return null;
+        String normalizedGithubUsername = GithubUsernameNormalizer.normalize(dto.getGithubUsername());
         UUID id = null;
-        if (dto.getGithubUsername() != null && !dto.getGithubUsername().isBlank()) {
-            id = UUID.nameUUIDFromBytes(dto.getGithubUsername().getBytes(StandardCharsets.UTF_8));
+        if (normalizedGithubUsername != null) {
+            id = UUID.nameUUIDFromBytes(normalizedGithubUsername.getBytes(StandardCharsets.UTF_8));
         }
 
         return EmployeeEntity.builder()
                 .id(id)
                 .displayName(dto.getDisplayName())
-                .githubUsername(dto.getGithubUsername())
+                .githubUsername(normalizedGithubUsername)
                 .role(dto.getRole())
                 .build();
     }
@@ -41,7 +43,7 @@ public class EmployeeMapper {
     public void updateEntity(EmployeeUpdateDTO dto, EmployeeEntity entity) {
         if (dto == null || entity == null) return;
         entity.setDisplayName(dto.getDisplayName());
-        entity.setGithubUsername(dto.getGithubUsername());
+        entity.setGithubUsername(GithubUsernameNormalizer.normalize(dto.getGithubUsername()));
         entity.setRole(dto.getRole());
     }
 }

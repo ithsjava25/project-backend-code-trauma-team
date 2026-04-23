@@ -66,10 +66,11 @@ class EmployeeServiceTest {
 
     @Test
     void createEmployee_shouldAllowManager() {
-        EmployeeCreateDTO dto = new EmployeeCreateDTO();
+        EmployeeCreateDTO dto = new EmployeeCreateDTO("Name", " Gh_User ", Role.DOCTOR);
         EmployeeEntity entity = new EmployeeEntity();
         EmployeeDTO resultDTO = new EmployeeDTO(UUID.randomUUID(), "Name", "gh_user", Role.DOCTOR, Instant.now());
 
+        when(employeeRepository.findByGithubUsername("gh_user")).thenReturn(Optional.empty());
         when(employeeMapper.toEntity(dto)).thenReturn(entity);
         when(employeeRepository.save(any())).thenReturn(entity);
         when(employeeMapper.toDTO(entity)).thenReturn(resultDTO);
@@ -77,6 +78,7 @@ class EmployeeServiceTest {
         EmployeeDTO result = employeeService.createEmployee(managerActor, dto);
 
         assertThat(result).isNotNull();
+        assertThat(dto.getGithubUsername()).isEqualTo("gh_user");
         verify(employeeRepository).save(any());
     }
 
@@ -117,6 +119,25 @@ class EmployeeServiceTest {
         assertThatThrownBy(() -> employeeService.updateEmployee(managerActor, id, dto))
                 .isInstanceOf(BadRequestException.class)
                 .hasMessageContaining("Github username cannot be changed");
+    }
+
+    @Test
+    void updateEmployee_shouldAllowEquivalentUsernameAfterNormalization() {
+        UUID id = UUID.randomUUID();
+        EmployeeUpdateDTO dto = new EmployeeUpdateDTO("New Name", " GH_USER ", Role.DOCTOR);
+        EmployeeEntity entity = new EmployeeEntity();
+        entity.setGithubUsername("gh_user");
+        EmployeeDTO resultDTO = new EmployeeDTO(id, "New Name", "gh_user", Role.DOCTOR, Instant.now());
+
+        when(employeeRepository.findById(id)).thenReturn(Optional.of(entity));
+        when(employeeRepository.save(entity)).thenReturn(entity);
+        when(employeeMapper.toDTO(entity)).thenReturn(resultDTO);
+
+        EmployeeDTO result = employeeService.updateEmployee(managerActor, id, dto);
+
+        assertThat(result).isNotNull();
+        assertThat(dto.getGithubUsername()).isEqualTo("gh_user");
+        verify(employeeMapper).updateEntity(dto, entity);
     }
 
     @Test

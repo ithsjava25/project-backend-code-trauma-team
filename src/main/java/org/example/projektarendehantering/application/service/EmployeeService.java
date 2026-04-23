@@ -2,6 +2,7 @@ package org.example.projektarendehantering.application.service;
 
 import org.example.projektarendehantering.common.Actor;
 import org.example.projektarendehantering.common.BadRequestException;
+import org.example.projektarendehantering.common.GithubUsernameNormalizer;
 import org.example.projektarendehantering.common.NotAuthorizedException;
 import org.example.projektarendehantering.common.Role;
 import org.example.projektarendehantering.infrastructure.persistence.EmployeeEntity;
@@ -29,9 +30,15 @@ public class EmployeeService {
     @Transactional
     public EmployeeDTO createEmployee(Actor actor, EmployeeCreateDTO dto) {
         requireCanManageEmployees(actor);
+        String normalizedGithubUsername = GithubUsernameNormalizer.normalize(dto.getGithubUsername());
+        dto.setGithubUsername(normalizedGithubUsername);
 
-        if (employeeRepository.findByGithubUsername(dto.getGithubUsername()).isPresent()) {
-            throw new BadRequestException("EMPLOYEE_EXISTS", "Employee with username " + dto.getGithubUsername() + " already exists");
+        if (normalizedGithubUsername == null) {
+            throw new BadRequestException("EMPLOYEE_USERNAME_REQUIRED", "Github username is required");
+        }
+
+        if (employeeRepository.findByGithubUsername(normalizedGithubUsername).isPresent()) {
+            throw new BadRequestException("EMPLOYEE_EXISTS", "Employee with username " + normalizedGithubUsername + " already exists");
         }
 
         EmployeeEntity entity = employeeMapper.toEntity(dto);
@@ -48,10 +55,12 @@ public class EmployeeService {
         EmployeeEntity entity = employeeRepository.findById(id)
                 .orElseThrow(() -> new BadRequestException("EMPLOYEE_NOT_FOUND", "Employee not found"));
 
-        if (!entity.getGithubUsername().equals(dto.getGithubUsername())) {
+        String normalizedGithubUsername = GithubUsernameNormalizer.normalize(dto.getGithubUsername());
+        if (!entity.getGithubUsername().equals(normalizedGithubUsername)) {
             throw new BadRequestException("EMPLOYEE_USERNAME_IMMUTABLE", "Github username cannot be changed");
         }
 
+        dto.setGithubUsername(normalizedGithubUsername);
         employeeMapper.updateEntity(dto, entity);
         return employeeMapper.toDTO(employeeRepository.save(entity));
     }

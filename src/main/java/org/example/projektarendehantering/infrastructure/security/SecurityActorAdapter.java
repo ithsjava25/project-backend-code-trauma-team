@@ -1,6 +1,7 @@
 package org.example.projektarendehantering.infrastructure.security;
 
 import org.example.projektarendehantering.common.Actor;
+import org.example.projektarendehantering.common.GithubUsernameNormalizer;
 import org.example.projektarendehantering.common.NotAuthorizedException;
 import org.example.projektarendehantering.common.Role;
 import org.example.projektarendehantering.infrastructure.persistence.EmployeeRepository;
@@ -44,8 +45,13 @@ public class SecurityActorAdapter {
             }
         }
 
+        String normalizedIdentity = GithubUsernameNormalizer.normalize(name);
+        if (normalizedIdentity == null) {
+            throw new NotAuthorizedException("Authenticated identity is missing");
+        }
+
         // Create a deterministic UUID based on the username/name
-        UUID userId = UUID.nameUUIDFromBytes(name.getBytes(StandardCharsets.UTF_8));
+        UUID userId = UUID.nameUUIDFromBytes(normalizedIdentity.getBytes(StandardCharsets.UTF_8));
 
         // 1. Try finding an employee with this UUID (OAuth/GitHub users)
         var employee = employeeRepository.findById(userId);
@@ -73,6 +79,6 @@ public class SecurityActorAdapter {
             role = Role.PATIENT;
         }
 
-        return new Actor(userId, role, null, name);
+        return new Actor(userId, role, null, normalizedIdentity);
     }
 }

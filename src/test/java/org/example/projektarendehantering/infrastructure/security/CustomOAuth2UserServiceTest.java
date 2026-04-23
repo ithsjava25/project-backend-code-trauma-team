@@ -48,7 +48,7 @@ class CustomOAuth2UserServiceTest {
     private OAuth2User mockOAuth2User() {
         return new DefaultOAuth2User(
             Collections.emptyList(),
-            Map.of("login", "testuser", "id", 123),
+            Map.of("login", " TestUser ", "id", 123),
             "id"
         );
     }

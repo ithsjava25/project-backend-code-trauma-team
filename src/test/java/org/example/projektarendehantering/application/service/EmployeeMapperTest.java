@@ -41,7 +41,7 @@ class EmployeeMapperTest {
     void toEntity_shouldMapAllFields() {
         EmployeeCreateDTO dto = EmployeeCreateDTO.builder()
                 .displayName("Bob")
-                .githubUsername("bob456")
+                .githubUsername(" Bob456 ")
                 .role(Role.MANAGER)
                 .build();
 
@@ -63,7 +63,7 @@ class EmployeeMapperTest {
 
         EmployeeUpdateDTO dto = EmployeeUpdateDTO.builder()
                 .displayName("NewName")
-                .githubUsername("newuser")
+                .githubUsername(" NewUser ")
                 .role(Role.MANAGER)
                 .build();
 
