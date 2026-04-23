@@ -103,7 +103,8 @@
                     <span th:text="${doc.uploadedAt}">Date</span>
                 </div>
             </div>
-            <form th:action="@{/ui/cases/{caseId}/documents/{docId}/delete(caseId=${case.id}, docId=${doc.id})}" method="post">
+            <form th:if="${currentActor != null and currentActor.role().name() != 'PATIENT'}"
+                  th:action="@{/ui/cases/{caseId}/documents/{docId}/delete(caseId=${case.id}, docId=${doc.id})}" method="post">
                 <button class="button button-secondary" type="submit" onclick="return confirm('Are you sure?')">Delete</button>
             </form>
         </div>
