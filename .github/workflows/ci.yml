@@ -23,3 +23,6 @@ jobs:
 
       - name: Build and test
         run: ./mvnw clean verify -B
+
+      - name: Run Spotless
+        run: ./mvnw spotless:check -B
