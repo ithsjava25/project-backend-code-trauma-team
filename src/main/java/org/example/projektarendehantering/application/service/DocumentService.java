@@ -93,7 +93,7 @@ public class DocumentService {
 
         validateAccess(actor, caseEntity);
 
-        String s3Key = UUID.randomUUID().toString() + "-" + originalFilename;
+        String s3Key = UUID.randomUUID() + "-" + originalFilename;
 
         try {
             ObjectMetadata metadata = ObjectMetadata.builder()
