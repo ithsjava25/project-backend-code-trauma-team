@@ -138,6 +138,7 @@ public class DocumentService {
         }
     }
 
+    @Transactional(readOnly = true)
     public List<DocumentDTO> listDocuments(Actor actor, UUID caseId) {
         CaseEntity caseEntity = caseRepository.findById(caseId)
                 .orElseThrow(() -> new BadRequestException("Case not found"));
@@ -153,6 +154,7 @@ public class DocumentService {
                 .collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
     public S3Resource downloadDocument(Actor actor, UUID documentId) {
         DocumentEntity entity = documentRepository.findById(documentId)
                 .orElseThrow(() -> new BadRequestException("Document not found"));
@@ -204,6 +206,7 @@ public class DocumentService {
     }
 
 
+    @Transactional(readOnly = true)
     public DocumentEntity getEntity(Actor actor, UUID documentId) {
         DocumentEntity entity = documentRepository.findById(documentId)
                 .orElseThrow(() -> new BadRequestException("Document not found"));
