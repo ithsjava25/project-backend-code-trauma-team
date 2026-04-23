@@ -21,6 +21,8 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.Instant;
 import java.util.Optional;
 import java.util.UUID;
@@ -113,6 +115,27 @@ class DocumentServiceTest {
 
         assertThatThrownBy(() -> documentService.uploadDocument(unauthorizedActor, caseId, file))
                 .isInstanceOf(NotAuthorizedException.class);
+    }
+
+    @Test
+    void uploadDocument_shouldAllowDocx() throws IOException {
+        byte[] docxBytes = Files.readAllBytes(Path.of("src/test/resources/test.docx"));
+        String docxMime = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+        MockMultipartFile file = new MockMultipartFile("file", "test.docx", docxMime, docxBytes);
+        when(caseRepository.findById(caseId)).thenReturn(Optional.of(caseEntity));
+        when(documentRepository.save(any(DocumentEntity.class))).thenAnswer(i -> {
+            DocumentEntity e = i.getArgument(0);
+            e.setId(UUID.randomUUID());
+            return e;
+        });
+        when(documentMapper.toDTO(any(DocumentEntity.class))).thenReturn(
+                new DocumentDTO(UUID.randomUUID(), "test.docx", docxMime, docxBytes.length, Instant.now(), doctorActor.userId(), caseId));
+
+        DocumentDTO result = documentService.uploadDocument(doctorActor, caseId, file);
+
+        assertThat(result).isNotNull();
+        assertThat(result.fileName()).isEqualTo("test.docx");
+        verify(s3Template).upload(eq("test-bucket"), anyString(), any(InputStream.class), any(ObjectMetadata.class));
     }
 
     @Test

@@ -21,6 +21,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.time.Instant;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -68,18 +69,16 @@ public class DocumentService {
         }
 
         String extension = originalFilename.contains(".")
-                ? originalFilename.substring(originalFilename.lastIndexOf('.') + 1).toLowerCase()
+                ? originalFilename.substring(originalFilename.lastIndexOf('.') + 1).toLowerCase(Locale.ROOT)
                 : "";
         String expectedMime = EXTENSION_TO_MIME.get(extension);
-        if (expectedMime == null) {
-            throw new BadRequestException("File type not allowed. Allowed types: pdf, png, jpg, jpeg, docx");
-        }
-        if (!expectedMime.equalsIgnoreCase(contentType)) {
+
+        if (expectedMime == null || !expectedMime.equalsIgnoreCase(contentType)) {
             throw new BadRequestException("File type not allowed. Allowed types: pdf, png, jpg, jpeg, docx");
         }
 
         byte[] fileBytes = file.getBytes();
-        String detectedMime = TIKA.detect(fileBytes);
+        String detectedMime = TIKA.detect(fileBytes, originalFilename);
         if (!expectedMime.equalsIgnoreCase(detectedMime)) {
             throw new BadRequestException("File content does not match declared type");
         }
