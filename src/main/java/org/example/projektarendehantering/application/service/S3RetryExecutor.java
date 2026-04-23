@@ -58,28 +58,33 @@ public class S3RetryExecutor {
     }
 
     public boolean isRetryable(Throwable throwable) {
-        Throwable root = rootCause(throwable);
-
-        if (root instanceof S3Exception s3Exception) {
-            return isRetryableStatusOrAwsError(
-                    s3Exception.statusCode(),
-                    s3Exception.awsErrorDetails() != null ? s3Exception.awsErrorDetails().errorCode() : null
-            );
-        }
-        if (root instanceof AwsServiceException awsServiceException) {
-            return isRetryableStatusOrAwsError(
-                    awsServiceException.statusCode(),
-                    awsServiceException.awsErrorDetails() != null ? awsServiceException.awsErrorDetails().errorCode() : null
-            );
-        }
-        if (root instanceof NonRetryableException) {
-            return false;
-        }
-        if (root instanceof RetryableException) {
-            return true;
-        }
-        if (root instanceof SdkClientException sdkClientException) {
-            return sdkClientException.retryable() || isLikelyTransientClientError(sdkClientException.getMessage());
+        Throwable current = throwable;
+        while (current != null) {
+            if (current instanceof S3Exception s3Exception) {
+                return isRetryableStatusOrAwsError(
+                        s3Exception.statusCode(),
+                        s3Exception.awsErrorDetails() != null ? s3Exception.awsErrorDetails().errorCode() : null
+                );
+            }
+            if (current instanceof AwsServiceException awsServiceException) {
+                return isRetryableStatusOrAwsError(
+                        awsServiceException.statusCode(),
+                        awsServiceException.awsErrorDetails() != null ? awsServiceException.awsErrorDetails().errorCode() : null
+                );
+            }
+            if (current instanceof NonRetryableException) {
+                return false;
+            }
+            if (current instanceof RetryableException) {
+                return true;
+            }
+            if (current instanceof SdkClientException sdkClientException) {
+                return sdkClientException.retryable() || isLikelyTransientClientError(sdkClientException.getMessage());
+            }
+            if (current.getCause() == current) {
+                break;
+            }
+            current = current.getCause();
         }
         return false;
     }
@@ -130,14 +135,6 @@ public class S3RetryExecutor {
 
     private boolean isRetryableStatusOrAwsError(int statusCode, String awsErrorCode) {
         return RETRYABLE_HTTP_STATUS.contains(statusCode) || isRetryableAwsErrorCode(awsErrorCode);
-    }
-
-    private Throwable rootCause(Throwable throwable) {
-        Throwable current = throwable;
-        while (current.getCause() != null && current.getCause() != current) {
-            current = current.getCause();
-        }
-        return current;
     }
 
     private boolean isLikelyTransientClientError(String message) {

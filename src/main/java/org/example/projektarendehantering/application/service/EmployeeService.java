@@ -16,6 +16,7 @@ import lombok.RequiredArgsConstructor;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -56,7 +57,7 @@ public class EmployeeService {
                 .orElseThrow(() -> new BadRequestException("EMPLOYEE_NOT_FOUND", "Employee not found"));
 
         String normalizedGithubUsername = GithubUsernameNormalizer.normalize(dto.getGithubUsername());
-        if (!entity.getGithubUsername().equals(normalizedGithubUsername)) {
+        if (!Objects.equals(entity.getGithubUsername(), normalizedGithubUsername)) {
             throw new BadRequestException("EMPLOYEE_USERNAME_IMMUTABLE", "Github username cannot be changed");
         }
 

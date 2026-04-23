@@ -58,7 +58,7 @@ public class FailedS3DeletionService {
                 .build();
         failedS3DeletionRepository.save(entity);
         log.warn("Queued failed S3 deletion for retry. bucket={}, key={}", bucket, s3Key);
-        auditService.record(AuditEventEntity.builder()
+        recordAuditBestEffort(AuditEventEntity.builder()
                 .eventName("DOCUMENT_S3_DELETE_QUEUED")
                 .description("Queued failed S3 deletion for retry")
                 .queryString("bucket=" + bucket + "&s3Key=" + s3Key + "&error=" + trimmed)
@@ -97,7 +97,7 @@ public class FailedS3DeletionService {
             });
             failedS3DeletionRepository.delete(item);
             log.info("Recovered failed S3 deletion. bucket={}, key={}", item.getBucket(), item.getS3Key());
-            auditService.record(AuditEventEntity.builder()
+            recordAuditBestEffort(AuditEventEntity.builder()
                     .eventName("DOCUMENT_S3_DELETE_RECOVERED")
                     .description("Recovered failed S3 deletion from retry queue")
                     .queryString("bucket=" + item.getBucket() + "&s3Key=" + item.getS3Key() + "&attempts=" + item.getAttemptCount())
@@ -121,7 +121,7 @@ public class FailedS3DeletionService {
             failedS3DeletionRepository.save(item);
             log.warn("Failed retrying S3 deletion. bucket={}, key={}, attempts={}",
                     item.getBucket(), item.getS3Key(), item.getAttemptCount(), ex);
-            auditService.record(AuditEventEntity.builder()
+            recordAuditBestEffort(AuditEventEntity.builder()
                     .eventName("DOCUMENT_S3_DELETE_RETRY_FAILED")
                     .description("Retry failed for queued S3 deletion")
                     .queryString("bucket=" + item.getBucket() + "&s3Key=" + item.getS3Key()
@@ -139,13 +139,21 @@ public class FailedS3DeletionService {
 
     private void markDeadLetter(FailedS3DeletionEntity item, String reason) {
         failedS3DeletionRepository.delete(item);
-        auditService.record(AuditEventEntity.builder()
+        recordAuditBestEffort(AuditEventEntity.builder()
                 .eventName("DOCUMENT_S3_DELETE_DEAD_LETTERED")
                 .description("Queued S3 deletion reached max retry attempts and was dead-lettered")
                 .queryString("bucket=" + item.getBucket() + "&s3Key=" + item.getS3Key()
                         + "&attempts=" + item.getAttemptCount() + "&reason=" + reason)
                 .occurredAt(Instant.now())
                 .build());
+    }
+
+    private void recordAuditBestEffort(AuditEventEntity event) {
+        try {
+            auditService.record(event);
+        } catch (Exception ex) {
+            log.warn("Failed to record S3 deletion audit event. eventName={}", event.getEventName(), ex);
+        }
     }
 
     private String trimError(Exception e) {
