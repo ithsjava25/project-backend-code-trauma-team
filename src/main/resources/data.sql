@@ -15,6 +15,14 @@ INSERT INTO user_account (id, email, password_hash, role, provider, provider_use
 VALUES ('120e8400-e29b-41d4-a716-446655440002', 'patient.seed@traumateam.local', NULL, 'PATIENT', 'GITHUB', 'seed-patient-001', true, CURRENT_TIMESTAMP - INTERVAL '40 days')
 ON CONFLICT (email) DO NOTHING;
 
+INSERT INTO user_account (id, email, password_hash, role, provider, provider_user_id, enabled, created_at)
+VALUES ('228023f0-e676-356e-ba78-097cc894cc5a', NULL, NULL, 'MANAGER', 'GITHUB', 'linuswestling', true, CURRENT_TIMESTAMP - INTERVAL '2 days')
+ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO user_account (id, email, password_hash, role, provider, provider_user_id, enabled, created_at)
+VALUES ('876a23e4-2207-3e12-b36c-c44e4a50f772', NULL, NULL, 'MANAGER', 'GITHUB', 'mattknatt', true, CURRENT_TIMESTAMP - INTERVAL '2 days')
+ON CONFLICT (id) DO NOTHING;
+
 -- ------------------------------------------------------------
 -- Patients
 -- ------------------------------------------------------------
@@ -63,6 +71,14 @@ ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO employees (id, display_name, github_username, role, created_at)
 VALUES ('770e8400-e29b-41d4-a716-446655440004', 'Nurse Emma Karlsson', 'emma-karlsson-rn', 'NURSE', CURRENT_TIMESTAMP - INTERVAL '33 days')
+ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO employees (id, display_name, github_username, role, created_at)
+VALUES ('228023f0-e676-356e-ba78-097cc894cc5a', 'Linus Westling', 'linuswestling', 'MANAGER', CURRENT_TIMESTAMP - INTERVAL '2 days')
+ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO employees (id, display_name, github_username, role, created_at)
+VALUES ('876a23e4-2207-3e12-b36c-c44e4a50f772', 'Matt Knatt', 'mattknatt', 'MANAGER', CURRENT_TIMESTAMP - INTERVAL '2 days')
 ON CONFLICT (id) DO NOTHING;
 
 -- ------------------------------------------------------------
