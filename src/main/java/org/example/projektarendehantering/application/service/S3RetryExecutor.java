@@ -23,6 +23,15 @@ public class S3RetryExecutor {
 
     private static final Logger log = LoggerFactory.getLogger(S3RetryExecutor.class);
     private static final Set<Integer> RETRYABLE_HTTP_STATUS = Set.of(408, 429, 500, 502, 503, 504);
+    private static final String[] TRANSIENT_CLIENT_ERROR_MARKERS = {
+            "connection reset",
+            "connection refused",
+            "timed out",
+            "timeout",
+            "broken pipe",
+            "i/o",
+            "eof"
+    };
 
     private final RetryTemplate retryTemplate;
 
@@ -38,6 +47,12 @@ public class S3RetryExecutor {
         try {
             return retryTemplate.execute(callback);
         } catch (RuntimeException ex) {
+            if (ex instanceof AppException appException) {
+                throw appException;
+            }
+            if (ex.getCause() instanceof AppException appExceptionCause) {
+                throw appExceptionCause;
+            }
             throw mapToAppException(operationName, ex);
         }
     }
@@ -46,12 +61,16 @@ public class S3RetryExecutor {
         Throwable root = rootCause(throwable);
 
         if (root instanceof S3Exception s3Exception) {
-            return RETRYABLE_HTTP_STATUS.contains(s3Exception.statusCode()) || isRetryableAwsErrorCode(s3Exception.awsErrorDetails() != null
-                    ? s3Exception.awsErrorDetails().errorCode()
-                    : null);
+            return isRetryableStatusOrAwsError(
+                    s3Exception.statusCode(),
+                    s3Exception.awsErrorDetails() != null ? s3Exception.awsErrorDetails().errorCode() : null
+            );
         }
         if (root instanceof AwsServiceException awsServiceException) {
-            return RETRYABLE_HTTP_STATUS.contains(awsServiceException.statusCode());
+            return isRetryableStatusOrAwsError(
+                    awsServiceException.statusCode(),
+                    awsServiceException.awsErrorDetails() != null ? awsServiceException.awsErrorDetails().errorCode() : null
+            );
         }
         if (root instanceof NonRetryableException) {
             return false;
@@ -60,7 +79,7 @@ public class S3RetryExecutor {
             return true;
         }
         if (root instanceof SdkClientException sdkClientException) {
-            return sdkClientException.retryable();
+            return sdkClientException.retryable() || isLikelyTransientClientError(sdkClientException.getMessage());
         }
         return false;
     }
@@ -109,11 +128,28 @@ public class S3RetryExecutor {
         };
     }
 
+    private boolean isRetryableStatusOrAwsError(int statusCode, String awsErrorCode) {
+        return RETRYABLE_HTTP_STATUS.contains(statusCode) || isRetryableAwsErrorCode(awsErrorCode);
+    }
+
     private Throwable rootCause(Throwable throwable) {
         Throwable current = throwable;
         while (current.getCause() != null && current.getCause() != current) {
             current = current.getCause();
         }
         return current;
+    }
+
+    private boolean isLikelyTransientClientError(String message) {
+        if (message == null || message.isBlank()) {
+            return false;
+        }
+        String normalized = message.toLowerCase();
+        for (String marker : TRANSIENT_CLIENT_ERROR_MARKERS) {
+            if (normalized.contains(marker)) {
+                return true;
+            }
+        }
+        return false;
     }
 }

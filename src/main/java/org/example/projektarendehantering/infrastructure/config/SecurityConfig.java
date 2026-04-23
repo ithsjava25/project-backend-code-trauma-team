@@ -34,7 +34,7 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http, CustomOAuth2UserService customOAuth2UserService) throws Exception {
         http
             .authorizeHttpRequests(authorize -> authorize
-                .requestMatchers("/login**", "/register", "/error**", "/static/**", "/app.css", "/app.js", "/webjars/**").permitAll()
+                .requestMatchers("/login**", "/register", "/error**", "/static/**", "/app.js", "/webjars/**").permitAll()
                 .anyRequest().authenticated()
             )
             .oauth2Login(oauth2 -> oauth2

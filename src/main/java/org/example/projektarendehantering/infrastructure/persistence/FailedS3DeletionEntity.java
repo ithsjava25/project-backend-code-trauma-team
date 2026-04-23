@@ -14,8 +14,8 @@ import java.util.UUID;
 @Entity
 @Table(
         name = "failed_s3_deletions",
-        uniqueConstraints = @UniqueConstraint(columnNames = {"bucket", "s3Key"}),
-        indexes = @Index(name = "idx_failed_s3_next_attempt", columnList = "nextAttemptAt,createdAt")
+        uniqueConstraints = @UniqueConstraint(columnNames = {"bucket", "s3_key"}),
+        indexes = @Index(name = "idx_failed_s3_next_attempt", columnList = "next_attempt_at,created_at")
 )
 public class FailedS3DeletionEntity {
 

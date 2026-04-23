@@ -72,7 +72,11 @@ public class FailedS3DeletionService {
                 .findByNextAttemptAtBeforeOrderByCreatedAtAsc(Instant.now(), PageRequest.of(0, batchSize));
 
         for (FailedS3DeletionEntity item : items) {
-            selfProvider.getObject().processOne(item.getId());
+            try {
+                selfProvider.getObject().processOne(item.getId());
+            } catch (Exception ex) {
+                log.error("Unexpected error while processing failed S3 deletion item. id={}", item.getId(), ex);
+            }
         }
     }
 

@@ -20,7 +20,6 @@ public class AuditWebMvcConfig implements WebMvcConfigurer {
                 .addPathPatterns("/ui/**", "/api/**")
                 .excludePathPatterns(
                         "/static/**",
-                        "/app.css",
                         "/app.js",
                         "/error**",
                         "/login**"

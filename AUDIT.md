@@ -59,7 +59,7 @@ Table **`audit_events`** (entity `AuditEventEntity`):
 `AuditWebMvcConfig` adds `AuditInterceptor` for:
 
 - **Included:** `/ui/**`, `/api/**`
-- **Excluded:** `/static/**`, `/app.css`, `/app.js`, `/error**`, `/login**`
+- **Excluded:** `/static/**`, `/app.js`, `/error**`, `/login**`
 
 So static assets, error pages, and login flows do not generate audit rows.
 
