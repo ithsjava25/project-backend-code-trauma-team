@@ -15,9 +15,14 @@ import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.web.multipart.MultipartFile;
 
+import org.apache.tika.Tika;
+
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.time.Instant;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -35,6 +40,16 @@ public class DocumentService {
     @Value("${app.s3.bucket}")
     private String bucket;
 
+    private static final Tika TIKA = new Tika();
+    private static final long MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
+    private static final Map<String, String> EXTENSION_TO_MIME = Map.of(
+            "pdf",  "application/pdf",
+            "png",  "image/png",
+            "jpg",  "image/jpeg",
+            "jpeg", "image/jpeg",
+            "docx", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+    );
+
     @Transactional
     public DocumentDTO uploadDocument(Actor actor, UUID caseId, MultipartFile file) throws IOException {
         if (file == null || file.isEmpty()) {
@@ -49,6 +64,25 @@ public class DocumentService {
             throw new BadRequestException("Content type is required");
         }
 
+        if (file.getSize() > MAX_FILE_SIZE) {
+            throw new BadRequestException("File size exceeds the maximum allowed size of 10 MB");
+        }
+
+        String extension = originalFilename.contains(".")
+                ? originalFilename.substring(originalFilename.lastIndexOf('.') + 1).toLowerCase(Locale.ROOT)
+                : "";
+        String expectedMime = EXTENSION_TO_MIME.get(extension);
+
+        if (expectedMime == null || !expectedMime.equalsIgnoreCase(contentType)) {
+            throw new BadRequestException("File type not allowed. Allowed types: pdf, png, jpg, jpeg, docx");
+        }
+
+        byte[] fileBytes = file.getBytes();
+        String detectedMime = TIKA.detect(fileBytes, originalFilename);
+        if (!expectedMime.equalsIgnoreCase(detectedMime)) {
+            throw new BadRequestException("File content does not match declared type");
+        }
+
         CaseEntity caseEntity = caseRepository.findById(caseId)
                 .orElseThrow(() -> new BadRequestException("Case not found"));
 
@@ -58,13 +92,13 @@ public class DocumentService {
 
         validateAccess(actor, caseEntity);
 
-        String s3Key = UUID.randomUUID().toString() + "-" + originalFilename;
+        String s3Key = UUID.randomUUID() + "-" + originalFilename;
 
         try {
             ObjectMetadata metadata = ObjectMetadata.builder()
                     .contentType(file.getContentType())
                     .build();
-            s3Template.upload(bucket, s3Key, file.getInputStream(), metadata);
+            s3Template.upload(bucket, s3Key, new ByteArrayInputStream(fileBytes), metadata);
         } catch (Exception e) {
             log.error("S3 upload failed for bucket: {}, key: {}. Error: {}", bucket, s3Key, e.getMessage(), e);
             throw new AppException("S3_UPLOAD_FAILED", "Failed to upload file to S3");

@@ -22,6 +22,8 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
@@ -80,33 +82,33 @@ class DocumentServiceTest {
 
     @Test
     void uploadDocument_shouldAllowOwner() throws IOException {
-        MockMultipartFile file = new MockMultipartFile("file", "test.txt", "text/plain", "hello".getBytes());
+        MockMultipartFile file = new MockMultipartFile("file", "test.pdf", "application/pdf", "%PDF-1.4 test".getBytes());
         when(caseRepository.findById(caseId)).thenReturn(Optional.of(caseEntity));
         when(documentRepository.save(any(DocumentEntity.class))).thenAnswer(i -> {
             DocumentEntity e = i.getArgument(0);
             e.setId(UUID.randomUUID());
             return e;
         });
-        when(documentMapper.toDTO(any(DocumentEntity.class))).thenReturn(new DocumentDTO(UUID.randomUUID(), "test.txt", "text/plain", 5, Instant.now(), doctorActor.userId(), caseId));
+        when(documentMapper.toDTO(any(DocumentEntity.class))).thenReturn(new DocumentDTO(UUID.randomUUID(), "test.pdf", "application/pdf", 5, Instant.now(), doctorActor.userId(), caseId));
 
         DocumentDTO result = documentService.uploadDocument(doctorActor, caseId, file);
 
         assertThat(result).isNotNull();
-        assertThat(result.fileName()).isEqualTo("test.txt");
+        assertThat(result.fileName()).isEqualTo("test.pdf");
         verify(s3Template).upload(eq("test-bucket"), anyString(), any(InputStream.class), any(ObjectMetadata.class));
         verify(documentRepository).save(any(DocumentEntity.class));
     }
 
     @Test
     void uploadDocument_shouldAllowManager() throws IOException {
-        MockMultipartFile file = new MockMultipartFile("file", "test.txt", "text/plain", "hello".getBytes());
+        MockMultipartFile file = new MockMultipartFile("file", "test.pdf", "application/pdf", "%PDF-1.4 test".getBytes());
         when(caseRepository.findById(caseId)).thenReturn(Optional.of(caseEntity));
         when(documentRepository.save(any(DocumentEntity.class))).thenAnswer(i -> {
             DocumentEntity e = i.getArgument(0);
             e.setId(UUID.randomUUID());
             return e;
         });
-        when(documentMapper.toDTO(any(DocumentEntity.class))).thenReturn(new DocumentDTO(UUID.randomUUID(), "test.txt", "text/plain", 5, Instant.now(), managerActor.userId(), caseId));
+        when(documentMapper.toDTO(any(DocumentEntity.class))).thenReturn(new DocumentDTO(UUID.randomUUID(), "test.pdf", "application/pdf", 5, Instant.now(), managerActor.userId(), caseId));
 
         DocumentDTO result = documentService.uploadDocument(managerActor, caseId, file);
 
@@ -117,11 +119,32 @@ class DocumentServiceTest {
     @Test
     void uploadDocument_shouldDenyUnauthorized() {
         Actor unauthorizedActor = new Actor(UUID.randomUUID(), Role.DOCTOR, "Unauthorized", "unauthorized_user");
-        MockMultipartFile file = new MockMultipartFile("file", "test.txt", "text/plain", "hello".getBytes());
+        MockMultipartFile file = new MockMultipartFile("file", "test.pdf", "application/pdf", "%PDF-1.4 test".getBytes());
         when(caseRepository.findById(caseId)).thenReturn(Optional.of(caseEntity));
 
         assertThatThrownBy(() -> documentService.uploadDocument(unauthorizedActor, caseId, file))
                 .isInstanceOf(NotAuthorizedException.class);
+    }
+
+    @Test
+    void uploadDocument_shouldAllowDocx() throws IOException {
+        byte[] docxBytes = Files.readAllBytes(Path.of("src/test/resources/test.docx"));
+        String docxMime = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+        MockMultipartFile file = new MockMultipartFile("file", "test.docx", docxMime, docxBytes);
+        when(caseRepository.findById(caseId)).thenReturn(Optional.of(caseEntity));
+        when(documentRepository.save(any(DocumentEntity.class))).thenAnswer(i -> {
+            DocumentEntity e = i.getArgument(0);
+            e.setId(UUID.randomUUID());
+            return e;
+        });
+        when(documentMapper.toDTO(any(DocumentEntity.class))).thenReturn(
+                new DocumentDTO(UUID.randomUUID(), "test.docx", docxMime, docxBytes.length, Instant.now(), doctorActor.userId(), caseId));
+
+        DocumentDTO result = documentService.uploadDocument(doctorActor, caseId, file);
+
+        assertThat(result).isNotNull();
+        assertThat(result.fileName()).isEqualTo("test.docx");
+        verify(s3Template).upload(eq("test-bucket"), anyString(), any(InputStream.class), any(ObjectMetadata.class));
     }
 
     @Test
@@ -142,7 +165,7 @@ class DocumentServiceTest {
 
     @Test
     void uploadDocument_shouldAllowPatientOnOwnCase() throws IOException {
-        MockMultipartFile file = new MockMultipartFile("file", "test.txt", "text/plain", "hello".getBytes());
+        MockMultipartFile file = new MockMultipartFile("file", "test.pdf", "application/pdf", "%PDF-1.4 test".getBytes());
         when(caseRepository.findById(caseId)).thenReturn(Optional.of(caseEntity));
         when(documentRepository.save(any(DocumentEntity.class))).thenAnswer(i -> {
             DocumentEntity e = i.getArgument(0);
@@ -150,7 +173,7 @@ class DocumentServiceTest {
             return e;
         });
         when(documentMapper.toDTO(any(DocumentEntity.class))).thenReturn(
-                new DocumentDTO(UUID.randomUUID(), "test.txt", "text/plain", 5, Instant.now(), patientActor.userId(), caseId));
+                new DocumentDTO(UUID.randomUUID(), "file", "test.pdf", 5, Instant.now(), patientActor.userId(), caseId));
 
         DocumentDTO result = documentService.uploadDocument(patientActor, caseId, file);
 
@@ -161,7 +184,7 @@ class DocumentServiceTest {
     @Test
     void uploadDocument_shouldDenyPatientOnOtherCase() {
         Actor otherPatient = new Actor(UUID.randomUUID(), Role.PATIENT, "Other", "other_patient");
-        MockMultipartFile file = new MockMultipartFile("file", "test.txt", "text/plain", "hello".getBytes());
+        MockMultipartFile file = new MockMultipartFile("file", "test.pdf", "application/pdf", "%PDF-1.4 test".getBytes());
         when(caseRepository.findById(caseId)).thenReturn(Optional.of(caseEntity));
 
         assertThatThrownBy(() -> documentService.uploadDocument(otherPatient, caseId, file))

@@ -97,7 +97,7 @@ class DocumentIntegrationTest {
     @Test
     @WithMockUser(username = "manager", roles = {"MANAGER"})
     void uploadDocument_shouldSucceed() throws Exception {
-        MockMultipartFile file = new MockMultipartFile("file", "test.txt", MediaType.TEXT_PLAIN_VALUE, "hello".getBytes());
+        MockMultipartFile file = new MockMultipartFile("file", "test.pdf", "application/pdf", "%PDF-1.4 test".getBytes());
 
         mockMvc.perform(multipart("/ui/cases/{caseId}/documents/upload", caseId)
                         .file(file)
@@ -112,7 +112,7 @@ class DocumentIntegrationTest {
     @Test
     @WithMockUser(username = "manager", roles = {"MANAGER"})
     void listDocuments_shouldReturnDocumentsWithoutLazyLoadingException() throws Exception {
-        MockMultipartFile file = new MockMultipartFile("file", "test.txt", MediaType.TEXT_PLAIN_VALUE, "hello".getBytes());
+        MockMultipartFile file = new MockMultipartFile("file", "test.pdf", "application/pdf", "%PDF-1.4 test".getBytes());
         mockMvc.perform(multipart("/ui/cases/{caseId}/documents/upload", caseId)
                         .file(file).with(csrf()))
                 .andExpect(status().is3xxRedirection());
@@ -124,7 +124,7 @@ class DocumentIntegrationTest {
     @Test
     @WithMockUser(username = "manager", roles = {"MANAGER"})
     void downloadDocument_shouldSucceedWithoutLazyLoadingException() throws Exception {
-        MockMultipartFile file = new MockMultipartFile("file", "test.txt", MediaType.TEXT_PLAIN_VALUE, "hello".getBytes());
+        MockMultipartFile file = new MockMultipartFile("file", "test.pdf", "application/pdf", "%PDF-1.4 test".getBytes());
         mockMvc.perform(multipart("/ui/cases/{caseId}/documents/upload", caseId)
                         .file(file).with(csrf()))
                 .andExpect(status().is3xxRedirection());
@@ -143,7 +143,7 @@ class DocumentIntegrationTest {
     @Test
     @WithMockUser(username = "other", roles = {"DOCTOR"})
     void uploadDocument_shouldDenyUnauthorized() throws Exception {
-        MockMultipartFile file = new MockMultipartFile("file", "test.txt", MediaType.TEXT_PLAIN_VALUE, "hello".getBytes());
+        MockMultipartFile file = new MockMultipartFile("file", "test.pdf", "application/pdf", "%PDF-1.4 test".getBytes());
 
         mockMvc.perform(multipart("/ui/cases/{caseId}/documents/upload", caseId)
                         .file(file)
