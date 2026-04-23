@@ -1,7 +1,6 @@
 package org.example.projektarendehantering.application.service;
 
 import org.example.projektarendehantering.common.Actor;
-import org.example.projektarendehantering.common.BadRequestException;
 import org.example.projektarendehantering.common.ConflictException;
 import org.example.projektarendehantering.common.NotAuthorizedException;
 import org.example.projektarendehantering.common.Role;
