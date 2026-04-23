@@ -1,6 +1,5 @@
 package org.example.projektarendehantering.application.service;
 
-import io.awspring.cloud.s3.ObjectMetadata;
 import io.awspring.cloud.s3.S3Resource;
 import io.awspring.cloud.s3.S3Template;
 import org.example.projektarendehantering.common.AppException;
@@ -20,10 +19,10 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.retry.RetryCallback;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
@@ -66,6 +65,11 @@ class DocumentServiceTest {
     @BeforeEach
     void setUp() {
         ReflectionTestUtils.setField(documentService, "bucket", "test-bucket");
+        lenient().when(s3RetryExecutor.execute(anyString(), any())).thenAnswer(invocation -> {
+            @SuppressWarnings("unchecked")
+            RetryCallback<Object, RuntimeException> callback = invocation.getArgument(1);
+            return callback.doWithRetry(null);
+        });
 
         UUID doctorId = UUID.randomUUID();
         UUID managerId = UUID.randomUUID();
@@ -215,7 +219,7 @@ class DocumentServiceTest {
         DocumentDTO result = documentService.uploadDocument(patientActor, caseId, file);
 
         assertThat(result).isNotNull();
-        verify(s3Template).upload(eq("test-bucket"), anyString(), any(InputStream.class), any(ObjectMetadata.class));
+        verify(s3RetryExecutor).execute(eq("upload"), any());
     }
 
     @Test
