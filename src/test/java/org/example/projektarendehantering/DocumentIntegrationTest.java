@@ -22,6 +22,9 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.WebApplicationContext;
 
+import io.awspring.cloud.s3.S3Resource;
+
+import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.util.UUID;
 
@@ -32,6 +35,9 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
@@ -101,6 +107,37 @@ class DocumentIntegrationTest {
 
         assertThat(documentRepository.findAllByCaseEntityId(caseId)).hasSize(1);
         verify(s3Template).upload(eq("test-documents"), any(), any(InputStream.class), any(ObjectMetadata.class));
+    }
+
+    @Test
+    @WithMockUser(username = "manager", roles = {"MANAGER"})
+    void listDocuments_shouldReturnDocumentsWithoutLazyLoadingException() throws Exception {
+        MockMultipartFile file = new MockMultipartFile("file", "test.txt", MediaType.TEXT_PLAIN_VALUE, "hello".getBytes());
+        mockMvc.perform(multipart("/ui/cases/{caseId}/documents/upload", caseId)
+                        .file(file).with(csrf()))
+                .andExpect(status().is3xxRedirection());
+
+        mockMvc.perform(get("/ui/cases/{caseId}", caseId))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    @WithMockUser(username = "manager", roles = {"MANAGER"})
+    void downloadDocument_shouldSucceedWithoutLazyLoadingException() throws Exception {
+        MockMultipartFile file = new MockMultipartFile("file", "test.txt", MediaType.TEXT_PLAIN_VALUE, "hello".getBytes());
+        mockMvc.perform(multipart("/ui/cases/{caseId}/documents/upload", caseId)
+                        .file(file).with(csrf()))
+                .andExpect(status().is3xxRedirection());
+
+        UUID docId = documentRepository.findAllByCaseEntityId(caseId).get(0).getId();
+
+        S3Resource mockResource = mock(S3Resource.class);
+        when(mockResource.getInputStream()).thenReturn(new ByteArrayInputStream("content".getBytes()));
+        when(mockResource.contentLength()).thenReturn(7L);
+        when(s3Template.download(any(), any())).thenReturn(mockResource);
+
+        mockMvc.perform(get("/ui/cases/{caseId}/documents/{docId}/download", caseId, docId))
+                .andExpect(status().isOk());
     }
 
     @Test
