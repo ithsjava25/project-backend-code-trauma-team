@@ -10,6 +10,8 @@ import org.example.projektarendehantering.infrastructure.persistence.EmployeeRep
 import org.example.projektarendehantering.presentation.dto.EmployeeCreateDTO;
 import org.example.projektarendehantering.presentation.dto.EmployeeDTO;
 import org.example.projektarendehantering.presentation.dto.EmployeeUpdateDTO;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -28,6 +30,7 @@ public class EmployeeService {
     private final EmployeeRepository employeeRepository;
     private final EmployeeMapper employeeMapper;
 
+    @CacheEvict(value = {"employees-by-role", "all-employees"}, allEntries = true)
     @Transactional
     public EmployeeDTO createEmployee(Actor actor, EmployeeCreateDTO dto) {
         requireCanManageEmployees(actor);
@@ -50,6 +53,7 @@ public class EmployeeService {
         return employeeMapper.toDTO(employeeRepository.save(entity));
     }
 
+    @CacheEvict(value = {"employees-by-role", "all-employees"}, allEntries = true)
     @Transactional
     public EmployeeDTO updateEmployee(Actor actor, UUID id, EmployeeUpdateDTO dto) {
         requireCanManageEmployees(actor);
@@ -66,6 +70,7 @@ public class EmployeeService {
         return employeeMapper.toDTO(employeeRepository.save(entity));
     }
 
+    @CacheEvict(value = {"employees-by-role", "all-employees"}, allEntries = true)
     @Transactional
     public void deleteEmployee(Actor actor, UUID id) {
         requireCanManageEmployees(actor);
@@ -80,6 +85,7 @@ public class EmployeeService {
         return employeeRepository.findById(id).map(employeeMapper::toDTO);
     }
 
+    @Cacheable("all-employees")
     @Transactional(readOnly = true)
     public List<EmployeeDTO> getAllEmployees(Actor actor) {
         requireCanManageEmployees(actor);
@@ -88,6 +94,7 @@ public class EmployeeService {
                 .collect(Collectors.toList());
     }
 
+    @Cacheable(value = "employees-by-role", key = "#role")
     @Transactional(readOnly = true)
     public List<EmployeeDTO> findByRole(Role role) {
         return employeeRepository.findAllByRole(role).stream()
