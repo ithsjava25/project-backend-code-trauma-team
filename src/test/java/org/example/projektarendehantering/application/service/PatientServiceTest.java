@@ -1,7 +1,6 @@
 package org.example.projektarendehantering.application.service;
 
 import org.example.projektarendehantering.common.Actor;
-import org.example.projektarendehantering.common.BadRequestException;
 import org.example.projektarendehantering.common.ConflictException;
 import org.example.projektarendehantering.common.NotAuthorizedException;
 import org.example.projektarendehantering.common.Role;
@@ -110,25 +109,4 @@ class PatientServiceTest {
                 .isInstanceOf(NotAuthorizedException.class);
     }
 
-    @Test
-    void deletePatient_shouldDeleteIfFound() {
-        UUID id = UUID.randomUUID();
-        PatientEntity entity = new PatientEntity();
-
-        when(patientRepository.findById(id)).thenReturn(Optional.of(entity));
-
-        patientService.deletePatient(managerActor, id);
-
-        verify(patientRepository).delete(entity);
-    }
-
-    @Test
-    void deletePatient_shouldThrowIfNotFound() {
-        UUID id = UUID.randomUUID();
-
-        when(patientRepository.findById(id)).thenReturn(Optional.empty());
-
-        assertThatThrownBy(() -> patientService.deletePatient(managerActor, id))
-                .isInstanceOf(BadRequestException.class);
-    }
 }

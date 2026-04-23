@@ -60,14 +60,6 @@ public class PatientService {
         return patientMapper.toDTO(patientRepository.save(entity));
     }
 
-    @Transactional
-    public void deletePatient(Actor actor, UUID id) {
-        requireCanManagePatients(actor);
-        PatientEntity entity = patientRepository.findById(id)
-                .orElseThrow(() -> new BadRequestException("PATIENT_NOT_FOUND", "Patient not found"));
-        patientRepository.delete(entity);
-    }
-
     @Transactional(readOnly = true)
     public Optional<PatientDTO> getPatient(UUID id) {
         return patientRepository.findById(id).map(patientMapper::toDTO);

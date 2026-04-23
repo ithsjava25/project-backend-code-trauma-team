@@ -29,10 +29,6 @@
                 <td th:text="${p.createdAt}">Date</td>
                 <td>
                     <a class="button button-small" th:href="@{/ui/patients/edit/{id}(id=${p.id})}">Edit</a>
-                    <form th:action="@{/ui/patients/delete/{id}(id=${p.id})}" method="post" style="display:inline"
-                          onsubmit="return confirm('Are you sure you want to delete this patient?')">
-                        <button class="button button-small button-danger" type="submit">Delete</button>
-                    </form>
                 </td>
             </tr>
             </tbody>
