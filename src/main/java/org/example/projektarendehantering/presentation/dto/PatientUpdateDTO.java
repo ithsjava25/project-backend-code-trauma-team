@@ -13,14 +13,10 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class PatientUpdateDTO {
 
-    @NotBlank
-    private String firstName;
+    @NotBlank private String firstName;
 
-    @NotBlank
-    private String lastName;
+    @NotBlank private String lastName;
 
-    @NotBlank
-    @Pattern(regexp = "^\\d{8}-\\d{4}$", message = "Use format YYYYMMDD-XXXX")
-    private String personalIdentityNumber;
+    @NotBlank @Pattern(regexp = "^\\d{8}-\\d{4}$", message = "Use format YYYYMMDD-XXXX") private String personalIdentityNumber;
 
 }

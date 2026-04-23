@@ -84,10 +84,10 @@ class PatientServiceTest {
         UUID id = UUID.randomUUID();
         PatientUpdateDTO updateDto = new PatientUpdateDTO();
         updateDto.setPersonalIdentityNumber("19900101-1234");
-        
+
         PatientEntity entity = new PatientEntity();
         entity.setPersonalIdentityNumber("19900101-1111");
-        
+
         PatientDTO expectedDto = new PatientDTO();
 
         when(patientRepository.findById(id)).thenReturn(Optional.of(entity));

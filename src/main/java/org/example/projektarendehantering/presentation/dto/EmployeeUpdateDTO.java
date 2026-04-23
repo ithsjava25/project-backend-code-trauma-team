@@ -14,13 +14,10 @@ import org.example.projektarendehantering.common.Role;
 @AllArgsConstructor
 public class EmployeeUpdateDTO {
 
-    @NotBlank
-    private String displayName;
+    @NotBlank private String displayName;
 
-    @NotBlank
-    private String githubUsername;
+    @NotBlank private String githubUsername;
 
-    @NotNull
-    private Role role;
+    @NotNull private Role role;
 
 }

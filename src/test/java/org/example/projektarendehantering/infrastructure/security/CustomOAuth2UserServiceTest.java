@@ -59,11 +59,11 @@ class CustomOAuth2UserServiceTest {
         String login = "testuser";
         UUID userId = UUID.nameUUIDFromBytes(login.getBytes(StandardCharsets.UTF_8));
         EmployeeEntity employee = new EmployeeEntity(userId, "Test User", login, Role.DOCTOR, Instant.now());
-        
+
         when(employeeRepository.findByGithubUsername(login)).thenReturn(Optional.of(employee));
 
         OAuth2UserRequest request = mockOAuth2UserRequest();
-        
+
         // Act
         OAuth2User result = customOAuth2UserService.loadUser(request);
 
@@ -77,11 +77,11 @@ class CustomOAuth2UserServiceTest {
     void loadUser_whenUserNotFoundInDb_shouldNotAddRoleAuthority() {
         // Arrange
         String login = "testuser";
-        
+
         when(employeeRepository.findByGithubUsername(login)).thenReturn(Optional.empty());
 
         OAuth2UserRequest request = mockOAuth2UserRequest();
-        
+
         // Act
         OAuth2User result = customOAuth2UserService.loadUser(request);
 
@@ -100,10 +100,10 @@ class CustomOAuth2UserServiceTest {
                 .redirectUri("http://redirect")
                 .userNameAttributeName("id")
                 .build();
-        
+
         OAuth2AccessToken accessToken = new OAuth2AccessToken(
                 OAuth2AccessToken.TokenType.BEARER, "token", Instant.now(), Instant.now().plusSeconds(3600));
-        
+
         return new OAuth2UserRequest(clientRegistration, accessToken);
     }
 }

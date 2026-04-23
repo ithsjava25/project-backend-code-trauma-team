@@ -94,9 +94,9 @@ public class DocumentService {
 
         String s3Key = UUID.randomUUID() + "-" + originalFilename;
 
-        ObjectMetadata metadata = ObjectMetadata.builder()                                                                                                                                                                                                                                       
+        ObjectMetadata metadata = ObjectMetadata.builder()
                           .contentType(contentType)
-                          .build();                                                                                                                                                                                                                                                                        
+                          .build();
                   s3RetryExecutor.execute("upload", context -> {
                      s3Template.upload(bucket, s3Key, new ByteArrayInputStream(fileBytes), metadata);
                       return null;

@@ -84,7 +84,7 @@ public class GlobalControllerAdvice {
     public Object handleResponseStatusException(ResponseStatusException e, HttpServletRequest request, HttpServletResponse response, Model model) {
         HttpStatusCode code = e.getStatusCode();
         String reason = e.getReason() != null ? e.getReason() : "An error occurred";
-        
+
         if (isRestRequest(request)) {
             return ResponseEntity.status(code)
                     .body(Map.of(
@@ -92,13 +92,13 @@ public class GlobalControllerAdvice {
                             "status", code.value()
                     ));
         }
-        
+
         response.setStatus(code.value());
         String statusLabel = code.value() + "";
         if (code instanceof HttpStatus hs) {
             statusLabel += " " + hs.getReasonPhrase();
         }
-        
+
         model.addAttribute("status", statusLabel);
         model.addAttribute("message", reason);
         return "error";

@@ -17,11 +17,9 @@ public class PatientDTO {
 
     private UUID id;
 
-    @NotBlank
-    private String firstName;
+    @NotBlank private String firstName;
 
-    @NotBlank
-    private String lastName;
+    @NotBlank private String lastName;
 
     private String personalIdentityNumber;
 
