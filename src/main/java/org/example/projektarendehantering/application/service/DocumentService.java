@@ -11,8 +11,6 @@ import org.example.projektarendehantering.presentation.dto.DocumentDTO;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.transaction.support.TransactionSynchronization;
-import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.web.multipart.MultipartFile;
 
 import org.apache.tika.Tika;
@@ -34,6 +32,8 @@ public class DocumentService {
     private final DocumentRepository documentRepository;
     private final CaseRepository caseRepository;
     private final S3Template s3Template;
+    private final S3RetryExecutor s3RetryExecutor;
+    private final FailedS3DeletionService failedS3DeletionService;
     private final DocumentMapper documentMapper;
     private final AuditService auditService;
 
@@ -94,31 +94,14 @@ public class DocumentService {
 
         String s3Key = UUID.randomUUID() + "-" + originalFilename;
 
-        try {
-            ObjectMetadata metadata = ObjectMetadata.builder()
-                    .contentType(file.getContentType())
-                    .build();
-            s3Template.upload(bucket, s3Key, new ByteArrayInputStream(fileBytes), metadata);
-        } catch (Exception e) {
-            log.error("S3 upload failed for bucket: {}, key: {}. Error: {}", bucket, s3Key, e.getMessage(), e);
-            throw new AppException("S3_UPLOAD_FAILED", "Failed to upload file to S3");
-        }
+        ObjectMetadata metadata = ObjectMetadata.builder()                                                                                                                                                                                                                                       
+                          .contentType(contentType)
+                          .build();                                                                                                                                                                                                                                                                        
+                  s3RetryExecutor.execute("upload", context -> {
+                     s3Template.upload(bucket, s3Key, new ByteArrayInputStream(fileBytes), metadata);
+                      return null;
+                  });
 
-        boolean syncActive = TransactionSynchronizationManager.isSynchronizationActive();
-        if (syncActive) {
-            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
-                @Override
-                public void afterCompletion(int status) {
-                    if (status != TransactionSynchronization.STATUS_COMMITTED) {
-                        try {
-                            s3Template.deleteObject(bucket, s3Key);
-                        } catch (Exception cleanupEx) {
-                            log.error("Failed to cleanup rolled-back S3 object {}", s3Key, cleanupEx);
-                        }
-                    }
-                }
-            });
-        }
 
         DocumentEntity entity = DocumentEntity.builder()
                 .fileName(originalFilename)
@@ -161,12 +144,16 @@ public class DocumentService {
             }
             return documentMapper.toDTO(saved);
         } catch (RuntimeException ex) {
-            if (!syncActive) {
-                try {
+            try {
+                s3RetryExecutor.execute("delete", context -> {
                     s3Template.deleteObject(bucket, s3Key);
-                } catch (Exception cleanupEx) {
-                    log.error("Failed to cleanup orphaned S3 object {}", s3Key, cleanupEx);
-                }
+                    return null;
+                });
+            } catch (Exception cleanupEx) {
+                log.error("Failed to cleanup orphaned S3 object {}", s3Key, cleanupEx);
+                failedS3DeletionService.enqueue(bucket, s3Key, cleanupEx);
+                recordS3Audit(actor, caseEntity.getId(), "DOCUMENT_UPLOAD_COMPENSATION_QUEUED",
+                        "Queued failed upload compensation cleanup for retry", s3Key);
             }
             throw ex;
         }
@@ -195,7 +182,7 @@ public class DocumentService {
 
         validateAccess(actor, entity.getCaseEntity());
 
-        return s3Template.download(bucket, entity.getS3Key());
+        return s3RetryExecutor.execute("download", context -> s3Template.download(bucket, entity.getS3Key()));
     }
 
     @Transactional
@@ -208,35 +195,29 @@ public class DocumentService {
 
         validateAccess(actor, entity.getCaseEntity());
 
-        // Save S3 key before deletion
         String s3Key = entity.getS3Key();
-
-        // 1. Delete DB entity inside the transaction
         documentRepository.delete(entity);
-
-        // 2. Delete S3 object *after* successful commit (if in a transaction)
-        if (TransactionSynchronizationManager.isSynchronizationActive()) {
-            TransactionSynchronizationManager.registerSynchronization(
-                    new TransactionSynchronization() {
-                        @Override
-                        public void afterCommit() {
-                            try {
-                                s3Template.deleteObject(bucket, s3Key);
-                            } catch (Exception e) {
-                                // DB is already committed — log but do not throw
-                                log.error("Failed to delete S3 object {} after DB commit", s3Key, e);
-                            }
-                        }
-                    }
-            );
-        } else {
-            // No active transaction (e.g. in unit test)
-            try {
+        try {
+            s3RetryExecutor.execute("delete", context -> {
                 s3Template.deleteObject(bucket, s3Key);
-            } catch (Exception e) {
-                log.error("Failed to delete S3 object {} (no active transaction)", s3Key, e);
-            }
+                return null;
+            });
+        } catch (Exception e) {
+            log.error("Failed to delete S3 object {} after DB delete", s3Key, e);
+            failedS3DeletionService.enqueue(bucket, s3Key, e);
         }
+    }
+
+    private void recordS3Audit(Actor actor, UUID caseId, String eventName, String description, String s3Key) {
+        auditService.record(AuditEventEntity.builder()
+                .caseId(caseId)
+                .eventName(eventName)
+                .description(description)
+                .actorId(actor != null ? actor.userId() : null)
+                .actorRole(actor != null && actor.role() != null ? actor.role().name() : null)
+                .queryString("bucket=" + bucket + "&s3Key=" + s3Key)
+                .occurredAt(Instant.now())
+                .build());
     }
 
 

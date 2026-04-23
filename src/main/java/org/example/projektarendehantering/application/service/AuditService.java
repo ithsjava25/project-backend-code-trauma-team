@@ -15,6 +15,7 @@ import org.example.projektarendehantering.presentation.dto.AuditEventDTO;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
@@ -67,7 +68,7 @@ public class AuditService {
             "refresh_token"
     );
 
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void record(AuditEventEntity event) {
         if (event == null) return;
         if (event.getId() == null) {

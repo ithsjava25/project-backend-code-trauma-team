@@ -1,6 +1,7 @@
 package org.example.projektarendehantering.infrastructure.security;
 
 import org.example.projektarendehantering.infrastructure.persistence.EmployeeRepository;
+import org.example.projektarendehantering.common.GithubUsernameNormalizer;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
@@ -26,7 +27,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
     public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
         OAuth2User oAuth2User = loadBaseUser(userRequest);
 
-        String login = oAuth2User.getAttribute("login");
+        String login = GithubUsernameNormalizer.normalize(oAuth2User.getAttribute("login"));
         Set<GrantedAuthority> authorities = new HashSet<>(oAuth2User.getAuthorities());
 
         if (login != null) {

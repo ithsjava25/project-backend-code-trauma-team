@@ -122,6 +122,31 @@ class SecurityActorAdapterTest {
     }
 
     @Test
+    void currentUser_whenOAuth2LoginHasMixedCase_shouldNormalizeBeforeIdLookup() {
+        String login = " TestUser ";
+        String normalizedLogin = "testuser";
+        UUID userId = UUID.nameUUIDFromBytes(normalizedLogin.getBytes(StandardCharsets.UTF_8));
+
+        OAuth2AuthenticationToken oauth2Token = mock(OAuth2AuthenticationToken.class);
+        OAuth2User oauth2User = mock(OAuth2User.class);
+
+        when(securityContext.getAuthentication()).thenReturn(oauth2Token);
+        when(oauth2Token.isAuthenticated()).thenReturn(true);
+        when(oauth2Token.getName()).thenReturn("unused-name");
+        when(oauth2Token.getPrincipal()).thenReturn(oauth2User);
+        when(oauth2User.getAttribute("login")).thenReturn(login);
+
+        when(employeeRepository.findById(userId)).thenReturn(Optional.empty());
+        when(userAccountRepository.findByEmail("unused-name")).thenReturn(Optional.empty());
+        doReturn(Collections.emptyList()).when(oauth2Token).getAuthorities();
+
+        Actor actor = securityActorAdapter.currentUser();
+
+        assertThat(actor.userId()).isEqualTo(userId);
+        assertThat(actor.githubUsername()).isEqualTo(normalizedLogin);
+    }
+
+    @Test
     void currentUser_whenEmployeeNotFound_shouldFallbackToAuthorities_Manager() {
         String username = "manager-user";
         UUID userId = UUID.nameUUIDFromBytes(username.getBytes(StandardCharsets.UTF_8));
