@@ -41,6 +41,8 @@ class CaseServiceTest {
     @Mock
     private EmployeeRepository employeeRepository;
     @Mock
+    private UserAccountRepository userAccountRepository;
+    @Mock
     private CaseNoteMapper caseNoteMapper;
     @Mock
     private AuditService auditService;
@@ -79,6 +81,9 @@ class CaseServiceTest {
 
         PatientEntity patient = new PatientEntity();
         patient.setId(patientId);
+        UserAccountEntity patientUserAccount = new UserAccountEntity();
+        patientUserAccount.setId(patientId);
+        patient.setUserAccount(patientUserAccount);
         caseEntity.setPatient(patient);
     }
 
@@ -145,17 +150,22 @@ class CaseServiceTest {
     void createCase_shouldAllowPatientAndForceOwnPatientId() {
         CaseDTO dto = new CaseDTO();
         PatientEntity patient = new PatientEntity();
-        patient.setId(patientActor.userId());
+        patient.setId(UUID.randomUUID());
+        UserAccountEntity patientUserAccount = new UserAccountEntity();
+        patientUserAccount.setId(patientActor.userId());
+        patient.setUserAccount(patientUserAccount);
 
         when(caseMapper.toEntity(dto)).thenReturn(new CaseEntity());
-        when(patientRepository.findById(patientActor.userId())).thenReturn(Optional.of(patient));
+        when(patientRepository.findByUserAccount_Id(patientActor.userId())).thenReturn(Optional.of(patient));
         when(caseRepository.save(any(CaseEntity.class))).thenAnswer(i -> i.getArgument(0));
         when(caseMapper.toDTO(any(CaseEntity.class))).thenReturn(new CaseDTO());
 
         caseService.createCase(patientActor, dto);
 
-        verify(patientRepository).findById(patientActor.userId());
-        verify(caseRepository).save(argThat(saved -> saved.getPatient() != null && patientActor.userId().equals(saved.getPatient().getId())));
+        verify(patientRepository).findByUserAccount_Id(patientActor.userId());
+        verify(caseRepository).save(argThat(saved -> saved.getPatient() != null
+                && saved.getPatient().getUserAccount() != null
+                && patientActor.userId().equals(saved.getPatient().getUserAccount().getId())));
     }
 
     @Test
@@ -465,13 +475,13 @@ class CaseServiceTest {
 
     @Test
     void getAllCases_shouldReturnPatientCasesForPatientActor() {
-        when(caseRepository.findAllByPatient_IdAndStatusNot(patientActor.userId(), CaseStatus.CLOSED)).thenReturn(List.of(caseEntity));
+        when(caseRepository.findAllByPatient_UserAccount_IdAndStatusNot(patientActor.userId(), CaseStatus.CLOSED)).thenReturn(List.of(caseEntity));
         when(caseMapper.toDTO(caseEntity)).thenReturn(new CaseDTO());
 
         List<CaseDTO> result = caseService.getAllCases(patientActor);
 
         assertThat(result).hasSize(1);
-        verify(caseRepository).findAllByPatient_IdAndStatusNot(patientActor.userId(), CaseStatus.CLOSED);
+        verify(caseRepository).findAllByPatient_UserAccount_IdAndStatusNot(patientActor.userId(), CaseStatus.CLOSED);
     }
 
     @Test

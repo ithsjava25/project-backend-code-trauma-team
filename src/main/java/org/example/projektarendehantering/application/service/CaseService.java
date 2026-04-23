@@ -14,6 +14,8 @@ import org.example.projektarendehantering.infrastructure.persistence.EmployeeEnt
 import org.example.projektarendehantering.infrastructure.persistence.EmployeeRepository;
 import org.example.projektarendehantering.infrastructure.persistence.PatientEntity;
 import org.example.projektarendehantering.infrastructure.persistence.PatientRepository;
+import org.example.projektarendehantering.infrastructure.persistence.UserAccountEntity;
+import org.example.projektarendehantering.infrastructure.persistence.UserAccountRepository;
 import org.example.projektarendehantering.presentation.dto.CaseAssignmentDTO;
 import org.example.projektarendehantering.presentation.dto.CaseDTO;
 import org.springframework.http.HttpStatus;
@@ -39,6 +41,7 @@ public class CaseService {
     private final PatientRepository patientRepository;
     private final CaseNoteRepository caseNoteRepository;
     private final EmployeeRepository employeeRepository;
+    private final UserAccountRepository userAccountRepository;
     private final AuditService auditService;
 
     @Transactional
@@ -75,23 +78,29 @@ public class CaseService {
             if (requestedPatientId != null && !actor.userId().equals(requestedPatientId)) {
                 throw new NotAuthorizedException("Patients can only create cases for themselves");
             }
-            requestedPatientId = actor.userId();
+            requestedPatientId = null;
         }
         if (requestedPatientId == null) {
-            throw new BadRequestException("patientId is required");
+            if (!isPatient(actor)) {
+                throw new BadRequestException("patientId is required");
+            }
         }
         CaseEntity entity = caseMapper.toEntity(caseDTO);
         entity.setId(UUID.randomUUID());
-        PatientEntity patient = patientRepository.findById(requestedPatientId).orElse(null);
-        if (patient == null) {
-            if (isPatient(actor) && actor.userId().equals(requestedPatientId)) {
+        PatientEntity patient;
+        if (isPatient(actor)) {
+            patient = patientRepository.findByUserAccount_Id(actor.userId()).orElseGet(() -> {
+                UserAccountEntity account = userAccountRepository.findById(actor.userId())
+                        .orElseThrow(() -> new NotAuthorizedException("Patient account not found"));
                 PatientEntity self = new PatientEntity();
-                self.setId(requestedPatientId);
+                self.setId(UUID.randomUUID());
+                self.setUserAccount(account);
                 self.setCreatedAt(Instant.now());
-                patient = patientRepository.save(self);
-            } else {
-                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Patient not found");
-            }
+                return patientRepository.save(self);
+            });
+        } else {
+            patient = patientRepository.findById(requestedPatientId)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Patient not found"));
         }
         entity.setPatient(patient);
         if (isDoctor(actor) || isManager(actor)) {
@@ -198,7 +207,7 @@ public class CaseService {
                     .collect(Collectors.toList());
         }
         if (isPatient(actor)) {
-            return caseRepository.findAllByPatient_IdAndStatusNot(actor.userId(), CaseStatus.CLOSED).stream()
+            return caseRepository.findAllByPatient_UserAccount_IdAndStatusNot(actor.userId(), CaseStatus.CLOSED).stream()
                     .map(caseMapper::toDTO)
                     .collect(Collectors.toList());
         }
@@ -274,7 +283,7 @@ public class CaseService {
         if (isManager(actor)) return;
         if (isDoctor(actor) && actor.userId().equals(entity.getOwnerId())) return;
         if (isNurse(actor) && actor.userId().equals(entity.getHandlerId())) return;
-        if (isPatient(actor) && entity.getPatient() != null && actor.userId().equals(entity.getPatient().getId())) return;
+        if (isPatient(actor) && isActorPatientLinked(actor, entity)) return;
         throw new NotAuthorizedException("Not allowed to read this case");
     }
 
@@ -304,8 +313,14 @@ public class CaseService {
         if (isManager(actor)) return true;
         if (isDoctor(actor) && actor.userId().equals(entity.getOwnerId())) return true;
         if (isNurse(actor) && actor.userId().equals(entity.getHandlerId())) return true;
-        if (isPatient(actor) && entity.getPatient() != null && actor.userId().equals(entity.getPatient().getId())) return true;
+        if (isPatient(actor) && isActorPatientLinked(actor, entity)) return true;
         return false;
+    }
+
+    private boolean isActorPatientLinked(Actor actor, CaseEntity entity) {
+        return entity.getPatient() != null
+                && entity.getPatient().getUserAccount() != null
+                && actor.userId().equals(entity.getPatient().getUserAccount().getId());
     }
 
     private boolean isManager(Actor actor) {
