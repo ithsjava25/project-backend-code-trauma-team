@@ -63,12 +63,4 @@ class PatientUiControllerTest {
                 .andExpect(model().attributeExists("patientUpdateDTO"));
     }
 
-    @Test
-    @WithMockUser(roles = "MANAGER")
-    void deletePatient_shouldRedirect() throws Exception {
-        UUID id = UUID.randomUUID();
-        mockMvc.perform(post("/ui/patients/delete/{id}", id).with(csrf()))
-                .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/ui/patients"));
-    }
 }

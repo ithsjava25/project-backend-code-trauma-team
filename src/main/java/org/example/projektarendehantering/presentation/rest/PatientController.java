@@ -37,13 +37,6 @@ public class PatientController {
         return ResponseEntity.ok(patientService.updatePatient(securityActorAdapter.currentUser(), id, patientDTO));
     }
 
-    @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('MANAGER')")
-    public ResponseEntity<Void> deletePatient(@PathVariable UUID id) {
-        patientService.deletePatient(securityActorAdapter.currentUser(), id);
-        return ResponseEntity.noContent().build();
-    }
-
     @GetMapping("/{id}")
     public ResponseEntity<PatientDTO> getPatient(@PathVariable UUID id) {
         return patientService.getPatient(id)

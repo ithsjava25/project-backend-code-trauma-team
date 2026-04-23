@@ -92,15 +92,4 @@ class PatientControllerTest {
                 .andExpect(jsonPath("$.firstName").value("Jane"));
     }
 
-    @Test
-    @WithMockUser(roles = "MANAGER")
-    void deletePatient_shouldReturnNoContent() throws Exception {
-        UUID id = UUID.randomUUID();
-
-        mockMvc.perform(delete("/api/patients/{id}", id)
-                        .with(csrf()))
-                .andExpect(status().isNoContent());
-
-        verify(patientService).deletePatient(managerActor, id);
-    }
 }
