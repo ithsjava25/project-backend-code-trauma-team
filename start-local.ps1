@@ -37,7 +37,7 @@ function Invoke-CommandWithMode {
 
             if ($LASTEXITCODE -ne 0) {
                 Write-Host "Command failed in quiet mode (exit code: $LASTEXITCODE)." -ForegroundColor Red
-                Write-Host "Recent output from $tempLog:" -ForegroundColor DarkRed
+                Write-Host "Recent output from ${tempLog}:" -ForegroundColor DarkRed
                 Get-Content -Path $tempLog -Tail 25 | ForEach-Object { Write-Host $_ -ForegroundColor DarkGray }
             }
         }

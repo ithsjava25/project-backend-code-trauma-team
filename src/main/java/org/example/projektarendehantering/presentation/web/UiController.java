@@ -47,6 +47,11 @@ public class UiController {
     }
 
     @GetMapping("/")
+    public String landing() {
+        return "landing";
+    }
+
+    @GetMapping("/home")
     public String index() {
         return "index";
     }
