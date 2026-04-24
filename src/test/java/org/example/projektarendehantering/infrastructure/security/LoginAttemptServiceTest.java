@@ -38,7 +38,7 @@ class LoginAttemptServiceTest {
     }
 
     @Test
-    void recordSuccess_shouldClearFailureState() {
+    void recordSuccess_shouldClearEmailFailureStateButKeepIpState() {
         MutableClock clock = new MutableClock(Instant.parse("2026-04-24T11:00:00Z"));
         LoginAttemptService service = new LoginAttemptService(2, 900, 900, clock);
 
@@ -47,7 +47,11 @@ class LoginAttemptServiceTest {
         assertThat(service.currentLockDecision("user@example.com", "127.0.0.1").locked()).isTrue();
 
         service.recordSuccess("user@example.com", "127.0.0.1");
-        assertThat(service.currentLockDecision("user@example.com", "127.0.0.1").locked()).isFalse();
+
+        // Successful email/password auth clears the email-specific lock state.
+        // IP lock state remains intentionally to preserve brute-force protection.
+        assertThat(service.currentLockDecision("user@example.com", "127.0.0.1").locked()).isTrue();
+        assertThat(service.currentLockDecision("user@example.com", "10.0.0.1").locked()).isFalse();
     }
 
     private static final class MutableClock extends Clock {
