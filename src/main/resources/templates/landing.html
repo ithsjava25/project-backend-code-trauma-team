@@ -8,138 +8,138 @@
         <div class="landing-progress-bar" id="landingProgressBar"></div>
     </div>
     <div class="landing-topbar">
-        <a class="button button-secondary landing-login" th:href="@{/login}">🔐 Logga in</a>
+        <a class="button button-secondary landing-login" th:href="@{/login}">Logga in</a>
     </div>
 
-    <section id="hero-cta" class="panel landing-hero landing-hero--presentation">
+    <section id="hero-cta" class="panel landing-hero landing-hero--presentation landing-slide" data-slide>
         <div class="landing-hero-meta">
-            <span class="notice-badge">🎓 Projektpresentation</span>
-            <span class="landing-hero-time">⏱️ 5-7 minuter</span>
+            <span class="notice-badge">Projektpresentation ✦</span>
+            <span class="landing-hero-time">5-7 minuter</span>
         </div>
-        <h1>🏥 Vårdens ärenden i ett tryggt flöde</h1>
+        <h1>Vårdens ärenden i ett tryggt flöde</h1>
         <p class="landing-lead">Ett samlat system för registrering, ansvar och uppföljning utan onödiga överlämningar.</p>
         <div class="landing-actions">
-            <a class="button landing-cta-primary" href="#problem-solution">✨ Se lösningen</a>
-            <a class="button button-secondary landing-cta-secondary" th:href="@{/login}">🚀 Öppna applikationen</a>
+            <a class="button landing-cta-primary" href="#problem-solution">Se lösningen</a>
+            <a class="button button-secondary landing-cta-secondary" th:href="@{/login}">Öppna applikationen</a>
         </div>
     </section>
 
     <nav class="panel landing-nav" aria-label="Presentationsmoduler">
-        <a class="landing-nav-link" href="#problem-solution">🧩 Problem/Lösning</a>
-        <a class="landing-nav-link" href="#case-lifecycle">🔄 Flöde</a>
-        <a class="landing-nav-link" href="#role-based-access">👥 Roller</a>
-        <a class="landing-nav-link" href="#documents-reliability">📄 Dokument</a>
-        <a class="landing-nav-link" href="#audit-trust">🕵️ Spårbarhet</a>
-        <a class="landing-nav-link" href="#architecture-quality">🧱 Kvalitet</a>
+        <a class="landing-nav-link" href="#problem-solution">Problem och lösning</a>
+        <a class="landing-nav-link" href="#case-lifecycle">Flöde</a>
+        <a class="landing-nav-link" href="#role-based-access">Roller</a>
+        <a class="landing-nav-link" href="#documents-reliability">Dokument</a>
+        <a class="landing-nav-link" href="#audit-trust">Spårbarhet</a>
+        <a class="landing-nav-link" href="#architecture-quality">Kvalitet</a>
     </nav>
 
-    <section id="problem-solution" class="panel landing-section js-reveal">
+    <section id="problem-solution" class="panel landing-section js-reveal landing-slide" data-slide>
         <div class="landing-section-head">
-            <h2>🧭 Från splittrat till samlat</h2>
+            <h2>Från splittrat till samlat</h2>
             <p class="landing-section-kicker">Två lägen: problem och lösning.</p>
         </div>
         <div class="segmented-tabs" role="tablist" aria-label="Problem och lösning">
-            <button type="button" class="segmented-tabs__btn is-active" data-target="#problemPanel" aria-selected="true">⚠️ Problem</button>
-            <button type="button" class="segmented-tabs__btn" data-target="#solutionPanel" aria-selected="false">✅ Lösning</button>
+            <button type="button" class="segmented-tabs__btn is-active" data-target="#problemPanel" aria-selected="true">Problem</button>
+            <button type="button" class="segmented-tabs__btn" data-target="#solutionPanel" aria-selected="false">Lösning</button>
         </div>
         <div id="problemPanel" class="tab-panel is-active">
             <div class="icon-card-grid">
-                <article class="icon-card icon-card--alert"><span class="icon-dot" aria-hidden="true">🧰</span><h3>Många verktyg</h3></article>
-                <article class="icon-card icon-card--alert"><span class="icon-dot" aria-hidden="true">🧠</span><h3>Tappar kontext</h3></article>
-                <article class="icon-card icon-card--alert"><span class="icon-dot" aria-hidden="true">🐢</span><h3>Långsamma överlämningar</h3></article>
+                <article class="icon-card icon-card--alert"><h3>Många verktyg</h3></article>
+                <article class="icon-card icon-card--alert"><h3>Tappar kontext</h3></article>
+                <article class="icon-card icon-card--alert"><h3>Långsamma överlämningar</h3></article>
             </div>
         </div>
         <div id="solutionPanel" class="tab-panel" hidden>
             <div class="icon-card-grid">
-                <article class="icon-card icon-card--good"><span class="icon-dot" aria-hidden="true">🗺️</span><h3>Ett tydligt flöde</h3></article>
-                <article class="icon-card icon-card--good"><span class="icon-dot" aria-hidden="true">🎯</span><h3>Klara ansvar</h3></article>
-                <article class="icon-card icon-card--good"><span class="icon-dot" aria-hidden="true">📍</span><h3>Spårbara händelser</h3></article>
+                <article class="icon-card icon-card--good"><h3>Ett tydligt flöde</h3></article>
+                <article class="icon-card icon-card--good"><h3>Klara ansvar</h3></article>
+                <article class="icon-card icon-card--good"><h3>Spårbara händelser</h3></article>
             </div>
         </div>
     </section>
 
-    <section id="case-lifecycle" class="panel landing-section js-reveal">
-        <h2>🔄 Enkelt flöde, tydligt ansvar</h2>
+    <section id="case-lifecycle" class="panel landing-section js-reveal landing-slide" data-slide>
+        <h2>Enkelt flöde, tydligt ansvar</h2>
         <ol class="flow-timeline" aria-label="Ärendeflöde">
-            <li><button type="button" class="flow-step is-active" data-step="create">1 🆕 Skapa</button></li>
-            <li><button type="button" class="flow-step" data-step="assign">2 👤 Tilldela</button></li>
-            <li><button type="button" class="flow-step" data-step="update">3 📝 Uppdatera</button></li>
-            <li><button type="button" class="flow-step" data-step="close">4 ✅ Avsluta</button></li>
+            <li><button type="button" class="flow-step is-active" data-step="create">1 Skapa</button></li>
+            <li><button type="button" class="flow-step" data-step="assign">2 Tilldela</button></li>
+            <li><button type="button" class="flow-step" data-step="update">3 Uppdatera</button></li>
+            <li><button type="button" class="flow-step" data-step="close">4 Avsluta</button></li>
         </ol>
         <article class="flow-detail" id="flowDetail" aria-live="polite"></article>
     </section>
 
-    <section id="role-based-access" class="panel landing-section js-reveal">
-        <h2>👥 Rätt åtkomst för rätt roll</h2>
+    <section id="role-based-access" class="panel landing-section js-reveal landing-slide" data-slide>
+        <h2>Rätt åtkomst för rätt roll</h2>
         <div class="role-tabs" role="tablist" aria-label="Roller">
-            <button type="button" class="role-tabs__btn is-active" data-role="manager">🧑‍💼 Chef</button>
-            <button type="button" class="role-tabs__btn" data-role="doctor">🩺 Läkare</button>
-            <button type="button" class="role-tabs__btn" data-role="nurse">👩‍⚕️ Sjuksköterska</button>
-            <button type="button" class="role-tabs__btn" data-role="patient">🧑 Patient</button>
+            <button type="button" class="role-tabs__btn is-active" data-role="manager">Chef</button>
+            <button type="button" class="role-tabs__btn" data-role="doctor">Läkare</button>
+            <button type="button" class="role-tabs__btn" data-role="nurse">Sjuksköterska</button>
+            <button type="button" class="role-tabs__btn" data-role="patient">Patient</button>
         </div>
         <article class="role-panel" id="rolePanel" aria-live="polite"></article>
     </section>
 
-    <section id="documents-reliability" class="panel landing-section js-reveal">
+    <section id="documents-reliability" class="panel landing-section js-reveal landing-slide" data-slide>
         <div class="module-head">
-            <h2>📄 Dokument som håller</h2>
+            <h2>Dokument som håller</h2>
             <p class="module-intro">Mindre text, mer överblick.</p>
         </div>
         <div class="metrics-row">
-            <span class="metric-chip">🧪 MIME-kontroll</span>
-            <span class="metric-chip">🔁 Automatisk retry</span>
-            <span class="metric-chip">🛡️ Säker uppföljning</span>
+            <span class="metric-chip">MIME-kontroll</span>
+            <span class="metric-chip">Automatisk retry</span>
+            <span class="metric-chip">Säker uppföljning</span>
         </div>
         <div class="accordion" data-accordion>
-            <button type="button" class="accordion__trigger" aria-expanded="false" aria-controls="docsAcc1" id="docsBtn1">✅ Validering</button>
+            <button type="button" class="accordion__trigger" aria-expanded="false" aria-controls="docsAcc1" id="docsBtn1">Validering</button>
             <div class="accordion__panel" id="docsAcc1" role="region" aria-labelledby="docsBtn1" hidden>Felaktiga filtyper stoppas innan lagring.</div>
-            <button type="button" class="accordion__trigger" aria-expanded="false" aria-controls="docsAcc2" id="docsBtn2">⚙️ Driftsäkerhet</button>
+            <button type="button" class="accordion__trigger" aria-expanded="false" aria-controls="docsAcc2" id="docsBtn2">Driftsäkerhet</button>
             <div class="accordion__panel" id="docsAcc2" role="region" aria-labelledby="docsBtn2" hidden>Tillfälliga lagringsfel hanteras med retry och återhämtning.</div>
         </div>
     </section>
 
-    <section id="audit-trust" class="panel landing-section js-reveal">
+    <section id="audit-trust" class="panel landing-section js-reveal landing-slide" data-slide>
         <div class="module-head">
-            <h2>🕵️ Full spårbarhet</h2>
+            <h2>Full spårbarhet</h2>
             <p class="module-intro">Vem, vad, när - direkt synligt.</p>
         </div>
         <div class="metrics-row">
-            <span class="metric-chip">👤 Aktör</span>
-            <span class="metric-chip">📌 Händelse</span>
-            <span class="metric-chip">⏰ Tidpunkt</span>
+            <span class="metric-chip">Aktör</span>
+            <span class="metric-chip">Händelse</span>
+            <span class="metric-chip">Tidpunkt</span>
         </div>
         <div class="icon-card-grid">
-            <article class="icon-card"><h3>🔎 Filter</h3><p>Chef ser relevanta händelser snabbt.</p></article>
-            <article class="icon-card"><h3>📡 Live</h3><p>Uppdateringar kan följas i nära realtid.</p></article>
-            <article class="icon-card"><h3>📊 Kontroll</h3><p>Bättre underlag för uppföljning och kvalitet.</p></article>
+            <article class="icon-card"><h3>Filter</h3><p>Chef ser relevanta händelser snabbt.</p></article>
+            <article class="icon-card"><h3>Live</h3><p>Uppdateringar kan följas i nära realtid.</p></article>
+            <article class="icon-card"><h3>Kontroll</h3><p>Bättre underlag för uppföljning och kvalitet.</p></article>
         </div>
     </section>
 
-    <section id="architecture-quality" class="panel landing-section js-reveal">
-        <h2>🧱 Byggt för stabil utveckling</h2>
+    <section id="architecture-quality" class="panel landing-section js-reveal landing-slide" data-slide>
+        <h2>Byggt för stabil utveckling</h2>
         <div class="icon-card-grid">
-            <article class="icon-card"><h3>🏗️ Tydliga lager</h3></article>
-            <article class="icon-card"><h3>🔐 Säker standard</h3></article>
-            <article class="icon-card"><h3>🧪 Automatiska tester</h3></article>
+            <article class="icon-card"><h3>Tydliga lager</h3></article>
+            <article class="icon-card"><h3>Säker standard</h3></article>
+            <article class="icon-card"><h3>Automatiska tester</h3></article>
         </div>
         <details class="lite-details">
-            <summary>🔍 Visa tekniska bevis</summary>
+            <summary>Visa tekniska bevis</summary>
             <p>MVC-struktur, servicevalidering och testade kärnflöden ger tryggare ändringar över tid.</p>
         </details>
     </section>
 
-    <section id="final-cta" class="panel landing-close landing-close-cta js-reveal">
-        <p class="landing-close-kicker">🎬 Avslut</p>
+    <section id="final-cta" class="panel landing-close landing-close-cta js-reveal landing-slide" data-slide>
+        <p class="landing-close-kicker">Avslut</p>
         <h2>Redo att se helheten?</h2>
         <p class="landing-close-lead">En plattform för säkrare samarbete och snabbare beslut i vården.</p>
         <div class="landing-close-points" aria-label="Nyckelvärden">
-            <span class="landing-chip">⚡ Snabbare samordning</span>
-            <span class="landing-chip">🔒 Säkrare åtkomst</span>
-            <span class="landing-chip">🧾 Full spårbarhet</span>
+            <span class="landing-chip">Snabbare samordning</span>
+            <span class="landing-chip">Säkrare åtkomst</span>
+            <span class="landing-chip">Full spårbarhet</span>
         </div>
         <div class="landing-actions landing-close-actions">
-            <a class="button button-strong" th:href="@{/login}">🚀 Starta live-demo</a>
-            <a class="button button-secondary" href="#hero-cta">🔁 Starta om presentation</a>
+            <a class="button button-strong" th:href="@{/login}">Starta live-demo</a>
+            <a class="button button-secondary" href="#hero-cta">Starta om presentation</a>
         </div>
     </section>
 </main>
