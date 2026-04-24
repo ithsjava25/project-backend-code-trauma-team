@@ -14,7 +14,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
 import java.util.Locale;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -59,11 +61,12 @@ public class RegistrationService {
         }
 
         PatientEntity patientEntity = new PatientEntity();
-        patientEntity.setId(savedAccount.getId());
+        patientEntity.setId(UUID.randomUUID());
         patientEntity.setFirstName(firstName);
         patientEntity.setLastName(lastName);
         patientEntity.setPersonalIdentityNumber(personalIdentityNumber);
-        patientEntity.setCreatedAt(savedAccount.getCreatedAt());
+        patientEntity.setUserAccount(savedAccount);
+        patientEntity.setCreatedAt(savedAccount.getCreatedAt() != null ? savedAccount.getCreatedAt() : Instant.now());
 
         try {
             patientRepository.save(patientEntity);

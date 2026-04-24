@@ -236,8 +236,10 @@ public class DocumentService {
         if (actor.isManager()) return;
         if (actor.isDoctor() && actor.userId().equals(caseEntity.getOwnerId())) return;
         if (actor.isNurse() && actor.userId().equals(caseEntity.getHandlerId())) return;
-        if (actor.isPatient() && caseEntity.getPatient() != null
-                && actor.userId().equals(caseEntity.getPatient().getId())) return;
+        if (actor.isPatient()
+                && caseEntity.getPatient() != null
+                && caseEntity.getPatient().getUserAccount() != null
+                && actor.userId().equals(caseEntity.getPatient().getUserAccount().getId())) return;
         throw new NotAuthorizedException("Not authorized to access documents for this case");
     }
 }
