@@ -1,13 +1,15 @@
 package org.example.projektarendehantering.infrastructure.security;
 
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.Clock;
 import java.time.Instant;
 import java.util.Optional;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.TimeUnit;
 
 /**
  * In-memory, IP-based rate limiter for MVP Phase 1.
@@ -22,13 +24,16 @@ import java.util.concurrent.ConcurrentMap;
 @Service
 public class RateLimitService {
 
-    private final ConcurrentMap<String, CounterWindow> counters = new ConcurrentHashMap<>();
+    private static final long MAX_COUNTER_ENTRIES = 10_000;
+
+    private final Cache<String, CounterWindow> counters;
     private final int globalApiLimit;
     private final int globalApiWindowSeconds;
     private final int authEndpointLimit;
     private final int authEndpointWindowSeconds;
     private final Clock clock;
 
+    @Autowired
     public RateLimitService(
             @Value("${app.security.rate-limit.global-api.limit:100}") int globalApiLimit,
             @Value("${app.security.rate-limit.global-api.window-seconds:60}") int globalApiWindowSeconds,
@@ -47,6 +52,11 @@ public class RateLimitService {
         this.authEndpointLimit = authEndpointLimit;
         this.authEndpointWindowSeconds = authEndpointWindowSeconds;
         this.clock = clock;
+        long evictionWindowSeconds = Math.max(globalApiWindowSeconds, authEndpointWindowSeconds);
+        this.counters = Caffeine.newBuilder()
+                .expireAfterAccess(evictionWindowSeconds, TimeUnit.SECONDS)
+                .maximumSize(MAX_COUNTER_ENTRIES)
+                .build();
     }
 
     public Optional<RateLimitPolicy> policyForPath(String requestPath, String httpMethod) {
@@ -66,7 +76,7 @@ public class RateLimitService {
         PolicyConfig policyConfig = policyConfig(policy);
         long nowEpochSecond = Instant.now(clock).getEpochSecond();
         String counterKey = policy.name() + ":" + clientIp;
-        CounterWindow window = counters.computeIfAbsent(counterKey, ignored -> new CounterWindow(nowEpochSecond));
+        CounterWindow window = counters.get(counterKey, ignored -> new CounterWindow(nowEpochSecond));
 
         synchronized (window) {
             long elapsedSeconds = nowEpochSecond - window.windowStartEpochSecond;

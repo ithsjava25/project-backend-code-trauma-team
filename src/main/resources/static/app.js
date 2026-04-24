@@ -132,7 +132,7 @@
 
   window.addEventListener("scroll", syncActiveSlideFromViewport, { passive: true });
   window.addEventListener("resize", () => {
-    syncBySlide();
+  syncActiveSlideFromViewport();
   });
 
   if (prefersReducedMotion) {

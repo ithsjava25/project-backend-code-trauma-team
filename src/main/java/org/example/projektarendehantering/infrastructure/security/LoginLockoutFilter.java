@@ -35,7 +35,7 @@ public class LoginLockoutFilter extends OncePerRequestFilter {
         }
 
         String username = request.getParameter("username");
-        String clientIp = request.getRemoteAddr();
+        String clientIp = ClientIpResolver.resolve(request);
         LoginAttemptService.LockDecision decision = loginAttemptService.currentLockDecision(username, clientIp);
         if (!decision.locked()) {
             filterChain.doFilter(request, response);

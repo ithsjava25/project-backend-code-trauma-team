@@ -46,7 +46,7 @@ public class RateLimitFilter extends OncePerRequestFilter {
             return;
         }
 
-        String clientIp = request.getRemoteAddr();
+        String clientIp = ClientIpResolver.resolve(request);
         var decision = rateLimitService.evaluate(policy.get(), clientIp);
         if (decision.allowed()) {
             filterChain.doFilter(request, response);

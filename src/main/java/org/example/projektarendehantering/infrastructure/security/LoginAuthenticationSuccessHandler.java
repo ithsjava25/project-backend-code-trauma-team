@@ -25,7 +25,7 @@ public class LoginAuthenticationSuccessHandler implements AuthenticationSuccessH
     public void onAuthenticationSuccess(HttpServletRequest request,
                                         HttpServletResponse response,
                                         Authentication authentication) throws IOException, ServletException {
-        loginAttemptService.recordSuccess(authentication.getName(), request.getRemoteAddr());
+        loginAttemptService.recordSuccess(authentication.getName(), ClientIpResolver.resolve(request));
         response.sendRedirect("/home");
     }
 }

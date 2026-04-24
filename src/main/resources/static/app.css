@@ -714,12 +714,12 @@ textarea.input { padding: 12px; resize: vertical; }
   70% { transform: translateY(0); }
 }
 
-@keyframes panelGlow {
+@keyframes panel-glow {
   0%, 100% { transform: translate3d(0, 0, 0) scale(1); opacity: 0.38; }
   50% { transform: translate3d(0, -4px, 0) scale(1.03); opacity: 0.62; }
 }
 
-@keyframes shimmerSweep {
+@keyframes shimmer-sweep {
   0% { transform: translateX(-120%); opacity: 0; }
   30% { opacity: 0.2; }
   100% { transform: translateX(120%); opacity: 0; }
@@ -1035,7 +1035,7 @@ textarea.input { padding: 12px; resize: vertical; }
   border-radius: 999px;
   background: radial-gradient(circle, rgba(143, 190, 255, 0.35), rgba(143, 190, 255, 0));
   pointer-events: none;
-  animation: panelGlow 7s ease-in-out infinite;
+  animation: panel-glow 7s ease-in-out infinite;
 }
 
 .landing-slide::after {
@@ -1047,7 +1047,7 @@ textarea.input { padding: 12px; resize: vertical; }
   height: 2px;
   background: linear-gradient(90deg, rgba(143, 190, 255, 0), rgba(180, 214, 255, 0.8), rgba(143, 190, 255, 0));
   pointer-events: none;
-  animation: shimmerSweep 8s ease-in-out infinite;
+  animation: shimmer-sweep 8s ease-in-out infinite;
 }
 
 h1, h2 {

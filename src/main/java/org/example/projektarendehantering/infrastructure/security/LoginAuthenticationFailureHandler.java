@@ -30,7 +30,7 @@ public class LoginAuthenticationFailureHandler implements AuthenticationFailureH
                                         HttpServletResponse response,
                                         AuthenticationException exception) throws IOException, ServletException {
         String username = request.getParameter("username");
-        String clientIp = request.getRemoteAddr();
+        String clientIp = ClientIpResolver.resolve(request);
         LoginAttemptService.LockDecision decision = loginAttemptService.recordFailure(username, clientIp);
 
         String redirectUrl = "/login?error=true";
