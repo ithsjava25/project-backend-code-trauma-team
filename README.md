@@ -1,147 +1,120 @@
-# Projekt-arendehantering
+# Trauma Team - Case Management System
 
-Spring Boot application for case management with a Thymeleaf UI, PostgreSQL, and MinIO.
+A robust, full-stack Spring Boot application designed for medical case management, featuring a clean MVC architecture, hybrid authentication, and cloud-native document storage.
 
-## Prerequisites
+## Project Summary
+
+The "Trauma Team Case Management" project provides a secure platform for managing patient cases, employee assignments, and medical documentation. It follows strict architectural guardrails to ensure scalability, security, and maintainability.
+
+### Key Features
+
+- **Case Management:** Full lifecycle management of medical cases (Create, Read, Update, Delete, Close).
+- **Hybrid Authentication:**
+  - **Patients:** Register and login using traditional email/password credentials.
+  - **Employees/Managers:** Secure login via **GitHub OAuth2** integration.
+- **Role-Based Access Control (RBAC):** Fine-grained permissions for Patients, Employees, and Managers.
+- **Document Management:** Attach documents to cases with secure storage in **S3-compatible** systems (MinIO/Cloudflare R2).
+- **Resilience:** Built-in retry logic for file operations and background processing for failed S3 deletions.
+- **Auditing:** Automatic audit logging of key system events and user actions.
+- **Caching:** Performance optimization using **Caffeine** for frequent data lookups.
+- **Responsive UI:** Modern, clean web interface built with **Thymeleaf** and Vanilla CSS.
+
+## Technologies Used
+
+### Backend
+- **Java 25**
+- **Spring Boot 4.0.4**
+- **Spring Data JPA** (Persistence)
+- **Spring Security** (Authentication & Authorization)
+- **Spring Cloud AWS** (S3 Integration)
+- **Spring Retry** (Resilience)
+
+### Database & Infrastructure
+- **PostgreSQL** (Production/Development Database)
+- **H2** (In-memory testing)
+- **MinIO** (Local S3-compatible storage)
+- **Docker & Docker Compose** (Containerized infrastructure)
+
+### Frontend
+- **Thymeleaf** (Server-side templating)
+- **Vanilla CSS** (Custom styling)
+- **Apache Tika** (MIME type detection)
+
+### Developer Tools
+- **Lombok** (Boilerplate reduction)
+- **Spotless** (Code formatting)
+- **Maven** (Build automation)
+- **GitHub Actions** (CI/CD)
+
+---
+
+## Getting Started
+
+### Prerequisites
 
 - Java 25
 - Docker Desktop (or Docker Engine with Compose)
 - Maven Wrapper (`mvnw`) is included in the project
 
-## Start the application (local development)
+### 1. Start Infrastructure Services
 
-<<<<<<< issue/69
-### Quick start (recommended on Windows)
-
-Run one command to perform all startup steps:
+The project uses Docker Compose to run PostgreSQL and MinIO.
 
 ```powershell
+# Quick start (recommended on Windows)
 .\start-local.ps1
 ```
 
-Show full command output instead of fun/quiet mode:
-
-```powershell
-.\start-local.ps1 --serious
-```
-
-The script will:
-- Verify Docker is available and the engine is running
-- Start infrastructure with `docker compose up -d`
-- Start Spring Boot with profile `local`
-
-=======
->>>>>>> main
-### 0) Verify Docker is running (Windows)
-
-Before running `docker compose up -d`, make sure Docker Desktop is started and the Linux engine is running.
-
-1. Start Docker Desktop.
-2. Wait until Docker Desktop shows **Engine running**.
-3. Verify in PowerShell:
-
-```powershell
-docker version
-```
-
-If Docker is healthy, this command prints both `Client` and `Server` sections.
-
-If you get an error like:
-
-`open //./pipe/dockerDesktopLinuxEngine: The system cannot find the file specified`
-
-it means Docker Desktop is not running (or not fully started yet). Start/restart Docker Desktop, wait 10-30 seconds, then run `docker version` again.
-
-### 1) Start infrastructure services
+Or manually:
 
 ```bash
 docker compose up -d
 ```
 
 This starts:
-- PostgreSQL on `localhost:5432`
-- MinIO API on `localhost:9000`
-- MinIO Console on `localhost:9001`
+- **PostgreSQL:** `localhost:5432`
+- **MinIO API:** `localhost:9000`
+- **MinIO Console:** `localhost:9001`
 
-### 2) Start the Spring Boot application with the local profile
+### 2. Configure GitHub OAuth2
+
+To use GitHub login, you need to set your environment variables:
+- `GITHUB_CLIENT_ID`
+- `GITHUB_CLIENT_SECRET`
+
+### 3. Run the Application
 
 ```bash
 ./mvnw spring-boot:run -Dspring-boot.run.profiles=local
 ```
 
-On Windows PowerShell:
+The application will be available at [http://localhost:8080](http://localhost:8080).
 
-```powershell
-.\mvnw spring-boot:run "-Dspring-boot.run.profiles=local"
-```
+## Access and Roles
 
-### 3) Open the app
+### Admin/Manager Account
+A default manager account is seeded when running with the `local` profile:
+- **Email:** `admin@traumateam.com`
+- **Password:** `password`
+- **Role:** `MANAGER`
 
-- [http://localhost:8080](http://localhost:8080)
+### Patient Access
+Patients can register at `/register` and manage their own cases.
 
-## Login and access
+### Employee Access
+Employees should use the "Sign in with GitHub" option on the login page.
 
-### Admin account (use normal login page)
+---
 
-There is no separate admin login page. Use the normal login form at [http://localhost:8080/login](http://localhost:8080/login).
+## Project Structure
 
-When running with profile `local`, an admin-level account is seeded from `data-local.sql`:
+The project follows a strict **MVC** architecture:
+- `presentation`: REST and Web controllers, DTOs.
+- `application`: Business logic (Services), Mappers.
+- `infrastructure`: Persistence (Entities, Repositories), Security configuration, Cloud config.
+- `common`: Cross-cutting concerns (Exceptions, Shared Models).
 
-- Email: `admin@traumateam.com`
-- Password: `password`
-- Role: `MANAGER`
+## Troubleshooting
 
-Log in with:
-
-- Username/Email: `admin@traumateam.com`
-- Password: `password`
-
-### Other login options
-
-- Patients can register via `/register` and then log in with email/password at `/login`.
-- Employees can use GitHub OAuth via the "Sign in with GitHub" button on `/login`.
-
-## Stop services
-
-```bash
-docker compose down
-```
-
-## Quick troubleshooting
-
-- `docker compose up -d` fails with pipe/engine error:
-  - Start Docker Desktop and wait until the engine is green/running.
-  - Re-run `docker version` and confirm `Server` appears.
-- PostgreSQL fails with `Bind for 0.0.0.0:5432 failed: port is already allocated`:
-  - Another process (often a local PostgreSQL service) already uses port `5432`.
-  - Find what owns the port in PowerShell:
-
-```powershell
-netstat -ano | findstr :5432
-```
-
-  - Note the PID in the last column, then check process name:
-
-```powershell
-tasklist /FI "PID eq <PID>"
-```
-
-  - If it is a local PostgreSQL/service you do not need right now, stop it and retry:
-
-```powershell
-Stop-Service -Name postgresql* -ErrorAction SilentlyContinue
-docker compose up -d
-```
-
-  - If you want to keep your local PostgreSQL running, map Docker PostgreSQL to another host port:
-<<<<<<< issue/69
-  1. Edit `docker-compose.yml` PostgreSQL ports from `"5432:5432"` to `"5433:5432"`.
-  2. Edit `src/main/resources/application.properties` database URL from `localhost:5432` to `localhost:5433`.
-  3. Run `docker compose up -d` again.
-=======
-    1. Edit `docker-compose.yml` PostgreSQL ports from `"5432:5432"` to `"5433:5432"`.
-    2. Edit `src/main/resources/application.properties` database URL from `localhost:5432` to `localhost:5433`.
-    3. Run `docker compose up -d` again.
->>>>>>> main
-- App starts but login fails:
-  - Confirm you started Spring with profile `local` so `data-local.sql` is loaded.
+- **Port Conflicts:** If port `5432` is in use, stop any local PostgreSQL services or modify the mapping in `docker-compose.yml` and `application.properties`.
+- **Docker Issues:** Ensure Docker Desktop is running and the Linux engine is active. Use `docker version` to verify.
