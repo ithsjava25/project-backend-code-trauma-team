@@ -21,6 +21,9 @@
             <div th:if="${param.error}" class="panel panel-error" style="margin-bottom: 14px;">
                 Invalid email or password.
             </div>
+            <div th:if="${param.locked}" class="panel panel-error" style="margin-bottom: 14px;">
+                Too many login attempts. Please try again in a few minutes.
+            </div>
             <div th:if="${param.logout}" class="panel panel-success" style="margin-bottom: 14px;">
                 You have been logged out.
             </div>

@@ -15,6 +15,22 @@ INSERT INTO user_account (id, email, password_hash, role, provider, provider_use
 VALUES ('120e8400-e29b-41d4-a716-446655440002', 'patient.seed@traumateam.local', NULL, 'PATIENT', 'GITHUB', 'seed-patient-001', true, CURRENT_TIMESTAMP - INTERVAL '40 days')
 ON CONFLICT (email) DO NOTHING;
 
+INSERT INTO user_account (id, email, password_hash, role, provider, provider_user_id, enabled, created_at)
+VALUES ('228023f0-e676-356e-ba78-097cc894cc5a', NULL, NULL, 'MANAGER', 'GITHUB', 'linuswestling', true, CURRENT_TIMESTAMP - INTERVAL '2 days')
+ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO user_account (id, email, password_hash, role, provider, provider_user_id, enabled, created_at)
+VALUES ('876a23e4-2207-3e12-b36c-c44e4a50f772', NULL, NULL, 'MANAGER', 'GITHUB', 'mattknatt', true, CURRENT_TIMESTAMP - INTERVAL '2 days')
+ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO user_account (id, email, password_hash, role, provider, provider_user_id, enabled, created_at)
+VALUES ('10c6158e-4db8-3de1-8435-da247832962b', NULL, NULL, 'MANAGER', 'GITHUB', 'tyreviel', true, CURRENT_TIMESTAMP - INTERVAL '2 days')
+ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO user_account (id, email, password_hash, role, provider, provider_user_id, enabled, created_at)
+VALUES ('d0387e93-1633-3a58-a0d2-ea77c9fc7ef0', NULL, NULL, 'MANAGER', 'GITHUB', 'oskarlundqvist33', true, CURRENT_TIMESTAMP - INTERVAL '2 days')
+ON CONFLICT (id) DO NOTHING;
+
 -- ------------------------------------------------------------
 -- Patients
 -- ------------------------------------------------------------
@@ -63,6 +79,22 @@ ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO employees (id, display_name, github_username, role, created_at)
 VALUES ('770e8400-e29b-41d4-a716-446655440004', 'Nurse Emma Karlsson', 'emma-karlsson-rn', 'NURSE', CURRENT_TIMESTAMP - INTERVAL '33 days')
+ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO employees (id, display_name, github_username, role, created_at)
+VALUES ('228023f0-e676-356e-ba78-097cc894cc5a', 'Linus Westling', 'linuswestling', 'MANAGER', CURRENT_TIMESTAMP - INTERVAL '2 days')
+ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO employees (id, display_name, github_username, role, created_at)
+VALUES ('876a23e4-2207-3e12-b36c-c44e4a50f772', 'Mattias Hagström', 'mattknatt', 'MANAGER', CURRENT_TIMESTAMP - INTERVAL '2 days')
+ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO employees (id, display_name, github_username, role, created_at)
+VALUES ('10c6158e-4db8-3de1-8435-da247832962b', 'Oscar Nidemar', 'tyreviel', 'MANAGER', CURRENT_TIMESTAMP - INTERVAL '2 days')
+ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO employees (id, display_name, github_username, role, created_at)
+VALUES ('d0387e93-1633-3a58-a0d2-ea77c9fc7ef0', 'Oskar Lundqvist', 'oskarlundqvist33', 'MANAGER', CURRENT_TIMESTAMP - INTERVAL '2 days')
 ON CONFLICT (id) DO NOTHING;
 
 -- ------------------------------------------------------------
@@ -212,56 +244,4 @@ INSERT INTO documents (id, file_name, s3_key, content_type, file_size, uploaded_
 VALUES ('b90e8400-e29b-41d4-a716-446655440005', 'mri-referral.pdf', 'cases/990e8400-e29b-41d4-a716-446655440006/mri-referral.pdf',
         'application/pdf', 204889, CURRENT_TIMESTAMP - INTERVAL '22 hours', '770e8400-e29b-41d4-a716-446655440003',
         '990e8400-e29b-41d4-a716-446655440006')
-ON CONFLICT (id) DO NOTHING;
-
--- ------------------------------------------------------------
--- Audit events
--- ------------------------------------------------------------
-INSERT INTO audit_events (id, occurred_at, actor_id, actor_role, principal_name, request_path, query_string, handler,
-                          response_status, error_type, case_id, status_change, event_name, description, client_ip, user_agent)
-VALUES ('c90e8400-e29b-41d4-a716-446655440000', CURRENT_TIMESTAMP - INTERVAL '12 days',
-        '770e8400-e29b-41d4-a716-446655440001', 'DOCTOR', 'doctor.seed@traumateam.local',
-        '/ui/cases/990e8400-e29b-41d4-a716-446655440000', NULL, 'CaseUiController#showCase',
-        200, NULL, '990e8400-e29b-41d4-a716-446655440000', 'CREATED->ASSIGNED', 'CASE_STATUS_CHANGED',
-        'Case owner assigned to Dr. Alice Roberts.', '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)')
-ON CONFLICT (id) DO NOTHING;
-
-INSERT INTO audit_events (id, occurred_at, actor_id, actor_role, principal_name, request_path, query_string, handler,
-                          response_status, error_type, case_id, status_change, event_name, description, client_ip, user_agent)
-VALUES ('c90e8400-e29b-41d4-a716-446655440001', CURRENT_TIMESTAMP - INTERVAL '11 days',
-        '770e8400-e29b-41d4-a716-446655440002', 'NURSE', 'nurse.bob@traumateam.local',
-        '/ui/cases/990e8400-e29b-41d4-a716-446655440000/comments', NULL, 'CaseNoteUiController#create',
-        302, NULL, '990e8400-e29b-41d4-a716-446655440000', NULL, 'CASE_NOTE_ADDED',
-        'Nurse added observation note after first medication cycle.', '127.0.0.1',
-        'Mozilla/5.0 (Windows NT 10.0; Win64; x64)')
-ON CONFLICT (id) DO NOTHING;
-
-INSERT INTO audit_events (id, occurred_at, actor_id, actor_role, principal_name, request_path, query_string, handler,
-                          response_status, error_type, case_id, status_change, event_name, description, client_ip, user_agent)
-VALUES ('c90e8400-e29b-41d4-a716-446655440002', CURRENT_TIMESTAMP - INTERVAL '10 days',
-        '770e8400-e29b-41d4-a716-446655440001', 'DOCTOR', 'doctor.seed@traumateam.local',
-        '/ui/cases/990e8400-e29b-41d4-a716-446655440001/documents', NULL, 'DocumentUiController#upload',
-        201, NULL, '990e8400-e29b-41d4-a716-446655440001', NULL, 'DOCUMENT_UPLOADED',
-        'Follow-up x-ray uploaded and attached to case timeline.', '127.0.0.1',
-        'Mozilla/5.0 (Windows NT 10.0; Win64; x64)')
-ON CONFLICT (id) DO NOTHING;
-
-INSERT INTO audit_events (id, occurred_at, actor_id, actor_role, principal_name, request_path, query_string, handler,
-                          response_status, error_type, case_id, status_change, event_name, description, client_ip, user_agent)
-VALUES ('c90e8400-e29b-41d4-a716-446655440003', CURRENT_TIMESTAMP - INTERVAL '8 days',
-        '770e8400-e29b-41d4-a716-446655440003', 'DOCTOR', 'doctor.sara@traumateam.local',
-        '/api/cases/990e8400-e29b-41d4-a716-446655440004/status', 'target=COMMUNICATION', 'CaseController#updateStatus',
-        200, NULL, '990e8400-e29b-41d4-a716-446655440004', 'ASSIGNED->COMMUNICATION', 'CASE_STATUS_CHANGED',
-        'Case moved to communication after medication discussion with patient.', '127.0.0.1',
-        'PostmanRuntime/7.43.0')
-ON CONFLICT (id) DO NOTHING;
-
-INSERT INTO audit_events (id, occurred_at, actor_id, actor_role, principal_name, request_path, query_string, handler,
-                          response_status, error_type, case_id, status_change, event_name, description, client_ip, user_agent)
-VALUES ('c90e8400-e29b-41d4-a716-446655440004', CURRENT_TIMESTAMP - INTERVAL '2 days',
-        '770e8400-e29b-41d4-a716-446655440000', 'MANAGER', 'admin.seed@traumateam.local',
-        '/ui/admin/audit', NULL, 'AdminAuditUiController#index',
-        200, NULL, NULL, NULL, 'AUDIT_VIEWED',
-        'Manager reviewed audit overview dashboard.', '127.0.0.1',
-        'Mozilla/5.0 (Windows NT 10.0; Win64; x64)')
 ON CONFLICT (id) DO NOTHING;
