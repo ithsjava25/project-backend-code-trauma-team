@@ -6,39 +6,16 @@
     return;
   }
 
-  const sectionIds = [
-    "problem-solution",
-    "case-lifecycle",
-    "role-based-access",
-    "documents-reliability",
-    "audit-trust",
-    "architecture-quality",
-  ];
-
   const navLinks = Array.from(document.querySelectorAll(".landing-nav-link"));
-  const sections = sectionIds
-    .map((id) => document.getElementById(id))
-    .filter((section) => section !== null);
+  const slides = Array.from(document.querySelectorAll(".landing-slide"));
   const progressBar = document.getElementById("landingProgressBar");
   const revealTargets = Array.from(document.querySelectorAll(".js-reveal"));
   const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const slideIds = slides.map((slide) => slide.id).filter(Boolean);
+  let activeSlideIndex = 0;
 
-  // Smooth scroll between module anchors for presentation flow.
-  navLinks.forEach((link) => {
-    link.addEventListener("click", (event) => {
-      const href = link.getAttribute("href");
-      if (!href || !href.startsWith("#")) {
-        return;
-      }
-      const target = document.querySelector(href);
-      if (!target) {
-        return;
-      }
-
-      event.preventDefault();
-      target.scrollIntoView({ behavior: prefersReducedMotion ? "auto" : "smooth", block: "start" });
-      history.replaceState(null, "", href);
-    });
+  slides.forEach((slide, index) => {
+    slide.setAttribute("data-slide-index", String(index));
   });
 
   const updateActiveLink = (activeId) => {
@@ -53,39 +30,110 @@
     });
   };
 
-  const sectionObserver = new IntersectionObserver(
-    (entries) => {
-      let topVisible = null;
-      for (const entry of entries) {
-        if (!entry.isIntersecting) {
-          continue;
-        }
-        if (!topVisible || entry.boundingClientRect.top < topVisible.boundingClientRect.top) {
-          topVisible = entry;
-        }
-      }
-      if (topVisible && topVisible.target.id) {
-        updateActiveLink(topVisible.target.id);
-      }
-    },
-    { threshold: 0.45, rootMargin: "-10% 0px -45% 0px" }
-  );
-
-  sections.forEach((section) => sectionObserver.observe(section));
+  const updateSlideVisualState = () => {
+    slides.forEach((slide, index) => {
+      const isActive = index === activeSlideIndex;
+      slide.classList.toggle("is-active-slide", isActive);
+      slide.classList.toggle("is-inactive-slide", !isActive);
+    });
+  };
 
   const updateProgress = () => {
     if (!progressBar) {
       return;
     }
+
     const scrollTop = window.scrollY || window.pageYOffset;
     const documentHeight = document.documentElement.scrollHeight - window.innerHeight;
     const progress = documentHeight <= 0 ? 100 : Math.min(100, Math.max(0, (scrollTop / documentHeight) * 100));
     progressBar.style.width = `${progress}%`;
   };
 
-  window.addEventListener("scroll", updateProgress, { passive: true });
-  window.addEventListener("resize", updateProgress);
-  updateProgress();
+  const syncBySlide = () => {
+    const activeSlide = slides[activeSlideIndex];
+    if (!activeSlide || !activeSlide.id) {
+      return;
+    }
+    updateActiveLink(activeSlide.id);
+    updateSlideVisualState();
+    updateProgress();
+  };
+
+  const goToSlide = (index, options = {}) => {
+    const { behavior = "smooth", shouldScroll = true, updateHash = true } = options;
+    if (slides.length === 0) {
+      return;
+    }
+
+    const clampedIndex = Math.min(Math.max(index, 0), slides.length - 1);
+    if (clampedIndex === activeSlideIndex && !shouldScroll) {
+      syncBySlide();
+      return;
+    }
+
+    activeSlideIndex = clampedIndex;
+    syncBySlide();
+
+    const target = slides[activeSlideIndex];
+    if (shouldScroll && target) {
+      target.scrollIntoView({ behavior: prefersReducedMotion ? "auto" : behavior, block: "start" });
+    }
+
+    if (updateHash && target && target.id) {
+      history.replaceState(null, "", `#${target.id}`);
+    }
+  };
+
+  // Smooth scroll between module anchors for presentation flow.
+  navLinks.forEach((link) => {
+    link.addEventListener("click", (event) => {
+      const href = link.getAttribute("href");
+      if (!href || !href.startsWith("#")) {
+        return;
+      }
+      const target = document.querySelector(href);
+      if (!target) {
+        return;
+      }
+
+      event.preventDefault();
+      const targetIndex = slides.indexOf(target);
+      if (targetIndex >= 0) {
+        goToSlide(targetIndex, { behavior: "smooth", shouldScroll: true, updateHash: true });
+      } else {
+        target.scrollIntoView({ behavior: prefersReducedMotion ? "auto" : "smooth", block: "start" });
+        history.replaceState(null, "", href);
+      }
+    });
+  });
+
+  const syncActiveSlideFromViewport = () => {
+    if (slides.length === 0) {
+      return;
+    }
+    const viewportCenter = window.innerHeight * 0.42;
+    let closestIndex = activeSlideIndex;
+    let closestDistance = Number.POSITIVE_INFINITY;
+    slides.forEach((slide, index) => {
+      const rect = slide.getBoundingClientRect();
+      const distance = Math.abs(rect.top - viewportCenter);
+      if (distance < closestDistance) {
+        closestDistance = distance;
+        closestIndex = index;
+      }
+    });
+    if (closestIndex !== activeSlideIndex) {
+      activeSlideIndex = closestIndex;
+      syncBySlide();
+    } else {
+      updateProgress();
+    }
+  };
+
+  window.addEventListener("scroll", syncActiveSlideFromViewport, { passive: true });
+  window.addEventListener("resize", () => {
+  syncActiveSlideFromViewport();
+  });
 
   if (prefersReducedMotion) {
     revealTargets.forEach((node) => node.classList.add("revealed"));
@@ -152,20 +200,20 @@
 
   const flowData = {
     create: {
-      title: "🆕 Skapa ärende",
-      chips: ["🧑 Patientkontext", "🏁 Startstatus", "🧭 Tydlig start"],
+      title: "Skapa ärende",
+      chips: ["Patientkontext", "Startstatus", "Tydlig start"],
     },
     assign: {
-      title: "👤 Tilldela ansvar",
-      chips: ["👑 Ägare", "🛠️ Handläggare", "🎯 Klart ansvar"],
+      title: "Tilldela ansvar",
+      chips: ["Ägare", "Handläggare", "Klart ansvar"],
     },
     update: {
-      title: "📝 Uppdatera och kommunicera",
-      chips: ["🗒️ Anteckningar", "📍 Status", "🤝 Samarbete"],
+      title: "Uppdatera och kommunicera",
+      chips: ["Anteckningar", "Status", "Samarbete"],
     },
     close: {
-      title: "✅ Avsluta med spårbarhet",
-      chips: ["🏁 Avslut", "📚 Historik", "📈 Uppföljning"],
+      title: "Avsluta med spårbarhet",
+      chips: ["Avslut", "Historik", "Uppföljning"],
     },
   };
 
@@ -193,20 +241,20 @@
 
   const roleData = {
     manager: {
-      allow: ["👀 Se alla ärenden", "🧩 Hantera tilldelning", "📜 Granska loggar"],
-      deny: ["🚫 Ingen patientimitation"],
+      allow: ["Se alla ärenden", "Hantera tilldelning", "Granska loggar"],
+      deny: ["Ingen patientimitation"],
     },
     doctor: {
-      allow: ["✏️ Uppdatera tilldelade", "🗒️ Lägga anteckningar", "📁 Hantera dokument"],
-      deny: ["🚫 Ingen användaradministration"],
+      allow: ["Uppdatera tilldelade", "Lägga anteckningar", "Hantera dokument"],
+      deny: ["Ingen användaradministration"],
     },
     nurse: {
-      allow: ["👀 Se handlagda ärenden", "🗒️ Lägga anteckningar"],
-      deny: ["🚫 Ingen full adminbehörighet"],
+      allow: ["Se handlagda ärenden", "Lägga anteckningar"],
+      deny: ["Ingen full adminbehörighet"],
     },
     patient: {
-      allow: ["📲 Följa egna ärenden", "💬 Lägga kommunikationsnotis"],
-      deny: ["🚫 Ingen åtkomst till andras ärenden"],
+      allow: ["Följa egna ärenden", "Lägga kommunikationsnotis"],
+      deny: ["Ingen åtkomst till andras ärenden"],
     },
   };
 
@@ -250,4 +298,14 @@
       });
     });
   });
+
+  const hash = window.location.hash.replace("#", "");
+  const initialIndex = hash ? slideIds.indexOf(hash) : 0;
+  activeSlideIndex = initialIndex >= 0 ? initialIndex : 0;
+  goToSlide(activeSlideIndex, { behavior: "auto", shouldScroll: false, updateHash: false });
+  if (hash) {
+    goToSlide(activeSlideIndex, { behavior: "auto", shouldScroll: true, updateHash: false });
+  } else {
+    updateProgress();
+  }
 })();

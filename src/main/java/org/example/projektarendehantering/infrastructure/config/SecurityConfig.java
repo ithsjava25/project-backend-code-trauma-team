@@ -1,7 +1,11 @@
 package org.example.projektarendehantering.infrastructure.config;
 
 import org.example.projektarendehantering.infrastructure.security.CustomOAuth2UserService;
+import org.example.projektarendehantering.infrastructure.security.LoginAuthenticationFailureHandler;
+import org.example.projektarendehantering.infrastructure.security.LoginAuthenticationSuccessHandler;
+import org.example.projektarendehantering.infrastructure.security.LoginLockoutFilter;
 import org.example.projektarendehantering.infrastructure.security.LocalUserDetailsService;
+import org.example.projektarendehantering.infrastructure.security.RateLimitFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -11,6 +15,7 @@ import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.http.HttpStatus;
 
 @Configuration
@@ -25,7 +30,12 @@ public class SecurityConfig {
     }
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http, CustomOAuth2UserService customOAuth2UserService) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http,
+                                                   CustomOAuth2UserService customOAuth2UserService,
+                                                   RateLimitFilter rateLimitFilter,
+                                                   LoginLockoutFilter loginLockoutFilter,
+                                                   LoginAuthenticationSuccessHandler loginAuthenticationSuccessHandler,
+                                                   LoginAuthenticationFailureHandler loginAuthenticationFailureHandler) throws Exception {
         http
             .authorizeHttpRequests(authorize -> authorize
                 .requestMatchers("/", "/login**", "/register", "/error**", "/static/**", "/app.css", "/app.js", "/webjars/**").permitAll()
@@ -41,8 +51,8 @@ public class SecurityConfig {
             .formLogin(form -> form
                 .loginPage("/login")
                 .loginProcessingUrl("/login")
-                .defaultSuccessUrl("/home", true)
-                .failureUrl("/login?error=true")
+                .successHandler(loginAuthenticationSuccessHandler)
+                .failureHandler(loginAuthenticationFailureHandler)
             )
             .logout(logout -> logout
                 .logoutSuccessUrl("/login?logout=true")
@@ -55,7 +65,9 @@ public class SecurityConfig {
                     request -> request.getRequestURI().startsWith("/api/")
                 )
             )
-            .userDetailsService(localUserDetailsService);
+            .userDetailsService(localUserDetailsService)
+            .addFilterBefore(rateLimitFilter, UsernamePasswordAuthenticationFilter.class)
+            .addFilterBefore(loginLockoutFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
 
