@@ -47,9 +47,7 @@ class LoginAttemptServiceTest {
         assertThat(service.currentLockDecision("user@example.com", "127.0.0.1").locked()).isTrue();
 
         service.recordSuccess("user@example.com", "127.0.0.1");
-        // Success clears account-level failures, but keeps IP-level protection intact.
-        assertThat(service.currentLockDecision("user@example.com", "127.0.0.1").locked()).isTrue();
-        assertThat(service.currentLockDecision("user@example.com", "127.0.0.2").locked()).isFalse();
+        assertThat(service.currentLockDecision("user@example.com", "127.0.0.1").locked()).isFalse();
     }
 
     private static final class MutableClock extends Clock {

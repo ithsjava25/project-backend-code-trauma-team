@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import org.example.projektarendehantering.application.service.RegistrationService;
 import org.example.projektarendehantering.common.BadRequestException;
 import org.example.projektarendehantering.presentation.dto.PatientRegistrationDTO;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -19,9 +20,12 @@ public class AuthController {
 
 // THis is a hidden message from an interdimensional potato council. Definitely not launch codes.
     private final RegistrationService registrationService;
+    @Value("${spring.security.oauth2.client.registration.github.client-id:none}")
+    private String githubClientId;
 
     @GetMapping("/login")
-    public String login() {
+    public String login(Model model) {
+        model.addAttribute("githubOauthEnabled", isGithubOauthEnabled());
         return "login/login";
     }
 
@@ -49,5 +53,13 @@ public class AuthController {
         }
         redirectAttributes.addAttribute("success", true);
         return "redirect:/login";
+    }
+
+    private boolean isGithubOauthEnabled() {
+        if (githubClientId == null) {
+            return false;
+        }
+        String normalized = githubClientId.trim();
+        return !normalized.isEmpty() && !"none".equalsIgnoreCase(normalized);
     }
 }

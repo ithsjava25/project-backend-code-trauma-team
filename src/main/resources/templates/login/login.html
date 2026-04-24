@@ -59,9 +59,13 @@
                 <li>Manager, doctor, and nurse accounts are handled via GitHub.</li>
                 <li>Your role and access are applied automatically after sign-in.</li>
             </ul>
-            <a href="/oauth2/authorization/github" class="button button-secondary" style="width: 100%;">
+            <a th:if="${githubOauthEnabled}" href="/oauth2/authorization/github" class="button button-secondary" style="width: 100%;">
                 Sign in with GitHub
             </a>
+            <div th:unless="${githubOauthEnabled}" class="panel panel-error" style="margin-top: 12px;">
+                GitHub SSO is not configured in this environment. Set <code>GITHUB_CLIENT_ID</code> and
+                <code>GITHUB_CLIENT_SECRET</code> to enable employee login.
+            </div>
         </section>
     </div>
 </main>
