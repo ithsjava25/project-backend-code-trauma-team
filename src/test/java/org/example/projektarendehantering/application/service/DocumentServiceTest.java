@@ -12,6 +12,7 @@ import org.example.projektarendehantering.infrastructure.persistence.CaseReposit
 import org.example.projektarendehantering.infrastructure.persistence.DocumentEntity;
 import org.example.projektarendehantering.infrastructure.persistence.DocumentRepository;
 import org.example.projektarendehantering.infrastructure.persistence.PatientEntity;
+import org.example.projektarendehantering.infrastructure.persistence.UserAccountEntity;
 import org.example.projektarendehantering.presentation.dto.DocumentDTO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -85,6 +86,9 @@ class DocumentServiceTest {
 
         PatientEntity patient = new PatientEntity();
         patient.setId(patientId);
+        UserAccountEntity patientUserAccount = new UserAccountEntity();
+        patientUserAccount.setId(patientId);
+        patient.setUserAccount(patientUserAccount);
 
         caseId = UUID.randomUUID();
         caseEntity = new CaseEntity();

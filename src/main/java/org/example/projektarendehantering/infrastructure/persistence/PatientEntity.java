@@ -28,6 +28,10 @@ public class PatientEntity {
     @Column(unique = true)
     private String personalIdentityNumber;
 
+    @OneToOne
+    @JoinColumn(name = "user_account_id", unique = true)
+    private UserAccountEntity userAccount;
+
     private Instant createdAt;
 
 }
