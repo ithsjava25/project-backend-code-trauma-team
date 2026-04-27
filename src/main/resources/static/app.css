@@ -985,206 +985,200 @@ textarea.input { padding: 12px; resize: vertical; }
   }
 }
 
-/* Cohesive layout fix: avoid split panel feeling */
-.landing-page {
-  border: 0;
-  border-radius: 0;
-  background: none;
-  padding: 0;
-}
+/* --- Unified Landing Design System --- */
 
-.landing-progress {
-  position: relative;
-  top: auto;
+.landing-page {
+  gap: 0; /* Panels merge for a cohesive strip */
 }
 
 .landing-page > .panel {
-  background: rgba(255,255,255,0.03);
-  border: 1px solid var(--border);
+  padding: 32px;
+  background: rgba(16, 26, 51, 0.4);
+  border-color: rgba(110, 168, 255, 0.2);
   border-radius: var(--radius);
-  box-shadow: var(--shadow);
-  padding: 18px;
-}
-
-.landing-page > .panel + .panel {
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.25);
   margin-top: 0;
   border-top: 0;
+  position: relative;
+  overflow: hidden;
 }
 
-.landing-close-cta {
-  background: rgba(255,255,255,0.03);
-  border-color: var(--border);
+.landing-page > .panel:first-of-type {
+  border-top: 1px solid rgba(110, 168, 255, 0.2);
+  border-top-left-radius: var(--radius);
+  border-top-right-radius: var(--radius);
 }
 
-/* Presentation pop polish: higher contrast + playful depth */
-.landing-page > .panel {
-  border-color: rgba(143, 190, 255, 0.26);
-  box-shadow: 0 12px 30px rgba(2, 8, 28, 0.42);
+.landing-page > .panel:last-of-type {
+  border-bottom-left-radius: var(--radius);
+  border-bottom-right-radius: var(--radius);
 }
 
 .landing-page > .panel:hover {
-  border-color: rgba(143, 190, 255, 0.48);
+  border-color: rgba(110, 168, 255, 0.4);
+  background: rgba(16, 26, 51, 0.5);
 }
 
-.landing-slide::before {
-  content: "";
-  position: absolute;
-  inset: auto -18% -80px auto;
-  width: 180px;
-  height: 180px;
-  border-radius: 999px;
-  background: radial-gradient(circle, rgba(143, 190, 255, 0.35), rgba(143, 190, 255, 0));
-  pointer-events: none;
-  animation: panel-glow 7s ease-in-out infinite;
+/* Hero Section Refinement */
+.landing-hero--presentation {
+  padding: 80px 32px !important;
+  text-align: center;
+  background: radial-gradient(circle at top right, rgba(110, 168, 255, 0.15), transparent 60%),
+              radial-gradient(circle at bottom left, rgba(110, 168, 255, 0.1), transparent 60%),
+              rgba(16, 26, 51, 0.6) !important;
 }
 
-.landing-slide::after {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 36%;
-  height: 2px;
-  background: linear-gradient(90deg, rgba(143, 190, 255, 0), rgba(180, 214, 255, 0.8), rgba(143, 190, 255, 0));
-  pointer-events: none;
-  animation: shimmer-sweep 8s ease-in-out infinite;
+.landing-hero h1 {
+  font-size: clamp(34px, 6vw, 52px);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  margin-bottom: 20px;
+  background: linear-gradient(180deg, #fff, rgba(255,255,255,0.8));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
-h1, h2 {
-  color: #f4f7ff;
+.landing-lead {
+  font-size: 19px;
+  color: rgba(231, 236, 255, 0.8);
+  max-width: 60ch;
+  margin: 0 auto 40px;
 }
 
-.landing-lead,
-.module-intro,
-.landing-section-kicker,
-.landing-close-lead {
-  color: rgba(236, 242, 255, 0.88);
-}
-
-.notice-badge,
-.landing-hero-time {
-  border-color: rgba(143, 190, 255, 0.66);
-  background: rgba(110, 168, 255, 0.26);
-  color: #f3f7ff;
+/* Sticky Nav Refinement */
+.landing-nav {
+  position: sticky;
+  top: 14px;
+  z-index: 100;
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  background: rgba(16, 26, 51, 0.8);
+  backdrop-filter: blur(16px);
+  padding: 12px;
+  margin: 20px 0 !important;
+  border: 1px solid rgba(110, 168, 255, 0.25) !important;
+  border-radius: 999px !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
 }
 
 .landing-nav-link {
-  color: rgba(239, 244, 255, 0.9);
-  border-color: rgba(143, 190, 255, 0.25);
-  background: rgba(110, 168, 255, 0.07);
+  border: 1px solid transparent;
+  padding: 8px 16px;
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: 14px;
+  color: rgba(231, 236, 255, 0.7);
+  transition: all 0.2s ease;
 }
 
-.landing-nav-link:hover,
+.landing-nav-link:hover {
+  background: rgba(110, 168, 255, 0.1);
+  color: #fff;
+}
+
 .landing-nav-link.active {
-  border-color: rgba(143, 190, 255, 0.8);
-  background: rgba(110, 168, 255, 0.26);
-  box-shadow: 0 0 0 1px rgba(143, 190, 255, 0.2) inset;
+  background: rgba(110, 168, 255, 0.25);
+  border-color: rgba(110, 168, 255, 0.5);
+  color: #fff;
+  box-shadow: 0 0 15px rgba(110, 168, 255, 0.2);
 }
 
-.button {
-  border-color: rgba(143, 190, 255, 0.78);
-  background: rgba(110, 168, 255, 0.33);
+/* Metric Chips */
+.metrics-row--hero {
+  justify-content: center;
+  gap: 20px;
+  margin-bottom: 48px;
 }
 
-.button:hover {
-  background: rgba(110, 168, 255, 0.46);
-  box-shadow: 0 8px 18px rgba(67, 131, 255, 0.28);
+.metric-chip {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(110, 168, 255, 0.15);
+  padding: 12px 20px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.button-secondary {
-  border-color: rgba(231, 236, 255, 0.32);
-  background: rgba(255, 255, 255, 0.08);
+.metric-chip:hover {
+  background: rgba(110, 168, 255, 0.08);
+  border-color: rgba(110, 168, 255, 0.4);
+  transform: translateY(-4px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
 }
 
-.button-secondary:hover {
-  background: rgba(255, 255, 255, 0.16);
+.metric-icon { font-size: 24px; }
+.metric-content strong { font-size: 20px; color: #fff; display: block; }
+.metric-content span { font-size: 12px; color: rgba(231, 236, 255, 0.6); text-transform: uppercase; letter-spacing: 0.05em; font-weight: 700; }
+
+/* Action Buttons */
+.landing-cta-primary {
+  height: 48px;
+  padding: 0 32px;
+  font-size: 16px;
+  border-radius: 14px;
+  background: linear-gradient(180deg, var(--accent), #4a8eff);
+  border: 0;
+  color: #fff;
+  box-shadow: 0 10px 25px rgba(74, 142, 255, 0.3);
 }
 
-.button-strong {
-  border-color: rgba(180, 214, 255, 0.95);
-  background: linear-gradient(180deg, rgba(110, 168, 255, 0.6), rgba(93, 154, 251, 0.42));
-  box-shadow: 0 0 0 1px rgba(180, 214, 255, 0.24), 0 10px 24px rgba(72, 142, 255, 0.34);
+.landing-cta-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 15px 30px rgba(74, 142, 255, 0.4);
 }
 
-.icon-card,
-.flow-detail,
-.role-panel {
-  border-color: rgba(143, 190, 255, 0.22);
-  background: rgba(255, 255, 255, 0.045);
+.landing-cta-secondary {
+  height: 48px;
+  padding: 0 28px;
+  font-size: 16px;
+  border-radius: 14px;
+  border: 1px solid rgba(231, 236, 255, 0.2);
+}
+
+/* Tab Panels & Details */
+.tab-panel, .flow-detail, .role-panel {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(110, 168, 255, 0.15);
+  padding: 24px;
+  border-radius: 14px;
+}
+
+.icon-card {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(110, 168, 255, 0.1);
+  padding: 20px;
+  transition: all 0.3s ease;
 }
 
 .icon-card:hover {
-  transform: translateY(-2px);
-  border-color: rgba(143, 190, 255, 0.56);
-  background: rgba(255, 255, 255, 0.07);
-  box-shadow: 0 12px 22px rgba(5, 14, 40, 0.35);
+  background: rgba(110, 168, 255, 0.05);
+  border-color: rgba(110, 168, 255, 0.3);
+  transform: scale(1.02);
 }
 
-.icon-dot {
-  color: #f2f6ff;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.28);
+/* Animations */
+.landing-slide::before {
+  content: "";
+  position: absolute;
+  inset: auto -10% -20% auto;
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(circle, rgba(110, 168, 255, 0.15), transparent 70%);
+  pointer-events: none;
+  animation: panel-glow 10s ease-in-out infinite;
 }
 
-.metric-chip,
-.landing-chip {
-  border-color: rgba(143, 190, 255, 0.45);
-  background: rgba(110, 168, 255, 0.18);
-  color: #f2f6ff;
+@keyframes panel-glow {
+  0%, 100% { transform: scale(1) translate(0, 0); opacity: 0.4; }
+  50% { transform: scale(1.2) translate(-20px, -20px); opacity: 0.6; }
 }
 
-.permission-chip--allow {
-  border-color: rgba(123, 228, 149, 0.7);
-  background: rgba(123, 228, 149, 0.24);
-}
-
-.permission-chip--deny {
-  border-color: rgba(255, 110, 138, 0.62);
-  background: rgba(255, 110, 138, 0.2);
-}
-
-.flow-step,
-.role-tabs__btn,
-.segmented-tabs__btn,
-.accordion__trigger {
-  border-color: rgba(143, 190, 255, 0.34);
-  color: #ebf1ff;
-}
-
-.flow-step.is-active,
-.role-tabs__btn.is-active,
-.segmented-tabs__btn.is-active {
-  border-color: rgba(180, 214, 255, 0.95);
-  background: rgba(110, 168, 255, 0.34);
-  box-shadow: 0 0 0 1px rgba(180, 214, 255, 0.24) inset;
-}
-
-.accordion__trigger:hover {
-  background: rgba(110, 168, 255, 0.14);
-}
-
-@media (min-width: 981px) {
-  .js-enhanced .landing-page {
-    padding-top: 10px;
-    padding-bottom: 18px;
-  }
-
-  .js-enhanced .landing-slide {
-    min-height: clamp(480px, 72vh, 760px);
-    opacity: 0.86;
-    transform: translateY(8px) scale(0.995);
-    filter: saturate(0.88);
-  }
-
-  .js-enhanced .landing-slide.is-active-slide {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-    filter: none;
-    box-shadow: 0 18px 44px rgba(2, 8, 28, 0.52);
-  }
-
-  .js-enhanced .landing-slide.is-inactive-slide {
-    opacity: 0.84;
-    transform: translateY(8px) scale(0.995);
-    filter: saturate(0.88);
-  }
+@media (max-width: 900px) {
+  .landing-page > .panel { padding: 24px; }
+  .landing-hero--presentation { padding: 60px 24px !important; }
+  .landing-nav { top: 10px; padding: 8px; font-size: 12px; }
 }

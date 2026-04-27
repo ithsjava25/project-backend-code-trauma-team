@@ -221,12 +221,18 @@
   const renderFlow = (key) => {
     const item = flowData[key];
     if (!flowDetail || !item) return;
+    
+    flowDetail.classList.remove("is-active");
+    // Force reflow
+    void flowDetail.offsetWidth;
+    
     flowDetail.innerHTML = `
       <h3>${item.title}</h3>
       <div class="metrics-row">
         ${item.chips.map((chip) => `<span class="metric-chip">${chip}</span>`).join("")}
       </div>
     `;
+    flowDetail.classList.add("is-active");
   };
 
   const flowSteps = Array.from(document.querySelectorAll(".flow-step"));
@@ -262,12 +268,18 @@
   const renderRole = (roleKey) => {
     const role = roleData[roleKey];
     if (!role || !rolePanel) return;
+
+    rolePanel.classList.remove("is-active");
+    // Force reflow
+    void rolePanel.offsetWidth;
+
     rolePanel.innerHTML = `
       <div class="permission-chips">
         ${role.allow.map((item) => `<span class="metric-chip permission-chip--allow">${item}</span>`).join("")}
         ${role.deny.map((item) => `<span class="metric-chip permission-chip--deny">${item}</span>`).join("")}
       </div>
     `;
+    rolePanel.classList.add("is-active");
   };
 
   const roleButtons = Array.from(document.querySelectorAll(".role-tabs__btn"));

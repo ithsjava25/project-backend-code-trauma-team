@@ -12,12 +12,34 @@
     </div>
 
     <section id="hero-cta" class="panel landing-hero landing-hero--presentation landing-slide" data-slide>
-        <div class="landing-hero-meta">
-            <span class="notice-badge">Projektpresentation ✦</span>
-            <span class="landing-hero-time">5-7 minuter</span>
-        </div>
+        <div class="hero-bg-glow"></div>
         <h1>Vårdens ärenden i ett tryggt flöde</h1>
         <p class="landing-lead">Ett samlat system för registrering, ansvar och uppföljning utan onödiga överlämningar.</p>
+        
+        <div class="metrics-row metrics-row--hero">
+            <div class="metric-chip">
+                <span class="metric-icon">📋</span>
+                <div class="metric-content">
+                    <strong th:text="${stats.totalCases}">0</strong>
+                    <span>Aktiva ärenden</span>
+                </div>
+            </div>
+            <div class="metric-chip">
+                <span class="metric-icon">👥</span>
+                <div class="metric-content">
+                    <strong th:text="${stats.totalPatients}">0</strong>
+                    <span>Patienter</span>
+                </div>
+            </div>
+            <div class="metric-chip">
+                <span class="metric-icon">🩺</span>
+                <div class="metric-content">
+                    <strong th:text="${stats.totalEmployees}">0</strong>
+                    <span>Vårdpersonal</span>
+                </div>
+            </div>
+        </div>
+
         <div class="landing-actions">
             <a class="button landing-cta-primary" href="#problem-solution">Se lösningen</a>
             <a class="button button-secondary landing-cta-secondary" th:href="@{/login}">Öppna applikationen</a>
