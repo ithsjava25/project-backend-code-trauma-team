@@ -1188,3 +1188,97 @@ h1, h2 {
     filter: saturate(0.88);
   }
 }
+
+/* Landing Page Polish */
+.landing-nav {
+  position: sticky;
+  top: 14px;
+  z-index: 100;
+  background: rgba(16, 26, 51, 0.75);
+  backdrop-filter: blur(12px);
+  padding: 10px;
+  border: 1px solid rgba(110, 168, 255, 0.2);
+  border-radius: 20px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  transition: all 0.3s ease;
+}
+
+.landing-nav-link.active {
+  background: rgba(110, 168, 255, 0.3);
+  border-color: var(--accent-strong);
+  color: #fff;
+}
+
+.tab-panel, .flow-detail, .role-panel {
+  display: none;
+  opacity: 0;
+  transform: translateY(10px);
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.tab-panel.is-active, .flow-detail.is-active, .role-panel.is-active {
+  display: block;
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.landing-hero--presentation {
+  background: radial-gradient(circle at top right, rgba(110, 168, 255, 0.12), transparent 50%),
+              radial-gradient(circle at bottom left, rgba(110, 168, 255, 0.08), transparent 50%);
+  border-color: rgba(110, 168, 255, 0.3);
+  padding: 60px 30px;
+}
+
+.metric-chip {
+  background: rgba(255, 255, 255, 0.05);
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+}
+
+.metric-chip:hover {
+  background: rgba(255, 255, 255, 0.1);
+  transform: translateY(-2px);
+  border-color: var(--accent);
+}
+
+.metric-icon {
+  font-size: 20px;
+}
+
+.metric-content {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  line-height: 1.2;
+}
+
+.metric-content strong {
+  font-size: 18px;
+  color: #fff;
+}
+
+.metric-content span {
+  font-size: 11px;
+  opacity: 0.7;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.hero-bg-glow {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 150%;
+  height: 150%;
+  background: radial-gradient(circle, rgba(110, 168, 255, 0.05) 0%, transparent 60%);
+  pointer-events: none;
+  z-index: -1;
+}
+
+.landing-section {
+  scroll-margin-top: 100px;
+}

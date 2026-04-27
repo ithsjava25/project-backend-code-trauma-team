@@ -3,6 +3,7 @@ package org.example.projektarendehantering.presentation.web;
 import org.example.projektarendehantering.application.service.CaseService;
 import org.example.projektarendehantering.application.service.EmployeeService;
 import org.example.projektarendehantering.application.service.PatientService;
+import org.example.projektarendehantering.application.service.PublicStatsService;
 import org.example.projektarendehantering.infrastructure.security.SecurityActorAdapter;
 import org.example.projektarendehantering.presentation.dto.CaseAssignmentDTO;
 import org.example.projektarendehantering.presentation.dto.CaseDTO;
@@ -31,12 +32,14 @@ public class UiController {
     private final CaseService caseService;
     private final PatientService patientService;
     private final EmployeeService employeeService;
+    private final PublicStatsService publicStatsService;
     private final SecurityActorAdapter securityActorAdapter;
 
-    public UiController(CaseService caseService, PatientService patientService, EmployeeService employeeService, SecurityActorAdapter securityActorAdapter) {
+    public UiController(CaseService caseService, PatientService patientService, EmployeeService employeeService, PublicStatsService publicStatsService, SecurityActorAdapter securityActorAdapter) {
         this.caseService = caseService;
         this.patientService = patientService;
         this.employeeService = employeeService;
+        this.publicStatsService = publicStatsService;
         this.securityActorAdapter = securityActorAdapter;
     }
 
@@ -47,7 +50,8 @@ public class UiController {
     }
 
     @GetMapping("/")
-    public String landing() {
+    public String landing(Model model) {
+        model.addAttribute("stats", publicStatsService.getPublicStats());
         return "landing";
     }
 
