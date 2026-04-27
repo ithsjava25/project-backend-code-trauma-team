@@ -30,7 +30,7 @@
                     <td class="code" th:text="${e.githubUsername}">Username</td>
                     <td th:text="${e.role}">Role</td>
                     <td class="code" th:text="${e.id}">UUID</td>
-                    <td th:text="${e.createdAt}">Date</td>
+                    <td th:text="${{e.createdAt}}">Date</td>
                     <td>
                         <a class="button button-small" th:href="@{/ui/employees/edit/{id}(id=${e.id})}">Edit</a>
                         <form th:action="@{/ui/employees/delete/{id}(id=${e.id})}" method="post" style="display:inline"

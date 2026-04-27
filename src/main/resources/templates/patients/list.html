@@ -26,7 +26,7 @@
                 <td th:text="${p.firstName}">First</td>
                 <td th:text="${p.lastName}">Last</td>
                 <td class="code" th:text="${p.personalIdentityNumber}">PIN</td>
-                <td th:text="${p.createdAt}">Date</td>
+                <td th:text="${{p.createdAt}}">Date</td>
                 <td>
                     <a class="button button-small" th:href="@{/ui/patients/edit/{id}(id=${p.id})}">Edit</a>
                 </td>
