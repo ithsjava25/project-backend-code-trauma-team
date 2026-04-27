@@ -12,7 +12,7 @@ import java.time.format.DateTimeFormatter;
 public class WebConfig {
 
     private static final DateTimeFormatter DISPLAY_FORMAT =
-            DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm").withZone(ZoneId.of("Europe/Stockholm"));
+            DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").withZone(ZoneId.of("Europe/Stockholm"));
 
     @Bean
     public Converter<Instant, String> instantToStringConverter() {

@@ -214,7 +214,7 @@
             </thead>
             <tbody>
             <tr th:each="e : ${events.content}">
-                <td th:text="${#temporals.format(e.occurredAt, 'yyyy-MM-dd HH:mm:ss', 'UTC')}">time</td>
+                <td th:text="${{e.occurredAt}}">time</td>
                 <td>
                     <div th:text="${e.actorRole}">role</div>
                     <div class="muted" th:text="${e.actorId}">actor</div>
