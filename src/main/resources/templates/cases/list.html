@@ -25,7 +25,7 @@
             <tbody>
                 <tr th:each="c : ${cases}">
                     <td th:text="${c.title}">Title</td>
-                    <td th:text="${c.createdAt}">Date</td>
+                    <td th:text="${{c.createdAt}}">Date</td>
                     <td>
                         <span
                                 th:if="${currentActor != null && currentActor.role() != null && currentActor.role().toString() == 'PATIENT' && c.status != null && c.status.toString() != 'CREATED'}"

@@ -38,7 +38,7 @@
         </div>
         <div class="kv">
             <div class="k">Created At</div>
-            <div class="v" th:text="${case.createdAt}">Date</div>
+            <div class="v" th:text="${{case.createdAt}}">Date</div>
         </div>
         
         <hr style="border: 0; border-top: 1px solid var(--border); margin: 20px 0;"/>
@@ -75,7 +75,7 @@
             <p th:text="${note.content}">Note content</p>
             <div class="muted" style="font-size: 0.8em;">
                 <span th:text="${note.authorDisplayName} ?: (${note.authorGithubUsername} ?: ${note.authorRole})">Author</span> - 
-                <span th:if="${note.createdAt != null}" th:text="${note.createdAt}">Date</span>
+                <span th:if="${note.createdAt != null}" th:text="${{note.createdAt}}">Date</span>
             </div>
         </div>
         <p th:if="${#lists.isEmpty(case.notes)}" class="muted">No notes yet.</p>
@@ -100,7 +100,7 @@
                 <a th:href="@{/ui/cases/{caseId}/documents/{docId}/download(caseId=${case.id}, docId=${doc.id})}" th:text="${doc.fileName}">Document.pdf</a>
                 <div class="muted" style="font-size: 0.8em;">
                     <span th:text="${#numbers.formatDecimal(doc.fileSize / 1024.0, 1, 1)} + ' KB'">123.4 KB</span> - 
-                    <span th:text="${doc.uploadedAt}">Date</span>
+                    <span th:text="${{doc.uploadedAt}}">Date</span>
                 </div>
             </div>
             <form th:if="${currentActor != null and currentActor.role().name() != 'PATIENT'}"

@@ -23,7 +23,7 @@
             <tbody>
                 <tr th:each="c : ${cases}">
                     <td th:text="${c.title}">Title</td>
-                    <td th:text="${c.createdAt}">Date</td>
+                    <td th:text="${{c.createdAt}}">Date</td>
                     <td>
                         <a th:href="@{/ui/cases/{id}(id=${c.id})}" class="button button-secondary">View</a>
                     </td>
